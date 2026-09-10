@@ -60,6 +60,32 @@ function AppRoutes() {
       />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
+      {/* Shared alumni routes */}
+      <Route
+        element={
+          <ProtectedRoute roles={["ADMIN", "ALUMNI"]}>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/alumni/dashboard" element={<AlumniDashboardPage />} />
+        <Route path="/alumni/profile" element={<AlumniProfilePage />} />
+        <Route path="/alumni/profile-setup" element={<ProfileSetupPage />} />
+        <Route
+          path="/alumni/settings-privacy"
+          element={<SettingsPrivacyPage />}
+        />
+        <Route path="/alumni/directory" element={<AlumniDirectoryPage />} />
+        <Route path="/alumni/events" element={<EventListPage />} />
+        <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
+        <Route path="/alumni/notices" element={<NoticeListPage />} />
+        <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
+        <Route path="/alumni/account" element={<AlumniAccountPage />} />
+        <Route path="/alumni/create" element={<AlumniFormPage />} />
+        <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
+        <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
+      </Route>
+
       {/* Admin routes */}
       <Route
         element={
@@ -70,9 +96,6 @@ function AppRoutes() {
       >
         <Route path="/dashboard" element={<AdminDashboardPage />} />
         <Route path="/alumni" element={<AlumniListPage />} />
-        <Route path="/alumni/create" element={<AlumniFormPage />} />
-        <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
-        <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
         <Route path="/events" element={<EventListPage isAdmin />} />
         <Route path="/events/create" element={<EventFormPage />} />
         <Route path="/events/:id" element={<EventDetailsPage isAdmin />} />
@@ -85,45 +108,6 @@ function AppRoutes() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile-setup" element={<ProfileSetupPage />} />
         <Route path="/settings-privacy" element={<SettingsPrivacyPage />} />
-        <Route path="/alumni/dashboard" element={<AlumniDashboardPage />} />
-        <Route path="/alumni/profile" element={<AlumniProfilePage />} />
-        <Route path="/alumni/profile-setup" element={<ProfileSetupPage />} />
-        <Route
-          path="/alumni/settings-privacy"
-          element={<SettingsPrivacyPage />}
-        />
-        <Route path="/alumni/directory" element={<AlumniDirectoryPage />} />
-        <Route path="/alumni/account" element={<AlumniAccountPage />} />
-        <Route path="/alumni/events" element={<EventListPage />} />
-        <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
-        <Route path="/alumni/notices" element={<NoticeListPage />} />
-        <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
-      </Route>
-
-      {/* Alumni routes */}
-      <Route
-        element={
-          <ProtectedRoute roles={["ALUMNI"]}>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/alumni/dashboard" element={<AlumniDashboardPage />} />
-        <Route path="/alumni/profile" element={<AlumniProfilePage />} />
-        <Route path="/alumni/profile-setup" element={<ProfileSetupPage />} />
-        <Route
-          path="/alumni/settings-privacy"
-          element={<SettingsPrivacyPage />}
-        />
-        <Route path="/alumni/directory" element={<AlumniDirectoryPage />} />
-        <Route path="/alumni/events" element={<EventListPage />} />
-        <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
-        <Route path="/alumni/notices" element={<NoticeListPage />} />
-        <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
-        <Route path="/alumni/account" element={<AlumniAccountPage />} />
-        <Route path="/alumni/create" element={<AlumniFormPage />} />
-        <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
-        <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
       </Route>
 
       <Route

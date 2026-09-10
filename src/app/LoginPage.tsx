@@ -56,7 +56,15 @@ export default function LoginPage() {
   };
 
   const fillDemo = (username: string, password: string) => {
-    handleSubmit(onSubmit)({ username, password } as never);
+    dispatch(loginAsync({ username, password })).then((res) => {
+      if (res.meta.requestStatus === "fulfilled") {
+        const payload = res.payload as { user?: { role?: string } } | undefined;
+        const role = payload?.user?.role;
+        navigate(role === "ADMIN" ? "/dashboard" : "/alumni/dashboard", {
+          replace: true,
+        });
+      }
+    });
   };
 
   return (

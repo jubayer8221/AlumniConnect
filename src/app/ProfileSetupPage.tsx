@@ -201,6 +201,25 @@ const relationOptions = [
   "Other",
 ].map((r) => ({ label: r, value: r }));
 
+const createFamilyMember = (): FamilyMember => ({
+  id: generateUUID(),
+  name: "",
+  relation: "",
+  occupation: "",
+  phone: "",
+});
+
+const createJobExperience = (): JobExperience => ({
+  id: generateUUID(),
+  company: "",
+  position: "",
+  startDate: "",
+  endDate: "",
+  location: "",
+  description: "",
+  isCurrent: false,
+});
+
 const sectionCardSx = {
   borderRadius: 3,
   border: "1px solid",
@@ -244,11 +263,15 @@ export default function ProfileSetupPage() {
   const { user } = useAppSelector((s) => s.auth);
   const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
 
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
+    createFamilyMember(),
+  ]);
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(
     [],
   );
-  const [jobExperiences, setJobExperiences] = useState<JobExperience[]>([]);
+  const [jobExperiences, setJobExperiences] = useState<JobExperience[]>([
+    createJobExperience(),
+  ]);
   const [skillsInput, setSkillsInput] = useState("");
 
   const {
@@ -344,17 +367,22 @@ export default function ProfileSetupPage() {
         isVerified: selectedAlumni.isVerified || false,
       } as never);
       setSkillsInput((selectedAlumni.skills || []).join(", "));
-      setFamilyMembers(selectedAlumni.familyMembers || []);
+      setFamilyMembers(
+        selectedAlumni.familyMembers?.length
+          ? selectedAlumni.familyMembers
+          : [createFamilyMember()],
+      );
       setEducationEntries(selectedAlumni.educationEntries || []);
-      setJobExperiences(selectedAlumni.jobExperiences || []);
+      setJobExperiences(
+        selectedAlumni.jobExperiences?.length
+          ? selectedAlumni.jobExperiences
+          : [createJobExperience()],
+      );
     }
   }, [selectedAlumni, reset]);
 
   const addFamilyMember = () =>
-    setFamilyMembers((p) => [
-      ...p,
-      { id: generateUUID(), name: "", relation: "", occupation: "", phone: "" },
-    ]);
+    setFamilyMembers((p) => [...p, createFamilyMember()]);
   const removeFamilyMember = (id: string) =>
     setFamilyMembers((p) => p.filter((m) => m.id !== id));
   const updateFamilyMember = (
@@ -390,20 +418,7 @@ export default function ProfileSetupPage() {
       p.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
     );
 
-  const addJob = () =>
-    setJobExperiences((p) => [
-      ...p,
-      {
-        id: generateUUID(),
-        company: "",
-        position: "",
-        startDate: "",
-        endDate: "",
-        location: "",
-        description: "",
-        isCurrent: false,
-      },
-    ]);
+  const addJob = () => setJobExperiences((p) => [...p, createJobExperience()]);
   const removeJob = (id: string) =>
     setJobExperiences((p) => p.filter((j) => j.id !== id));
   const updateJob = (
@@ -801,95 +816,82 @@ export default function ProfileSetupPage() {
                 Add Member
               </Button>
             </Box>
-            {familyMembers.length === 0 ? (
-              <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", textAlign: "center", py: 2 }}
-              >
-                No family members added yet.
-              </Typography>
-            ) : (
-              <Grid container spacing={2}>
-                {familyMembers.map((m) => (
-                  <Grid size={{ xs: 12 }} key={m.id}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        bgcolor: "background.default",
-                      }}
-                    >
-                      <Grid container spacing={2} sx={{ alignItems: "center" }}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <CommonInputField
-                            name={`familyName_${m.id}` as never}
-                            label="Name"
-                            control={control}
-                            placeholder="Full name"
-                            onChange={(e) =>
-                              updateFamilyMember(m.id, "name", e.target.value)
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <CommonSelectField
-                            name={`familyRelation_${m.id}` as never}
-                            label="Relation"
-                            control={control}
-                            options={relationOptions}
-                            placeholder="Select"
-                            onChange={(e) =>
-                              updateFamilyMember(
-                                m.id,
-                                "relation",
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <CommonInputField
-                            name={`familyOccupation_${m.id}` as never}
-                            label="Occupation"
-                            control={control}
-                            placeholder="Occupation"
-                            onChange={(e) =>
-                              updateFamilyMember(
-                                m.id,
-                                "occupation",
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <CommonInputField
-                            name={`familyPhone_${m.id}` as never}
-                            label="Phone"
-                            control={control}
-                            placeholder="Phone"
-                            onChange={(e) =>
-                              updateFamilyMember(m.id, "phone", e.target.value)
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <IconButton
-                            onClick={() => removeFamilyMember(m.id)}
-                            color="error"
-                            size="small"
-                          >
-                            <Trash2 size={16} />
-                          </IconButton>
-                        </Grid>
+            <Grid container spacing={2}>
+              {familyMembers.map((m) => (
+                <Grid size={{ xs: 12 }} key={m.id}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.default",
+                    }}
+                  >
+                    <Grid container spacing={2} sx={{ alignItems: "center" }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonInputField
+                          name={`familyName_${m.id}` as never}
+                          label="Name"
+                          control={control}
+                          placeholder="Full name"
+                          onChange={(e) =>
+                            updateFamilyMember(m.id, "name", e.target.value)
+                          }
+                        />
                       </Grid>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonSelectField
+                          name={`familyRelation_${m.id}` as never}
+                          label="Relation"
+                          control={control}
+                          options={relationOptions}
+                          placeholder="Select"
+                          onChange={(e) =>
+                            updateFamilyMember(m.id, "relation", e.target.value)
+                          }
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonInputField
+                          name={`familyOccupation_${m.id}` as never}
+                          label="Occupation"
+                          control={control}
+                          placeholder="Occupation"
+                          onChange={(e) =>
+                            updateFamilyMember(
+                              m.id,
+                              "occupation",
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonInputField
+                          name={`familyPhone_${m.id}` as never}
+                          label="Phone"
+                          control={control}
+                          placeholder="Phone"
+                          onChange={(e) =>
+                            updateFamilyMember(m.id, "phone", e.target.value)
+                          }
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <IconButton
+                          onClick={() => removeFamilyMember(m.id)}
+                          color="error"
+                          size="small"
+                        >
+                          <Trash2 size={16} />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
           </CardContent>
         </Card>
 
@@ -1137,106 +1139,97 @@ export default function ProfileSetupPage() {
                 Add Experience
               </Button>
             </Box>
-            {jobExperiences.length === 0 ? (
-              <Typography
-                variant="body2"
-                sx={{ color: "text.secondary", textAlign: "center", py: 2 }}
+            {jobExperiences.map((j) => (
+              <Box
+                key={j.id}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.default",
+                  mb: 1.5,
+                }}
               >
-                No job experiences added yet.
-              </Typography>
-            ) : (
-              jobExperiences.map((j) => (
-                <Box
-                  key={j.id}
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    bgcolor: "background.default",
-                    mb: 1.5,
-                  }}
-                >
-                  <Grid container spacing={2} sx={{ alignItems: "center" }}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <CommonInputField
-                        name={`jobCompany_${j.id}` as never}
-                        label="Company"
-                        control={control}
-                        placeholder="Company name"
-                        onChange={(ev) =>
-                          updateJob(j.id, "company", ev.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <CommonInputField
-                        name={`jobPosition_${j.id}` as never}
-                        label="Position"
-                        control={control}
-                        placeholder="Job title"
-                        onChange={(ev) =>
-                          updateJob(j.id, "position", ev.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <CommonInputField
-                        name={`jobStart_${j.id}` as never}
-                        label="Start Date"
-                        control={control}
-                        placeholder="YYYY-MM"
-                        onChange={(ev) =>
-                          updateJob(j.id, "startDate", ev.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <CommonInputField
-                        name={`jobEnd_${j.id}` as never}
-                        label="End Date"
-                        control={control}
-                        placeholder="YYYY-MM"
-                        onChange={(ev) =>
-                          updateJob(j.id, "endDate", ev.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 1 }}>
-                      <IconButton
-                        onClick={() => removeJob(j.id)}
-                        color="error"
-                        size="small"
-                      >
-                        <Trash2 size={16} />
-                      </IconButton>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <CommonInputField
-                        name={`jobLocation_${j.id}` as never}
-                        label="Location"
-                        control={control}
-                        placeholder="City, Country"
-                        onChange={(ev) =>
-                          updateJob(j.id, "location", ev.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <CommonInputField
-                        name={`jobDesc_${j.id}` as never}
-                        label="Description"
-                        control={control}
-                        placeholder="Brief description"
-                        onChange={(ev) =>
-                          updateJob(j.id, "description", ev.target.value)
-                        }
-                      />
-                    </Grid>
+                <Grid container spacing={2} sx={{ alignItems: "center" }}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobCompany_${j.id}` as never}
+                      label="Company"
+                      control={control}
+                      placeholder="Company name"
+                      onChange={(ev) =>
+                        updateJob(j.id, "company", ev.target.value)
+                      }
+                    />
                   </Grid>
-                </Box>
-              ))
-            )}
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobPosition_${j.id}` as never}
+                      label="Position"
+                      control={control}
+                      placeholder="Job title"
+                      onChange={(ev) =>
+                        updateJob(j.id, "position", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobStart_${j.id}` as never}
+                      label="Start Date"
+                      control={control}
+                      placeholder="YYYY-MM"
+                      onChange={(ev) =>
+                        updateJob(j.id, "startDate", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobEnd_${j.id}` as never}
+                      label="End Date"
+                      control={control}
+                      placeholder="YYYY-MM"
+                      onChange={(ev) =>
+                        updateJob(j.id, "endDate", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 1 }}>
+                    <IconButton
+                      onClick={() => removeJob(j.id)}
+                      color="error"
+                      size="small"
+                    >
+                      <Trash2 size={16} />
+                    </IconButton>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobLocation_${j.id}` as never}
+                      label="Location"
+                      control={control}
+                      placeholder="City, Country"
+                      onChange={(ev) =>
+                        updateJob(j.id, "location", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobDesc_${j.id}` as never}
+                      label="Description"
+                      control={control}
+                      placeholder="Brief description"
+                      onChange={(ev) =>
+                        updateJob(j.id, "description", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            ))}
           </CardContent>
         </Card>
 
