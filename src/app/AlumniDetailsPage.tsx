@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  Link,
 } from "@mui/material";
 import {
   ArrowLeft,
@@ -35,6 +36,7 @@ import {
   IdCard,
   MoreVertical,
   Lock,
+  Building2,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -61,6 +63,13 @@ import { formatDate } from "@/utils/dateUtils";
 import { appConfig } from "@/config/appConfig";
 import type { Alumni } from "@/types/alumni";
 
+// Joins whichever address fragments exist into one readable line instead of
+// listing village/union/thana/district/division/country as separate rows.
+const formatAddress = (...parts: (string | undefined | null)[]) => {
+  const joined = parts.filter(Boolean).join(", ");
+  return joined || undefined;
+};
+
 const InfoRow = ({
   label,
   value,
@@ -74,6 +83,7 @@ const InfoRow = ({
     sx={{
       display: "flex",
       justifyContent: "space-between",
+      gap: 2,
       py: 1.5,
       borderBottom: "1px solid",
       borderColor: "divider",
@@ -85,14 +95,32 @@ const InfoRow = ({
         alignItems: "center",
         gap: 1,
         color: "text.secondary",
+        flexShrink: 0,
       }}
     >
       {icon}
-      {label}
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        {label}
+      </Typography>
     </Box>
-    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+    <Typography variant="body2" sx={{ fontWeight: 500, textAlign: "right" }}>
       {value || "—"}
     </Typography>
+  </Box>
+);
+
+// Two-column layout for label/value rows so shorter sections (Personal,
+// Academic, Professional) read at roughly the same height instead of one
+// tall single column.
+const InfoGrid = ({ children }: { children: React.ReactNode }) => (
+  <Box
+    sx={{
+      display: "grid",
+      gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+      columnGap: 4,
+    }}
+  >
+    {children}
   </Box>
 );
 
@@ -120,12 +148,36 @@ const Section = ({
   </Card>
 );
 
+// Small icon + text pill used in the profile header's meta line.
+const MetaItem = ({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 0.5,
+      color: "text.secondary",
+    }}
+  >
+    {icon}
+    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+      {children}
+    </Typography>
+  </Box>
+);
+
 export default function AlumniDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
   const { role, user } = useAppSelector((s) => s.auth);
+  const profileId = id || user?.alumniId;
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [idCardOpen, setIdCardOpen] = useState(false);
   const [statusDialog, setStatusDialog] = useState<Alumni["status"] | null>(
@@ -133,8 +185,8 @@ export default function AlumniDetailsPage() {
   );
 
   useEffect(() => {
-    if (id) dispatch(fetchAlumniByIdAsync(id));
-  }, [dispatch, id]);
+    if (profileId) dispatch(fetchAlumniByIdAsync(profileId));
+  }, [dispatch, profileId]);
 
   if (loading && !selectedAlumni) return <CommonLoading />;
   if (!selectedAlumni)
@@ -151,6 +203,31 @@ export default function AlumniDetailsPage() {
   const isAdmin = role === "ADMIN";
   const isOwner = user?.alumniId === alumni.alumniId;
   const canSeePrivate = isAdmin || isOwner;
+  const canSeeAddress = canSeePrivate || alumni.privacy?.showAddress;
+
+  const presentAddress = canSeeAddress
+    ? formatAddress(
+        alumni.presentAddress,
+        alumni.presentVillageArea,
+        alumni.presentUnion,
+        alumni.presentThana,
+        alumni.presentDistrict,
+        alumni.presentDivision,
+        alumni.presentCountry,
+      )
+    : "Hidden";
+
+  const permanentAddress = canSeeAddress
+    ? formatAddress(
+        alumni.permanentAddress,
+        alumni.permanentVillageArea,
+        alumni.permanentUnion,
+        alumni.permanentThana,
+        alumni.permanentDistrict,
+        alumni.permanentDivision,
+        alumni.permanentCountry,
+      )
+    : "Hidden";
 
   const handleVerify = async () => {
     const res = await dispatch(verifyAlumniAsync(alumni.id));
@@ -189,16 +266,7 @@ export default function AlumniDetailsPage() {
             >
               Back
             </CommonButton>
-            {isAdmin && (
-              <CommonButton
-                variant="outlined"
-                startIcon={<Pencil size={18} />}
-                onClick={() => navigate(`/alumni/${alumni.id}/edit`)}
-              >
-                Edit Profile
-              </CommonButton>
-            )}
-            {isOwner && (
+            {(isAdmin || isOwner) && (
               <CommonButton
                 variant="outlined"
                 startIcon={<Pencil size={18} />}
@@ -221,7 +289,9 @@ export default function AlumniDetailsPage() {
                   setMenuAnchor(null);
                 }}
               >
-                <Printer size={16} className="mr-2" /> Print Profile
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Printer size={16} /> Print Profile
+                </Box>
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -229,21 +299,29 @@ export default function AlumniDetailsPage() {
                   setMenuAnchor(null);
                 }}
               >
-                <IdCard size={16} className="mr-2" /> View ID Card
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <IdCard size={16} /> View ID Card
+                </Box>
               </MenuItem>
               {isAdmin && !alumni.isVerified && (
                 <MenuItem onClick={handleVerify}>
-                  <BadgeCheck size={16} className="mr-2" /> Verify Alumni
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <BadgeCheck size={16} /> Verify Alumni
+                  </Box>
                 </MenuItem>
               )}
               {isAdmin && alumni.status === "ACTIVE" && (
                 <MenuItem onClick={() => setStatusDialog("INACTIVE")}>
-                  <Shield size={16} className="mr-2" /> Deactivate
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Shield size={16} /> Deactivate
+                  </Box>
                 </MenuItem>
               )}
               {isAdmin && alumni.status !== "ACTIVE" && (
                 <MenuItem onClick={() => setStatusDialog("ACTIVE")}>
-                  <Shield size={16} className="mr-2" /> Activate
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Shield size={16} /> Activate
+                  </Box>
                 </MenuItem>
               )}
             </Menu>
@@ -280,9 +358,12 @@ export default function AlumniDetailsPage() {
               src={alumni.profilePhoto}
               name={alumni.fullName}
               size={120}
-              sx={{ border: "4px solid white" }}
+              sx={{
+                border: "4px solid white",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              }}
             />
-            <Box sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box
                 sx={{
                   display: "flex",
@@ -305,46 +386,40 @@ export default function AlumniDetailsPage() {
                 <CommonStatusBadge status={alumni.status} />
               </Box>
               {alumni.designation && (
-                <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                <Typography
+                  variant="body1"
+                  sx={{ color: "text.secondary", mt: 0.25 }}
+                >
                   {alumni.designation}
                   {alumni.companyName ? ` at ${alumni.companyName}` : ""}
                 </Typography>
               )}
-              <Box sx={{ display: "flex", gap: 2, mt: 1, flexWrap: "wrap" }}>
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+              <Box
+                sx={{ display: "flex", gap: 2.5, mt: 1.25, flexWrap: "wrap" }}
+              >
+                <MetaItem icon={<IdCard size={14} />}>
                   {alumni.alumniId}
-                </Typography>
+                </MetaItem>
                 {alumni.departmentName && (
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
+                  <MetaItem icon={<GraduationCap size={14} />}>
                     {alumni.departmentName}
-                  </Typography>
+                  </MetaItem>
                 )}
                 {alumni.batch && (
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
+                  <MetaItem icon={<Award size={14} />}>
                     Batch {alumni.batch}
-                  </Typography>
+                  </MetaItem>
                 )}
                 {alumni.graduationYear && (
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
+                  <MetaItem icon={<Calendar size={14} />}>
                     Graduated {alumni.graduationYear}
-                  </Typography>
+                  </MetaItem>
                 )}
                 {alumni.city && (
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "text.secondary" }}
-                  >
-                    {alumni.city}, {alumni.country}
-                  </Typography>
+                  <MetaItem icon={<MapPin size={14} />}>
+                    {alumni.city}
+                    {alumni.country ? `, ${alumni.country}` : ""}
+                  </MetaItem>
                 )}
               </Box>
             </Box>
@@ -379,216 +454,137 @@ export default function AlumniDetailsPage() {
         </CardContent>
       </Card>
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
+      <Grid container spacing={0}>
+        <Grid size={{ xs: 12 }}>
           <Section
             title="Personal Information"
             icon={<GraduationCap size={20} />}
           >
-            <InfoRow label="Full Name" value={alumni.fullName} />
-            <InfoRow
-              label="Date of Birth"
-              value={formatDate(alumni.dateOfBirth)}
-              icon={<Calendar size={16} />}
-            />
-            <InfoRow label="Gender" value={alumni.gender} />
-            <InfoRow label="Blood Group" value={alumni.bloodGroup} />
-            <InfoRow label="Marital Status" value={alumni.maritalStatus} />
-          </Section>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Section title="Contact Information" icon={<Mail size={20} />}>
-            <InfoRow
-              label="Email"
-              value={
-                canSeePrivate || alumni.privacy?.showEmail
-                  ? alumni.email
-                  : "Hidden"
-              }
-              icon={<Mail size={16} />}
-            />
-            <InfoRow
-              label="Phone"
-              value={
-                canSeePrivate || alumni.privacy?.showPhone
-                  ? alumni.phone
-                  : "Hidden"
-              }
-              icon={<Phone size={16} />}
-            />
-            {alumni.alternatePhone && (
+            <InfoGrid>
+              <InfoRow label="Full Name" value={alumni.fullName} />
               <InfoRow
-                label="Alternate Phone"
-                value={canSeePrivate ? alumni.alternatePhone : "Hidden"}
+                label="Date of Birth"
+                value={formatDate(alumni.dateOfBirth)}
+                icon={<Calendar size={16} />}
               />
-            )}
-            <InfoRow
-              label="Present Address"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.presentAddress
-                  : "Hidden"
-              }
-              icon={<MapPin size={16} />}
-            />
-            <InfoRow
-              label="Present Village/Area"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.presentVillageArea
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Present Country"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.presentCountry
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Present Division"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.presentDivision
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Present District"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.presentDistrict
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Present Thana"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.presentThana
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Present Union"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.presentUnion
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Permanent Address"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.permanentAddress
-                  : "Hidden"
-              }
-              icon={<MapPin size={16} />}
-            />
-            <InfoRow
-              label="Permanent Village/Area"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.permanentVillageArea
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Permanent Country"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.permanentCountry
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Permanent Division"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.permanentDivision
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Permanent District"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.permanentDistrict
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Permanent Thana"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.permanentThana
-                  : "Hidden"
-              }
-            />
-            <InfoRow
-              label="Permanent Union"
-              value={
-                canSeePrivate || alumni.privacy?.showAddress
-                  ? alumni.permanentUnion
-                  : "Hidden"
-              }
-            />
-            <InfoRow label="City" value={alumni.city} />
-            <InfoRow label="Country" value={alumni.country} />
+              <InfoRow label="Gender" value={alumni.gender} />
+              <InfoRow label="Blood Group" value={alumni.bloodGroup} />
+              <InfoRow label="Marital Status" value={alumni.maritalStatus} />
+            </InfoGrid>
           </Section>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+
+        <Grid size={{ xs: 12 }}>
           <Section
             title="Academic Information"
             icon={<GraduationCap size={20} />}
           >
-            <InfoRow label="Student ID" value={alumni.studentId} />
-            <InfoRow
-              label="Registration Number"
-              value={alumni.registrationNumber}
-            />
-            <InfoRow label="Program" value={alumni.programName} />
-            <InfoRow label="Department" value={alumni.departmentName} />
-            <InfoRow label="Faculty" value={alumni.facultyName} />
-            <InfoRow
-              label="Admission Year"
-              value={alumni.admissionYear?.toString()}
-            />
-            <InfoRow
-              label="Graduation Year"
-              value={alumni.graduationYear?.toString()}
-            />
-            <InfoRow
-              label="Graduation Semester"
-              value={alumni.graduationSemester}
-            />
-            <InfoRow label="Batch" value={alumni.batch} />
-            <InfoRow label="Roll Number" value={alumni.rollNumber} />
+            <InfoGrid>
+              <InfoRow label="Student ID" value={alumni.studentId} />
+              <InfoRow
+                label="Registration Number"
+                value={alumni.registrationNumber}
+              />
+              <InfoRow label="Program" value={alumni.programName} />
+              <InfoRow label="Department" value={alumni.departmentName} />
+              <InfoRow label="Faculty" value={alumni.facultyName} />
+              <InfoRow
+                label="Admission Year"
+                value={alumni.admissionYear?.toString()}
+              />
+              <InfoRow
+                label="Graduation Year"
+                value={alumni.graduationYear?.toString()}
+              />
+              <InfoRow
+                label="Graduation Semester"
+                value={alumni.graduationSemester}
+              />
+              <InfoRow label="Batch" value={alumni.batch} />
+              <InfoRow label="Roll Number" value={alumni.rollNumber} />
+            </InfoGrid>
           </Section>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+
+        <Grid size={{ xs: 12 }}>
+          <Section title="Contact & Address" icon={<Mail size={20} />}>
+            <InfoGrid>
+              <InfoRow
+                label="Email"
+                value={
+                  canSeePrivate || alumni.privacy?.showEmail
+                    ? alumni.email
+                    : "Hidden"
+                }
+                icon={<Mail size={16} />}
+              />
+              <InfoRow
+                label="Phone"
+                value={
+                  canSeePrivate || alumni.privacy?.showPhone
+                    ? alumni.phone
+                    : "Hidden"
+                }
+                icon={<Phone size={16} />}
+              />
+              {alumni.alternatePhone && (
+                <InfoRow
+                  label="Alternate Phone"
+                  value={canSeePrivate ? alumni.alternatePhone : "Hidden"}
+                  icon={<Phone size={16} />}
+                />
+              )}
+              <InfoRow
+                label="Current Location"
+                value={
+                  alumni.city
+                    ? `${alumni.city}${alumni.country ? `, ${alumni.country}` : ""}`
+                    : undefined
+                }
+                icon={<MapPin size={16} />}
+              />
+            </InfoGrid>
+
+            <Divider sx={{ my: 2 }} />
+
+            <InfoGrid>
+              <InfoRow
+                label="Present Address"
+                value={presentAddress}
+                icon={<MapPin size={16} />}
+              />
+              <InfoRow
+                label="Permanent Address"
+                value={permanentAddress}
+                icon={<MapPin size={16} />}
+              />
+            </InfoGrid>
+          </Section>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
           <Section
-            title="Professional Information"
+            title="Professio` nal Information"
             icon={<Briefcase size={20} />}
           >
-            <InfoRow
-              label="Current Occupation"
-              value={alumni.currentOccupation}
-            />
-            <InfoRow label="Designation" value={alumni.designation} />
-            <InfoRow
-              label="Company"
-              value={
-                canSeePrivate || alumni.privacy?.showCompany
-                  ? alumni.companyName
-                  : "Hidden"
-              }
-            />
-            <InfoRow label="Industry" value={alumni.industry} />
-            <InfoRow label="Work Location" value={alumni.workLocation} />
+            <InfoGrid>
+              <InfoRow
+                label="Current Occupation"
+                value={alumni.currentOccupation}
+              />
+              <InfoRow label="Designation" value={alumni.designation} />
+              <InfoRow
+                label="Company"
+                value={
+                  canSeePrivate || alumni.privacy?.showCompany
+                    ? alumni.companyName
+                    : "Hidden"
+                }
+                icon={<Building2 size={16} />}
+              />
+              <InfoRow label="Industry" value={alumni.industry} />
+              <InfoRow label="Work Location" value={alumni.workLocation} />
+            </InfoGrid>
             {alumni.skills && alumni.skills.length > 0 && (
               <Box sx={{ mt: 2 }}>
                 <Typography
@@ -606,7 +602,8 @@ export default function AlumniDetailsPage() {
             )}
           </Section>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+
+        <Grid size={{ xs: 12 }}>
           <Section title="Social Links" icon={<Globe size={20} />}>
             {canSeePrivate || alumni.privacy?.showSocialLinks ? (
               <>
@@ -618,14 +615,15 @@ export default function AlumniDetailsPage() {
                       borderColor: "divider",
                     }}
                   >
-                    <a
+                    <Link
                       href={alumni.linkedinUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 text-blue-600 hover:underline"
+                      underline="hover"
+                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
                     >
                       <Linkedin size={16} /> LinkedIn Profile
-                    </a>
+                    </Link>
                   </Box>
                 )}
                 {alumni.facebookUrl && (
@@ -636,26 +634,28 @@ export default function AlumniDetailsPage() {
                       borderColor: "divider",
                     }}
                   >
-                    <a
+                    <Link
                       href={alumni.facebookUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 text-blue-600 hover:underline"
+                      underline="hover"
+                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
                     >
                       <Facebook size={16} /> Facebook Profile
-                    </a>
+                    </Link>
                   </Box>
                 )}
                 {alumni.websiteUrl && (
                   <Box sx={{ py: 1.5 }}>
-                    <a
+                    <Link
                       href={alumni.websiteUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 text-blue-600 hover:underline"
+                      underline="hover"
+                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
                     >
                       <Globe size={16} /> Personal Website
-                    </a>
+                    </Link>
                   </Box>
                 )}
                 {!alumni.linkedinUrl &&
@@ -667,14 +667,24 @@ export default function AlumniDetailsPage() {
                   )}
               </>
             ) : (
-              <Typography sx={{ color: "text.secondary" }}>
-                <Lock size={14} className="inline mr-1" /> Social links are
-                private
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  color: "text.secondary",
+                }}
+              >
+                <Lock size={14} />
+                <Typography sx={{ color: "text.secondary" }}>
+                  Social links are private
+                </Typography>
+              </Box>
             )}
           </Section>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+
+        <Grid size={{ xs: 12 }}>
           <Section title="Biography" icon={<Award size={20} />}>
             <Typography
               variant="body2"

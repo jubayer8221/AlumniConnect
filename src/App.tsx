@@ -17,7 +17,6 @@ import AlumniListPage from "@/app/AlumniListPage";
 import AlumniFormPage from "@/app/AlumniFormPage";
 import AlumniDetailsPage from "@/app/AlumniDetailsPage";
 import AlumniDashboardPage from "@/app/AlumniDashboardPage";
-import AlumniProfilePage from "@/app/AlumniProfilePage";
 import ProfileSetupPage from "@/app/ProfileSetupPage";
 import SettingsPrivacyPage from "@/app/SettingsPrivacyPage";
 import AlumniDirectoryPage from "@/app/AlumniDirectoryPage";
@@ -69,7 +68,7 @@ function AppRoutes() {
         }
       >
         <Route path="/alumni/dashboard" element={<AlumniDashboardPage />} />
-        <Route path="/alumni/profile" element={<AlumniProfilePage />} />
+        <Route path="/alumni/profile" element={<AlumniDetailsPage />} />
         <Route path="/alumni/profile-setup" element={<ProfileSetupPage />} />
         <Route
           path="/alumni/settings-privacy"

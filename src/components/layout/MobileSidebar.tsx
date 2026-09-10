@@ -121,9 +121,9 @@ const alumniNav: NavItem[] = [
     icon: <UserCircle size={22} />,
     children: [
       {
-        label: "Profile Setup",
-        path: "/alumni/profile-setup",
-        icon: <FileText size={16} />,
+        label: "My Profile",
+        path: "/alumni/profile",
+        icon: <UserCircle size={16} />,
       },
       {
         label: "Settings & Privacy",

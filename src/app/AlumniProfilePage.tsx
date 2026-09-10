@@ -67,11 +67,11 @@ export default function AlumniProfilePage() {
   return (
     <Box>
       <CommonPageHeader
-        title="My Profile"
+        title="Alumni Profile"
         subtitle="View and manage your alumni profile"
         breadcrumbs={[
           { label: "Home", path: "/alumni/dashboard" },
-          { label: "My Profile" },
+          { label: "Alumni Profile" },
         ]}
       />
 
