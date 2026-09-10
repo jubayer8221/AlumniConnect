@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
 
       <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }} sx={{ mb: 3 }}>
         {stats.map((stat) => (
-          <Grid key={stat.title} size={{ xs: 6, md: 6, md: 3 }}>
+          <Grid key={stat.title} size={{ xs: 6, md: 6 }}>
             <StatCard {...stat} />
           </Grid>
         ))}

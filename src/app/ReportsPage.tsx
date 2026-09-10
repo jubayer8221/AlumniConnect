@@ -92,7 +92,7 @@ export default function ReportsPage() {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {stats.map((s) => (
-          <Grid key={s.label} size={{ xs: 6, md: 6, md: 2 }}>
+          <Grid key={s.label} size={{ xs: 6, md: 6 }}>
             <CommonCard>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
                 {s.label}
