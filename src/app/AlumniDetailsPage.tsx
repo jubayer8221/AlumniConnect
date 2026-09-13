@@ -564,7 +564,7 @@ export default function AlumniDetailsPage() {
 
         <Grid size={{ xs: 12 }}>
           <Section
-            title="Professio` nal Information"
+            title="Professional Information"
             icon={<Briefcase size={20} />}
           >
             <InfoGrid>

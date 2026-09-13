@@ -60,16 +60,12 @@ const adminNav: NavItem[] = [
         path: "/alumni/profile",
         icon: <UserCircle size={16} />,
       },
-      {
-        label: "Profile Setup",
-        path: "/alumni/profile-setup",
-        icon: <FileText size={16} />,
-      },
-      {
-        label: "All Alumni",
-        path: "/alumni",
-        icon: <ListIcon size={16} />,
-      },
+      // {
+      //   label: "Profile Setup",
+      //   path: "/alumni/profile-setup",
+      //   icon: <FileText size={16} />,
+      // },
+
       // {
       //   label: "Alumni Directory",
       //   path: "/alumni/directory",
@@ -81,6 +77,12 @@ const adminNav: NavItem[] = [
         icon: <Shield size={16} />,
       },
     ],
+  },
+  {
+    label: "Alumni All",
+    path: "/alumni/directory",
+    // path: "/alumni",
+    icon: <ListIcon size={16} />,
   },
   {
     label: "Events",

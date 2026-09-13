@@ -52,41 +52,42 @@ const adminNav: NavItem[] = [
     icon: <LayoutDashboard size={22} />,
   },
   {
-    label: "Alumni",
-    path: "/alumni",
+    label: "Profile",
+    path: "/alumni/profile",
     icon: <Users size={22} />,
     children: [
       {
-        label: "All Alumni",
-        path: "/alumni",
+        label: "My Profile",
+        path: "/alumni/profile",
+        icon: <UserCircle size={16} />,
       },
-      {
-        label: "Profile Setup",
-        path: "/alumni/profile-setup",
-        icon: <FileText size={16} />,
-      },
+      // {
+      //   label: "Profile Setup",
+      //   path: "/alumni/profile-setup",
+      //   icon: <FileText size={16} />,
+      // },
       {
         label: "Settings & Privacy",
         path: "/alumni/settings-privacy",
         icon: <Shield size={16} />,
       },
-      {
-        label: "Alumni Directory",
-        path: "/alumni/directory",
-        icon: <Users size={16} />,
-      },
     ],
   },
   {
-    label: "Profile Setup",
-    path: "/profile-setup",
-    icon: <FileText size={22} />,
+    label: "Alumni List",
+    path: "/alumni/directory",
+    icon: <Users size={16} />,
   },
-  {
-    label: "Settings & Privacy",
-    path: "/settings-privacy",
-    icon: <Shield size={22} />,
-  },
+  // {
+  //   label: "All Alumni",
+  //   path: "/alumni",
+  //   icon: <Users size={16} />,
+  // },
+  // {
+  //   label: "Profile Setup",
+  //   path: "/profile-setup",
+  //   icon: <FileText size={22} />,
+  // },
   {
     label: "Events",
     path: "/events",
