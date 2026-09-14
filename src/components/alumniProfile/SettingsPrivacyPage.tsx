@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import {
   Box,
   Card,
@@ -17,6 +18,7 @@ import {
   Chip,
   ToggleButton,
   ToggleButtonGroup,
+  Grid,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import {
@@ -44,6 +46,9 @@ import {
   CommonPageHeader,
   CommonLoading,
   CommonEmptyState,
+  CommonInputField,
+  CommonSelectField,
+  CommonCheckbox,
 } from "@/components/common";
 import type {
   SectionPrivacy,
@@ -181,6 +186,17 @@ export default function SettingsPrivacyPage() {
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const alumniInfoForm = useForm({
+    defaultValues: {
+      username: selectedAlumni?.username ?? "",
+      password: "",
+      status: selectedAlumni?.status ?? "ACTIVE",
+      isVerified: !!selectedAlumni?.isVerified,
+      isMentor: !!selectedAlumni?.isMentor,
+      willingToMentor: !!selectedAlumni?.willingToMentor,
+    },
+  });
+
   useEffect(() => {
     if (user?.alumniId) {
       dispatch(fetchAlumniByIdAsync(user.alumniId));
@@ -194,12 +210,20 @@ export default function SettingsPrivacyPage() {
       const nextLegacy = selectedAlumni.privacy || defaultLegacyPrivacy;
       setSectionPrivacy(nextSection);
       setLegacyPrivacy(nextLegacy);
+      alumniInfoForm.reset({
+        username: selectedAlumni.username,
+        password: "",
+        status: selectedAlumni.status,
+        isVerified: !!selectedAlumni.isVerified,
+        isMentor: !!selectedAlumni.isMentor,
+        willingToMentor: !!selectedAlumni.willingToMentor,
+      });
       setInitialSnapshot({
         sectionPrivacy: nextSection,
         legacyPrivacy: nextLegacy,
       });
     }
-  }, [selectedAlumni]);
+  }, [selectedAlumni, alumniInfoForm]);
 
   const isDirty = useMemo(() => {
     if (!initialSnapshot) return false;
@@ -553,6 +577,98 @@ export default function SettingsPrivacyPage() {
               </Box>
             ))}
           </List>
+        </CardContent>
+      </Card>
+
+      {/* Alumni Information */}
+      <Card
+        sx={{
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          mt: 3,
+          boxShadow: "none",
+          opacity: isGlobalPrivate ? 0.55 : 1,
+          transition: "opacity 0.15s ease",
+        }}
+      >
+        <CardContent sx={{ p: { xs: 1, md: 1.5 } }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              px: { xs: 1.5, md: 2 },
+              pt: 1.5,
+            }}
+          >
+            <Shield size={18} color="#6366f1" />
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              Alumni Information
+            </Typography>
+          </Box>
+
+          <Box sx={{ px: { xs: 1.5, md: 2 }, pt: 2, pb: 1 }}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="username"
+                  label="Username"
+                  control={alumniInfoForm.control}
+                  disabled
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="password"
+                  label="New Password (leave blank to keep)"
+                  control={alumniInfoForm.control}
+                  type="password"
+                  placeholder="Leave blank to keep current password"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonSelectField
+                  name="status"
+                  label="Status"
+                  control={alumniInfoForm.control}
+                  options={[
+                    { label: "Active", value: "ACTIVE" },
+                    { label: "Inactive", value: "INACTIVE" },
+                    { label: "Pending", value: "PENDING" },
+                  ]}
+                  required
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Box sx={{ mt: 2 }}>
+                  <CommonCheckbox
+                    name="isVerified"
+                    label="Verified Alumni"
+                    control={alumniInfoForm.control}
+                  />
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Box sx={{ mt: 1 }}>
+                  <CommonCheckbox
+                    name="isMentor"
+                    label="Is Mentor"
+                    control={alumniInfoForm.control}
+                  />
+                </Box>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Box sx={{ mt: 1 }}>
+                  <CommonCheckbox
+                    name="willingToMentor"
+                    label="Willing to Mentor"
+                    control={alumniInfoForm.control}
+                  />
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
         </CardContent>
       </Card>
 

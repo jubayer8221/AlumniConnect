@@ -311,9 +311,8 @@ export default function ProfileSetupPage() {
   useEffect(() => {
     if (selectedAlumni) {
       reset({
-        firstName: selectedAlumni.firstName,
-        middleName: selectedAlumni.middleName || "",
-        lastName: selectedAlumni.lastName,
+        fullName: selectedAlumni.fullName || "",
+        nativeName: selectedAlumni.nativeName || "",
         gender: selectedAlumni.gender || "",
         dateOfBirth: selectedAlumni.dateOfBirth || "",
         bloodGroup: selectedAlumni.bloodGroup || "",
@@ -544,25 +543,17 @@ export default function ProfileSetupPage() {
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <CommonInputField
-                  name="firstName"
-                  label="First Name"
+                  name="fullName"
+                  label="Full Name"
                   control={control}
                   required
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <CommonInputField
-                  name="middleName"
-                  label="Middle Name"
+                  name="nativeName"
+                  label="Native Name"
                   control={control}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CommonInputField
-                  name="lastName"
-                  label="Last Name"
-                  control={control}
-                  required
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>

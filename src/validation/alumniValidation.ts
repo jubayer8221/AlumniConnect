@@ -1,9 +1,8 @@
 import * as yup from "yup";
 
 export const alumniSchema = yup.object({
-  firstName: yup.string().required("First name is required"),
-  middleName: yup.string().optional(),
-  lastName: yup.string().required("Last name is required"),
+  fullName: yup.string().required("Full name is required"),
+  nativeName: yup.string().optional(),
   gender: yup
     .string()
     .oneOf(["Male", "Female", "Other", ""], "Invalid gender")

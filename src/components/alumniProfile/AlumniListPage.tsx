@@ -43,8 +43,8 @@ import {
   CommonButton,
   CommonAvatar,
 } from "@/components/common";
-import AlumniCard from "@/app/components/AlumniCard";
-import AlumniFilters from "@/app/components/AlumniFilters";
+import AlumniCard from "@/components/alumniProfile/AlumniCard";
+import AlumniFilters from "@/components/alumniProfile/AlumniFilters";
 import type { GridColDef } from "@mui/x-data-grid";
 import type { Alumni } from "@/types/alumni";
 import { exportAlumniToCSV } from "@/utils/csvExport";

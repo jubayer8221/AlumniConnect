@@ -34,8 +34,8 @@ import {
   CommonAvatar,
   CommonStatusBadge,
 } from "@/components/common";
-import AlumniCard from "@/app/components/AlumniCard";
-import AlumniFilters from "@/app/components/AlumniFilters";
+import AlumniCard from "@/components/alumniProfile/AlumniCard";
+import AlumniFilters from "@/components/alumniProfile/AlumniFilters";
 
 const NAVY = "#132038";
 const TEAL = "#2dd4bf";

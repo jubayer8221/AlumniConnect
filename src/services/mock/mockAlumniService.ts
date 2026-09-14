@@ -174,18 +174,26 @@ export const mockAlumniService: AlumniService = {
     const existingIds = all.map((a) => a.alumniId);
     const alumniId = generateAlumniId(existingIds);
     const now = new Date().toISOString();
-    const fullName = data.middleName
-      ? `${data.firstName} ${data.middleName} ${data.lastName}`
-      : `${data.firstName} ${data.lastName}`;
+    const fullName =
+      data.fullName?.trim() ||
+      [data.firstName, data.middleName, data.lastName]
+        .filter(Boolean)
+        .join(" ") ||
+      "New Alumni";
+    const [firstNamePart, ...remainingNameParts] = fullName.split(/\s+/);
+    const lastNamePart = remainingNameParts.length
+      ? remainingNameParts[remainingNameParts.length - 1]
+      : "";
     const newAlumni: Alumni = {
       id: generateUUID(),
       alumniId,
       userId: generateUUID(),
       username: data.username,
-      firstName: data.firstName,
+      firstName: firstNamePart || fullName,
       middleName: data.middleName,
-      lastName: data.lastName,
+      lastName: lastNamePart || fullName,
       fullName,
+      nativeName: data.nativeName,
       profilePhoto: data.profilePhoto,
       gender: data.gender,
       dateOfBirth: data.dateOfBirth,
@@ -281,15 +289,17 @@ export const mockAlumniService: AlumniService = {
         data: null as unknown as Alumni,
       };
     const fullName =
-      data.middleName || all[idx].middleName
+      data.fullName?.trim() ||
+      (data.middleName || all[idx].middleName
         ? `${data.firstName || all[idx].firstName} ${data.middleName || all[idx].middleName || ""} ${data.lastName || all[idx].lastName}`
             .replace(/\s+/g, " ")
             .trim()
-        : `${data.firstName || all[idx].firstName} ${data.lastName || all[idx].lastName}`;
+        : `${data.firstName || all[idx].firstName} ${data.lastName || all[idx].lastName}`);
     const updated: Alumni = {
       ...all[idx],
       ...data,
       fullName,
+      nativeName: data.nativeName ?? all[idx].nativeName,
       updatedAt: new Date().toISOString(),
     } as Alumni;
     all[idx] = updated;

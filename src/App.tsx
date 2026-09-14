@@ -8,27 +8,31 @@ import { useAppDispatch, useAppSelector } from "@/hooks";
 import { restoreSessionAsync } from "@/Slice/authSlice";
 import AppLayout from "@/components/layout/AppLayout";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
-import { ToastContainer, CommonLoading } from "@/components/common";
+import {
+  ToastContainer,
+  CommonLoading,
+  NotFoundPage,
+} from "@/components/common";
 
-import LoginPage from "@/app/LoginPage";
-import UnauthorizedPage from "@/app/UnauthorizedPage";
-import AdminDashboardPage from "@/app/AdminDashboardPage";
-import AlumniListPage from "@/app/AlumniListPage";
-import AlumniFormPage from "@/app/AlumniFormPage";
-import AlumniDetailsPage from "@/app/AlumniDetailsPage";
-import AlumniDashboardPage from "@/app/AlumniDashboardPage";
-import ProfileSetupPage from "@/app/ProfileSetupPage";
-import SettingsPrivacyPage from "@/app/SettingsPrivacyPage";
-import AlumniDirectoryPage from "@/app/AlumniDirectoryPage";
-import AlumniAccountPage from "@/app/AlumniAccountPage";
-import EventListPage from "@/app/EventListPage";
-import EventDetailsPage from "@/app/EventDetailsPage";
-import EventFormPage from "@/app/EventFormPage";
-import NoticeListPage from "@/app/NoticeListPage";
-import NoticeDetailsPage from "@/app/NoticeDetailsPage";
-import NoticeFormPage from "@/app/NoticeFormPage";
-import ReportsPage from "@/app/ReportsPage";
-import SettingsPage from "@/app/SettingsPage";
+import LoginPage from "@/components/login/LoginPage";
+import UnauthorizedPage from "@/components/common/UnauthorizedPage";
+import AdminDashboardPage from "@/components/dashboard/AdminDashboardPage";
+import AlumniListPage from "@/components/alumniProfile/AlumniListPage";
+import AlumniFormPage from "@/components/alumniProfile/AlumniFormPage";
+import AlumniDetailsPage from "@/components/alumniProfile/AlumniDetailsPage";
+import AlumniDashboardPage from "@/components/dashboard/AlumniDashboardPage";
+import ProfileSetupPage from "@/components/alumniProfile/ProfileSetupPage";
+import SettingsPrivacyPage from "@/components/alumniProfile/SettingsPrivacyPage";
+import AlumniDirectoryPage from "@/components/alumniProfile/AlumniDirectoryPage";
+import AlumniAccountPage from "@/components/alumniProfile/AlumniAccountPage";
+import EventListPage from "@/components/event/EventListPage";
+import EventDetailsPage from "@/components/event/EventDetailsPage";
+import EventFormPage from "@/components/event/EventFormPage";
+import NoticeListPage from "@/components/notice/NoticeListPage";
+import NoticeDetailsPage from "@/components/notice/NoticeDetailsPage";
+import NoticeFormPage from "@/components/notice/NoticeFormPage";
+import ReportsPage from "@/components/report/ReportsPage";
+import SettingsPage from "@/components/settings/SettingsPage";
 
 function AppRoutes() {
   const dispatch = useAppDispatch();
@@ -44,6 +48,21 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route
+        path="/"
+        element={
+          isAuthenticated === undefined ? (
+            <CommonLoading message="Loading your session..." fullScreen />
+          ) : isAuthenticated ? (
+            <Navigate
+              to={role === "ADMIN" ? "/dashboard" : "/alumni/dashboard"}
+              replace
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
       <Route
         path="/login"
         element={
@@ -112,15 +131,14 @@ function AppRoutes() {
       <Route
         path="*"
         element={
-          <Navigate
-            to={
+          <NotFoundPage
+            homePath={
               isAuthenticated
                 ? role === "ADMIN"
                   ? "/dashboard"
                   : "/alumni/dashboard"
                 : "/login"
             }
-            replace
           />
         }
       />

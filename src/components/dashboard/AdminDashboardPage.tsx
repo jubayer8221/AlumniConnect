@@ -32,8 +32,8 @@ import {
   CommonEmptyState,
   CommonPageHeader,
 } from "@/components/common";
-import StatCard from "@/app/components/StatCard";
-import DashboardCharts from "@/app/components/DashboardCharts";
+import StatCard from "@/components/dashboard/StatCard";
+import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import { fromNow, formatDate } from "@/utils/dateUtils";
 import { appConfig } from "@/config/appConfig";
 
@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
       value: data.summary.totalAlumni,
       icon: <Users size={22} />,
       color: "#6366f1",
-      trend: 12.5,
+      // trend: 12.5,
     },
     {
       title: "Active",
@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
 
       <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }} sx={{ mb: 3 }}>
         {stats.map((stat) => (
-          <Grid key={stat.title} size={{ xs: 6, md: 6 }}>
+          <Grid key={stat.title} size={{ xs: 6, md: 4, lg: 3 }}>
             <StatCard {...stat} />
           </Grid>
         ))}

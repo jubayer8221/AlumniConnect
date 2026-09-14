@@ -13,10 +13,11 @@ export interface Alumni {
   alumniId: string;
   userId: string;
   username: string;
-  firstName: string;
+  firstName?: string;
   middleName?: string;
-  lastName: string;
+  lastName?: string;
   fullName: string;
+  nativeName?: string;
   profilePhoto?: string;
   gender?: Gender;
   dateOfBirth?: string;
@@ -164,9 +165,11 @@ export interface AlumniFilters {
 }
 
 export interface CreateAlumniRequest {
-  firstName: string;
+  firstName?: string;
   middleName?: string;
-  lastName: string;
+  lastName?: string;
+  fullName?: string;
+  nativeName?: string;
   gender?: Gender;
   dateOfBirth?: string;
   bloodGroup?: string;
