@@ -42,11 +42,11 @@ export default function HeaderProfileDialog({
         paper: { sx: { borderRadius: 2, mt: 1, minWidth: 220 } },
       }}
     >
-      <Typography
+      {/* <Typography
         sx={{ px: 2, pt: 1.5, pb: 1, fontSize: "0.9rem", fontWeight: 600 }}
       >
         {username || "Account"}
-      </Typography>
+      </Typography> */}
       <List sx={{ pt: 0 }}>
         <ListItemButton
           onClick={() => go("/alumni/profile")}
