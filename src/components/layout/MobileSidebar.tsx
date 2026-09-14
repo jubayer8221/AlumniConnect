@@ -131,12 +131,17 @@ const alumniNav: NavItem[] = [
         path: "/alumni/settings-privacy",
         icon: <Shield size={16} />,
       },
-      {
-        label: "All Alumni",
-        path: "/alumni/directory",
-        icon: <Users size={16} />,
-      },
+      // {
+      //   label: "All Alumni",
+      //   path: "/alumni/directory",
+      //   icon: <Users size={16} />,
+      // },
     ],
+  },
+  {
+    label: "Alumni List",
+    path: "/alumni/directory",
+    icon: <Users size={16} />,
   },
   {
     label: "Events",
@@ -458,7 +463,7 @@ export default function MobileSidebar() {
         {/* Bottom Section */}
         <Box sx={{ p: 2 }}>
           {/* Logout */}
-          <ListItem disablePadding>
+          {/* <ListItem disablePadding>
             <ListItemButton
               onClick={() => dispatch(logoutAsync())}
               sx={{
@@ -493,7 +498,7 @@ export default function MobileSidebar() {
                 }}
               />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
 
           {/* User Profile */}
           {user && (

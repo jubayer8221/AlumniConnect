@@ -62,6 +62,7 @@ import {
 import { formatDate } from "@/utils/dateUtils";
 import { appConfig } from "@/config/appConfig";
 import type { Alumni } from "@/types/alumni";
+import AlumniProfileCard from "@/components/alumniProfile/AlumniProfileCard";
 
 // Joins whichever address fragments exist into one readable line instead of
 // listing village/union/thana/district/division/country as separate rows.
@@ -259,13 +260,9 @@ export default function AlumniDetailsPage() {
         ]}
         actions={
           <>
-            <CommonButton
-              variant="outlined"
-              startIcon={<ArrowLeft size={18} />}
-              onClick={() => navigate(-1)}
-            >
-              Back
-            </CommonButton>
+            <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
+              <MoreVertical size={20} />
+            </IconButton>
             {(isAdmin || isOwner) && (
               <CommonButton
                 variant="outlined"
@@ -275,9 +272,14 @@ export default function AlumniDetailsPage() {
                 Edit Profile
               </CommonButton>
             )}
-            <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
-              <MoreVertical size={20} />
-            </IconButton>
+            <CommonButton
+              variant="outlined"
+              startIcon={<ArrowLeft size={18} />}
+              onClick={() => navigate(-1)}
+            >
+              Back
+            </CommonButton>
+
             <Menu
               anchorEl={menuAnchor}
               open={!!menuAnchor}
@@ -330,129 +332,15 @@ export default function AlumniDetailsPage() {
       />
 
       {/* Profile Header */}
-      <Card
-        sx={{
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          mb: 3,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          sx={{
-            height: 120,
-            background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
-          }}
+      <Box>
+        <AlumniProfileCard
+          alumni={alumni}
+          completion={completion}
+          missing={missing}
+          isOwner={isOwner}
+          isAdmin={isAdmin}
         />
-        <CardContent sx={{ p: 3, pt: 0, mt: -6 }}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 3,
-              alignItems: { sm: "flex-end" },
-            }}
-          >
-            <CommonAvatar
-              src={alumni.profilePhoto}
-              name={alumni.fullName}
-              size={120}
-              sx={{
-                border: "4px solid white",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            />
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  flexWrap: "wrap",
-                }}
-              >
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  {alumni.fullName}
-                </Typography>
-                {alumni.isVerified && (
-                  <Chip
-                    icon={<BadgeCheck size={14} />}
-                    label="Verified"
-                    size="small"
-                    color="success"
-                  />
-                )}
-                <CommonStatusBadge status={alumni.status} />
-              </Box>
-              {alumni.designation && (
-                <Typography
-                  variant="body1"
-                  sx={{ color: "text.secondary", mt: 0.25 }}
-                >
-                  {alumni.designation}
-                  {alumni.companyName ? ` at ${alumni.companyName}` : ""}
-                </Typography>
-              )}
-              <Box
-                sx={{ display: "flex", gap: 2.5, mt: 1.25, flexWrap: "wrap" }}
-              >
-                <MetaItem icon={<IdCard size={14} />}>
-                  {alumni.alumniId}
-                </MetaItem>
-                {alumni.departmentName && (
-                  <MetaItem icon={<GraduationCap size={14} />}>
-                    {alumni.departmentName}
-                  </MetaItem>
-                )}
-                {alumni.batch && (
-                  <MetaItem icon={<Award size={14} />}>
-                    Batch {alumni.batch}
-                  </MetaItem>
-                )}
-                {alumni.graduationYear && (
-                  <MetaItem icon={<Calendar size={14} />}>
-                    Graduated {alumni.graduationYear}
-                  </MetaItem>
-                )}
-                {alumni.city && (
-                  <MetaItem icon={<MapPin size={14} />}>
-                    {alumni.city}
-                    {alumni.country ? `, ${alumni.country}` : ""}
-                  </MetaItem>
-                )}
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Profile Completion */}
-          <Box sx={{ mt: 3 }}>
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}
-            >
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                Profile Completion
-              </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {completion}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={completion}
-              sx={{ height: 8, borderRadius: 4 }}
-            />
-            {missing.length > 0 && (isOwner || isAdmin) && (
-              <Typography
-                variant="caption"
-                sx={{ mt: 0.5, display: "block", color: "text.secondary" }}
-              >
-                Missing: {missing.join(", ")}
-              </Typography>
-            )}
-          </Box>
-        </CardContent>
-      </Card>
+      </Box>
 
       <Grid container spacing={0}>
         <Grid size={{ xs: 12 }}>

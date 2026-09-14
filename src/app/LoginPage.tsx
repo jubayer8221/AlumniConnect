@@ -31,6 +31,7 @@ import { loginSchema } from "@/validation/authValidation";
 import { CommonInputField, CommonButton } from "@/components/common";
 import { appConfig } from "@/config/appConfig";
 import type { LoginRequest } from "@/types/auth";
+import { Image } from "@mui/icons-material";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -299,6 +300,11 @@ export default function LoginPage() {
                   boxShadow: "0 8px 20px rgba(99,102,241,0.3)",
                 }}
               >
+                <Box
+                  component="img"
+                  src="/image/favicon.png"
+                  alt="Description"
+                />
                 <GraduationCap size={28} color="white" />
               </Box>
               <Box>

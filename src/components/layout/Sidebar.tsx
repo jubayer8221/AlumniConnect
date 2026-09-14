@@ -79,7 +79,7 @@ const adminNav: NavItem[] = [
     ],
   },
   {
-    label: "Alumni All",
+    label: "Alumni List",
     path: "/alumni/directory",
     // path: "/alumni",
     icon: <ListIcon size={16} />,
@@ -127,12 +127,12 @@ const alumniNav: NavItem[] = [
         path: "/alumni/settings-privacy",
         icon: <Shield size={16} />,
       },
-      {
-        label: "All Alumni",
-        path: "/alumni/directory",
-        icon: <Users size={16} />,
-      },
     ],
+  },
+  {
+    label: "Alumni List",
+    path: "/alumni/directory",
+    icon: <Users size={16} />,
   },
   {
     label: "Events",
