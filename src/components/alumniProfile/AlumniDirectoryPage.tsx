@@ -15,7 +15,7 @@ import {
   Chip,
   alpha,
 } from "@mui/material";
-import { List, LayoutGrid, Eye, Pencil, BadgeCheck } from "lucide-react";
+import { List, LayoutGrid, Eye, Pencil, BadgeCheck, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -33,6 +33,7 @@ import {
   CommonLoading,
   CommonAvatar,
   CommonStatusBadge,
+  CommonButton,
 } from "@/components/common";
 import AlumniCard from "@/components/alumniProfile/AlumniCard";
 import AlumniFilters from "@/components/alumniProfile/AlumniFilters";
@@ -43,9 +44,11 @@ const TEAL = "#2dd4bf";
 export default function AlumniDirectoryPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { role } = useAppSelector((s) => s.auth);
   const { items, loading, totalCount, pageNumber, pageSize, search } =
     useAppSelector((s) => s.alumni);
   const [view, setView] = useState<"table" | "grid">("grid");
+  const isAdmin = role === "ADMIN";
 
   useEffect(() => {
     dispatch(fetchAlumniAsync());
@@ -60,6 +63,17 @@ export default function AlumniDirectoryPage() {
           { label: "Home", path: "/alumni/dashboard" },
           { label: "Directory" },
         ]}
+        actions={
+          isAdmin ? (
+            <CommonButton
+              variant="contained"
+              startIcon={<Plus size={18} />}
+              onClick={() => navigate("/alumni/create")}
+            >
+              Add Alumni
+            </CommonButton>
+          ) : null
+        }
       />
 
       <Box
