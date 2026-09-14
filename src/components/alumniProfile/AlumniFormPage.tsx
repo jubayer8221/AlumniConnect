@@ -7,6 +7,9 @@ import {
   Typography,
   Divider,
   Button,
+  alpha,
+  IconButton,
+  Paper,
 } from "@mui/material";
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -36,6 +39,7 @@ import {
 } from "@/components/common";
 import type { CreateAlumniRequest, EducationEntry } from "@/types/alumni";
 import { generateUUID } from "@/utils/generateId";
+import { theme } from "@/store/theme";
 
 const genderOptions = [
   { label: "Male", value: "Male" },
@@ -864,7 +868,7 @@ export default function AlumniFormPage() {
                   startIcon={<Trash2 size={16} />}
                   onClick={() => removeEducation(entry.id)}
                 >
-                  Remove
+                  {/* Remove */}
                 </Button>
               </Box>
               <Grid container spacing={2}>
@@ -1029,87 +1033,184 @@ export default function AlumniFormPage() {
 
         <Section title="Family Information">
           {familyFields.length === 0 && (
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-              No family members added yet. Click "Add Family Member" to add one.
-            </Typography>
-          )}
-          {familyFields.map((field, index) => (
             <Box
-              key={field.id}
               sx={{
-                mb: 2,
-                p: 2,
-                border: "1px solid",
+                p: 4,
+                textAlign: "center",
+                border: "1px dashed",
                 borderColor: "divider",
-                borderRadius: 2,
-                position: "relative",
+                borderRadius: 3,
+                bgcolor: (theme) => alpha(theme.palette.action.hover, 0.02),
+                mb: 2,
               }}
             >
-              <Box sx={{ position: "absolute", top: 8, right: 8 }}>
-                <Button
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 1.5 }}
+              >
+                No family members added yet.
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Plus size={16} />}
+                onClick={() =>
+                  appendFamily({
+                    name: "",
+                    nameNative: "",
+                    relation: "",
+                    occupation: "",
+                    phone: "",
+                  } as never)
+                }
+                sx={{ textTransform: "none", borderRadius: 2 }}
+              >
+                Add First Member
+              </Button>
+            </Box>
+          )}
+
+          {familyFields.map((field, index) => (
+            <Paper
+              key={field.id}
+              elevation={0}
+              sx={{
+                mb: 2.5,
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 3,
+                overflow: "hidden",
+                transition: "border-color 0.2s ease",
+                "&:hover": {
+                  borderColor: (theme) =>
+                    alpha(theme.palette.primary.main, 0.4),
+                },
+              }}
+            >
+              {/* Form Item Header */}
+              <Box
+                sx={{
+                  px: 2.5,
+                  py: 1.5,
+                  bgcolor: (theme) => alpha(theme.palette.action.hover, 0.03),
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 600,
+                    color: "text.secondary",
+                    fontSize: "0.825rem",
+                  }}
+                >
+                  Family Member #{index + 1}
+                </Typography>
+
+                <IconButton
                   size="small"
                   color="error"
-                  startIcon={<Trash2 size={16} />}
                   onClick={() => removeFamily(index)}
-                  sx={{ minWidth: "auto", textTransform: "none" }}
+                  sx={{
+                    borderRadius: 1.5,
+                    bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                    "&:hover": {
+                      bgcolor: (theme) => alpha(theme.palette.error.main, 0.16),
+                    },
+                  }}
                 >
-                  Remove
-                </Button>
+                  <Trash2 size={16} />
+                </IconButton>
               </Box>
-              <Grid container spacing={2} sx={{ pr: "100px" }}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <CommonInputField
-                    name={`familyMembers.${index}.name` as never}
-                    label="Full Name"
-                    control={control}
-                    required
-                  />
+
+              {/* Inputs Grid */}
+              <Box sx={{ p: 2.5 }}>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`familyMembers.${index}.name` as never}
+                      label="Full Name"
+                      control={control}
+                      required
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`familyMembers.${index}.nameNative` as never}
+                      label="Name (Native)"
+                      control={control}
+                      required
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <CommonInputField
+                      name={`familyMembers.${index}.relation` as never}
+                      label="Relation"
+                      control={control}
+                      required
+                      placeholder="e.g. Father, Spouse"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <CommonInputField
+                      name={`familyMembers.${index}.occupation` as never}
+                      label="Occupation"
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <CommonInputField
+                      name={`familyMembers.${index}.phone` as never}
+                      label="Phone"
+                      control={control}
+                    />
+                  </Grid>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <CommonInputField
-                    name={`familyMembers.${index}.relation` as never}
-                    label="Relation"
-                    control={control}
-                    required
-                    placeholder="e.g. Father, Mother, Spouse"
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <CommonInputField
-                    name={`familyMembers.${index}.occupation` as never}
-                    label="Occupation"
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <CommonInputField
-                    name={`familyMembers.${index}.phone` as never}
-                    label="Phone"
-                    control={control}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
+              </Box>
+            </Paper>
           ))}
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Plus size={18} />}
-            onClick={() =>
-              appendFamily({
-                name: "",
-                relation: "",
-                occupation: "",
-                phone: "",
-              } as never)
-            }
-            sx={{ textTransform: "none", mt: 1 }}
-          >
-            Add Family Member
-          </Button>
+
+          {/* Bottom Action Button */}
+          {familyFields.length > 0 && (
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Plus size={18} />}
+              onClick={() =>
+                appendFamily({
+                  name: "",
+                  nameNative: "",
+                  relation: "",
+                  occupation: "",
+                  phone: "",
+                } as never)
+              }
+              sx={{
+                py: 1.25,
+                borderStyle: "dashed",
+                borderRadius: 2.5,
+                textTransform: "none",
+                fontWeight: 600,
+                borderColor: "divider",
+                color: "text.primary",
+                "&:hover": {
+                  borderStyle: "dashed",
+                  borderColor: "primary.main",
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                },
+              }}
+            >
+              Add Another Family Member
+            </Button>
+          )}
         </Section>
 
-        <Section title="Alumni Information">
+        {/* <Section title="Alumni Information">
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <CommonInputField
@@ -1161,7 +1262,7 @@ export default function AlumniFormPage() {
               />
             </Grid>
           </Grid>
-        </Section>
+        </Section> */}
 
         <Section title="Biography">
           <CommonTextArea

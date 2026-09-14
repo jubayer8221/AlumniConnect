@@ -14,7 +14,14 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import { Download, BarChart3 } from "lucide-react";
+import {
+  Download,
+  BarChart3,
+  Users,
+  User,
+  Star,
+  CheckCircle,
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { fetchDashboardDataAsync } from "@/Slice/dashboardSlice";
 import { fetchAlumniAsync } from "@/Slice/alumniSlice";
@@ -37,6 +44,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import StatCard from "../dashboard/StatCard";
 
 const PIE_COLORS = [
   "#3b82f6",
@@ -62,12 +70,36 @@ export default function ReportsPage() {
   if (loading && !data) return <CommonLoading />;
 
   const stats = [
-    { label: "Total Alumni", value: data?.summary.totalAlumni || 0 },
-    { label: "Male Alumni", value: data?.summary.maleAlumni || 0 },
-    { label: "Female Alumni", value: data?.summary.femaleAlumni || 0 },
-    { label: "Other", value: data?.summary.otherAlumni || 0 },
-    { label: "Mentor Count", value: data?.summary.mentors || 0 },
-    { label: "Verified Alumni", value: data?.summary.verifiedAlumni || 0 },
+    {
+      title: "Total Alumni",
+      value: data?.summary.totalAlumni ?? 0,
+      icon: <Users size={20} />,
+    },
+    {
+      title: "Male Alumni",
+      value: data?.summary.maleAlumni ?? 0,
+      icon: <User size={20} />,
+    },
+    {
+      title: "Female Alumni",
+      value: data?.summary.femaleAlumni ?? 0,
+      icon: <User size={20} />,
+    },
+    {
+      title: "Other",
+      value: data?.summary.otherAlumni ?? 0,
+      icon: <User size={20} />,
+    },
+    {
+      title: "Mentor Count",
+      value: data?.summary.mentors ?? 0,
+      icon: <Star size={20} />,
+    },
+    {
+      title: "Verified Alumni",
+      value: data?.summary.verifiedAlumni ?? 0,
+      icon: <CheckCircle size={20} />,
+    },
   ];
 
   return (
@@ -92,19 +124,8 @@ export default function ReportsPage() {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {stats.map((s) => (
-          <Grid key={s.label} size={{ xs: 6, md: 6 }}>
-            <CommonCard>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {s.label}
-              </Typography>
-              <Typography
-                variant="h5"
-                color="primary.main"
-                sx={{ fontWeight: 700 }}
-              >
-                {s.value}
-              </Typography>
-            </CommonCard>
+          <Grid key={s.title} size={{ xs: 12, sm: 6, xl: 3 }}>
+            <StatCard {...s} />
           </Grid>
         ))}
       </Grid>
