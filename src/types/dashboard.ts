@@ -36,6 +36,7 @@ export interface DashboardData {
     id: string;
     fullName: string;
     alumniId: string;
+    profilePhoto?: string;
     departmentName?: string;
     createdAt: string;
   }>;
@@ -57,6 +58,7 @@ export interface DashboardData {
     id: string;
     fullName: string;
     alumniId: string;
+    profilePhoto?: string;
     email: string;
   }>;
 }

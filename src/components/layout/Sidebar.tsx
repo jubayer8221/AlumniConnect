@@ -482,6 +482,8 @@ export default function Sidebar() {
             }}
           >
             <Avatar
+              src={user.profilePhoto}
+              alt={user.displayName || user.username || "User"}
               sx={{
                 width: 32,
                 height: 32,
@@ -492,7 +494,7 @@ export default function Sidebar() {
                 flexShrink: 0,
               }}
             >
-              {user.username?.[0]?.toUpperCase() || "U"}
+              {!user.profilePhoto && (user.username?.[0]?.toUpperCase() || "U")}
             </Avatar>
 
             {!collapsed && (

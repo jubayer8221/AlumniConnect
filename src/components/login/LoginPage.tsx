@@ -16,7 +16,6 @@ import {
   Checkbox,
 } from "@mui/material";
 import {
-  GraduationCap,
   LogIn,
   Eye,
   EyeOff,
@@ -80,7 +79,7 @@ export default function LoginPage() {
       sx={{
         minHeight: "100vh",
         display: "flex",
-        bgcolor: "#f8fafc",
+        bgcolor: "background.default",
       }}
     >
       {/* Left Side: Modern Visual Banner */}
@@ -94,7 +93,7 @@ export default function LoginPage() {
           position: "relative",
           overflow: "hidden",
           background:
-            "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)",
+            "linear-gradient(135deg, #115e59 0%, #18312e 62%, #102a28 100%)",
         }}
       >
         {/* Glow Effects */}
@@ -107,7 +106,7 @@ export default function LoginPage() {
             height: 450,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(42,157,143,0.22) 0%, transparent 70%)",
             filter: "blur(50px)",
           }}
         />
@@ -120,7 +119,7 @@ export default function LoginPage() {
             height: 500,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(236,72,153,0.2) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(194,65,12,0.18) 0%, transparent 70%)",
             filter: "blur(60px)",
           }}
         />
@@ -135,11 +134,16 @@ export default function LoginPage() {
               width: 48,
               height: 48,
               borderRadius: 3,
-              background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
-              boxShadow: "0 8px 24px rgba(99,102,241,0.4)",
+              bgcolor: "primary.main",
+              boxShadow: "0 8px 24px rgba(15,118,110,0.35)",
             }}
           >
-            <GraduationCap size={28} color="white" />
+            <Box
+              component="img"
+              src="/image/logo.png"
+              alt={`${appConfig.appName} logo`}
+              sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+            />
           </Box>
           <Box>
             <Typography
@@ -177,7 +181,7 @@ export default function LoginPage() {
             <Box
               component="span"
               sx={{
-                background: "linear-gradient(135deg, #818cf8 0%, #f472b6 100%)",
+                background: "linear-gradient(135deg, #7dd3c7 0%, #f4a261 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -205,12 +209,12 @@ export default function LoginPage() {
               {
                 icon: <Users size={20} />,
                 label: "5,000+ Alumni",
-                color: "#818cf8",
+                color: "#7dd3c7",
               },
               {
                 icon: <TrendingUp size={20} />,
                 label: "Active Network",
-                color: "#f472b6",
+                color: "#f4a261",
               },
               {
                 icon: <Award size={20} />,
@@ -276,7 +280,7 @@ export default function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           p: { xs: 3, sm: 6 },
-          bgcolor: "#ffffff",
+          bgcolor: "background.paper",
         }}
       >
         <Box sx={{ maxWidth: 440, width: "100%" }}>
@@ -298,17 +302,22 @@ export default function LoginPage() {
                 width: 44,
                 height: 44,
                 borderRadius: 2.5,
-                background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+                bgcolor: "primary.main",
               }}
             >
-              <GraduationCap size={24} color="white" />
+              <Box
+                component="img"
+                src="/image/logo.png"
+                alt={`${appConfig.appName} logo`}
+                sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
             </Box>
             <Box>
               <Typography
                 sx={{
                   fontSize: "1.25rem",
                   fontWeight: 800,
-                  color: "#0f172a",
+                  color: "text.primary",
                   letterSpacing: "-0.02em",
                 }}
               >
@@ -325,7 +334,7 @@ export default function LoginPage() {
               variant="h4"
               sx={{
                 fontWeight: 800,
-                color: "#0f172a",
+                color: "text.primary",
                 letterSpacing: "-0.02em",
                 mb: 1,
               }}
@@ -428,8 +437,8 @@ export default function LoginPage() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       size="small"
                       sx={{
-                        color: "#6366f1",
-                        "&.Mui-checked": { color: "#6366f1" },
+                        color: "primary.main",
+                        "&.Mui-checked": { color: "primary.main" },
                       }}
                     />
                   }
@@ -447,7 +456,7 @@ export default function LoginPage() {
                     fontSize: "0.85rem",
                     fontWeight: 600,
                     textTransform: "none",
-                    color: "#6366f1",
+                    color: "primary.main",
                     "&:hover": {
                       bgcolor: "transparent",
                       textDecoration: "underline",
@@ -467,9 +476,9 @@ export default function LoginPage() {
                   py: 1.4,
                   fontSize: "0.95rem",
                   fontWeight: 600,
-                  bgcolor: "#6366f1",
+                  bgcolor: "primary.main",
                   borderRadius: 2.5,
-                  "&:hover": { bgcolor: "#4f46e5" },
+                  "&:hover": { bgcolor: "primary.dark" },
                 }}
               >
                 Sign In
@@ -483,8 +492,8 @@ export default function LoginPage() {
               label="Quick Demo Login"
               size="small"
               sx={{
-                bgcolor: "rgba(99,102,241,0.08)",
-                color: "#6366f1",
+                bgcolor: "rgba(15,118,110,0.08)",
+                color: "primary.main",
                 fontWeight: 600,
                 border: "none",
               }}
@@ -497,15 +506,15 @@ export default function LoginPage() {
                 label: "Admin Portal",
                 username: "admin",
                 password: "admin123",
-                color: "#6366f1",
-                bg: "rgba(99,102,241,0.08)",
+                color: "#0f766e",
+                bg: "rgba(15,118,110,0.08)",
               },
               {
                 label: "Rahim Hasan (Alumni)",
                 username: "rahim.hasan",
                 password: "123456",
-                color: "#ec4899",
-                bg: "rgba(236,72,153,0.08)",
+                color: "#c2410c",
+                bg: "rgba(194,65,12,0.08)",
               },
               {
                 label: "Nusrat Jahan (Alumni)",

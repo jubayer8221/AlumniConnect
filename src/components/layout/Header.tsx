@@ -132,6 +132,8 @@ export default function Header() {
           onClick={(e) => setopenDialog(e.currentTarget)}
         >
           <Avatar
+            src={user?.profilePhoto}
+            alt={user?.displayName || user?.username || "User"}
             sx={{
               width: 36,
               height: 36,
@@ -141,7 +143,7 @@ export default function Header() {
               fontWeight: 700,
             }}
           >
-            {user?.username?.[0]?.toUpperCase()}
+            {!user?.profilePhoto && user?.username?.[0]?.toUpperCase()}
           </Avatar>
         </Box>
 

@@ -183,19 +183,21 @@ export default function AdminDashboardPage() {
                     >
                       <ListItemAvatar>
                         <Avatar
+                          src={alum?.profilePhoto}
+                          alt={alum?.fullName}
                           sx={{
                             background:
                               "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
                             fontWeight: 700,
                           }}
                         >
-                          {alum.fullName[0]}
+                          {!alum?.profilePhoto && alum?.fullName[0]}
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
                         primary={
                           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {alum.fullName}
+                            {alum?.fullName}
                           </Typography>
                         }
                         secondary={
@@ -434,13 +436,15 @@ export default function AdminDashboardPage() {
                       >
                         <ListItemAvatar>
                           <Avatar
+                            src={alum?.profilePhoto}
+                            alt={alum?.fullName}
                             sx={{
                               bgcolor: "rgba(239,68,68,0.1)",
                               color: "#ef4444",
                               fontWeight: 700,
                             }}
                           >
-                            {alum.fullName[0]}
+                            {!alum?.profilePhoto && alum?.fullName[0]}
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText
@@ -449,7 +453,7 @@ export default function AdminDashboardPage() {
                               variant="body2"
                               sx={{ fontWeight: 600 }}
                             >
-                              {alum.fullName}
+                              {alum?.fullName}
                             </Typography>
                           }
                           secondary={
@@ -457,7 +461,7 @@ export default function AdminDashboardPage() {
                               variant="caption"
                               sx={{ color: "text.secondary" }}
                             >
-                              {alum.email}
+                              {alum?.email}
                             </Typography>
                           }
                         />

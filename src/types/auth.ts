@@ -7,6 +7,7 @@ export interface User {
   alumniId?: string;
   email?: string;
   displayName?: string;
+  profilePhoto?: string;
 }
 
 export interface AuthSession {

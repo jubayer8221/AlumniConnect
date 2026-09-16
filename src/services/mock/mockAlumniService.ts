@@ -459,6 +459,7 @@ export const mockAlumniService: AlumniService = {
         id: a.id,
         fullName: a.fullName,
         alumniId: a.alumniId,
+        profilePhoto: a.profilePhoto,
         departmentName: a.departmentName,
         createdAt: a.createdAt,
       }));
@@ -470,6 +471,7 @@ export const mockAlumniService: AlumniService = {
         id: a.id,
         fullName: a.fullName,
         alumniId: a.alumniId,
+        profilePhoto: a.profilePhoto,
         email: a.email,
       }));
 
