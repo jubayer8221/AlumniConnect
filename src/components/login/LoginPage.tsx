@@ -134,7 +134,7 @@ export default function LoginPage() {
               width: 48,
               height: 48,
               borderRadius: 3,
-              bgcolor: "primary.main",
+              // bgcolor: "primary.main",
               boxShadow: "0 8px 24px rgba(15,118,110,0.35)",
             }}
           >
@@ -302,7 +302,7 @@ export default function LoginPage() {
                 width: 44,
                 height: 44,
                 borderRadius: 2.5,
-                bgcolor: "primary.main",
+                // bgcolor: "primary.main",
               }}
             >
               <Box
