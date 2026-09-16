@@ -43,10 +43,10 @@ export default function Header() {
       position="sticky"
       elevation={0}
       sx={{
-        bgcolor: "primary.dark",
+        bgcolor: "background.default",
         borderBottom: "1px solid",
-        borderColor: "rgba(255,255,255,0.12)",
-        color: "common.white",
+        borderColor: "divider",
+        color: "text.primary",
         backdropFilter: "blur(8px)",
       }}
     >
@@ -111,8 +111,8 @@ export default function Header() {
           sx={{
             mr: 1,
             color: "inherit",
-            bgcolor: "rgba(255,255,255,0.08)",
-            "&:hover": { bgcolor: "rgba(255,255,255,0.16)" },
+            bgcolor: "action.hover",
+            "&:hover": { bgcolor: "action.selected" },
           }}
         >
           <Bell size={20} />
@@ -135,7 +135,8 @@ export default function Header() {
             sx={{
               width: 36,
               height: 36,
-              background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
               fontSize: "0.875rem",
               fontWeight: 700,
             }}

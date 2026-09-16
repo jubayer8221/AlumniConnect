@@ -206,19 +206,13 @@ export default function Sidebar() {
                 py: 1.25,
                 px: 1.5,
                 minHeight: 44,
-                color: active ? "white" : "rgba(255,255,255,0.6)",
-                background: active
-                  ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                  : "transparent",
-                boxShadow: active
-                  ? "0 4px 12px rgba(99, 102, 241, 0.3)"
-                  : "none",
+                color: active ? "primary.main" : "text.secondary",
+                bgcolor: active ? "action.selected" : "transparent",
+                boxShadow: "none",
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  bgcolor: active
-                    ? "rgba(99,102,241,0.8)"
-                    : "rgba(255,255,255,0.08)",
-                  color: "white",
+                  bgcolor: active ? "action.selected" : "action.hover",
+                  color: "primary.main",
                 },
               }}
             >
@@ -276,15 +270,13 @@ export default function Sidebar() {
                         py: 0.75,
                         px: 2,
                         minHeight: 36,
-                        color: childActive
-                          ? "#a5b4fc"
-                          : "rgba(255,255,255,0.5)",
+                        color: childActive ? "primary.main" : "text.secondary",
                         "&.Mui-selected": {
-                          bgcolor: "rgba(99,102,241,0.15)",
+                          bgcolor: "action.selected",
                         },
                         "&:hover": {
-                          bgcolor: "rgba(255,255,255,0.06)",
-                          color: "white",
+                          bgcolor: "action.hover",
+                          color: "primary.main",
                         },
                       }}
                     >
@@ -332,17 +324,13 @@ export default function Sidebar() {
             px: collapsed ? 1 : 1.5,
             minHeight: 44,
             justifyContent: collapsed ? "center" : "flex-start",
-            color: active ? "white" : "rgba(255,255,255,0.6)",
-            background: active
-              ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-              : "transparent",
-            boxShadow: active ? "0 4px 12px rgba(99, 102, 241, 0.3)" : "none",
+            color: active ? "primary.main" : "text.secondary",
+            bgcolor: active ? "action.selected" : "transparent",
+            boxShadow: "none",
             transition: "all 0.2s ease",
             "&:hover": {
-              bgcolor: active
-                ? "rgba(99,102,241,0.8)"
-                : "rgba(255,255,255,0.08)",
-              color: "white",
+              bgcolor: active ? "action.selected" : "action.hover",
+              color: "primary.main",
             },
           }}
         >
@@ -378,11 +366,15 @@ export default function Sidebar() {
     <Box
       sx={{
         width: collapsed ? 72 : 264,
+        minWidth: collapsed ? 72 : 264,
+        boxSizing: "border-box",
         flexShrink: 0,
         height: "100vh",
         position: "sticky",
         top: 0,
-        bgcolor: "primary.dark",
+        bgcolor: "background.default",
+        borderRight: "1px solid",
+        borderColor: "divider",
         transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         display: { xs: "none", md: "flex" },
         flexDirection: "column",
@@ -408,12 +400,17 @@ export default function Sidebar() {
             width: 40,
             height: 40,
             borderRadius: 2,
-            background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+            // bgcolor: "primary.main",
             flexShrink: 0,
-            boxShadow: "0 4px 12px rgba(99, 102, 241, 0.4)",
+            boxShadow: "none",
           }}
         >
-          <GraduationCap size={22} color="white" />
+          <Box
+            component="img"
+            src="/image/logo.png"
+            alt={`${appConfig.appName} logo`}
+            sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+          />
         </Box>
 
         {!collapsed && (
@@ -422,7 +419,7 @@ export default function Sidebar() {
               sx={{
                 fontWeight: 800,
                 fontSize: "1.1rem",
-                color: "white",
+                color: "text.primary",
                 lineHeight: 1.2,
                 letterSpacing: "-0.02em",
               }}
@@ -433,7 +430,7 @@ export default function Sidebar() {
             <Typography
               sx={{
                 fontSize: "0.7rem",
-                color: "rgba(255,255,255,0.5)",
+                color: "text.secondary",
                 mt: 0.25,
               }}
             >
@@ -458,7 +455,7 @@ export default function Sidebar() {
 
       <Divider
         sx={{
-          borderColor: "rgba(255,255,255,0.08)",
+          borderColor: "divider",
         }}
       />
 
@@ -480,7 +477,7 @@ export default function Sidebar() {
               borderRadius: 2,
               transition: "background-color 0.2s ease",
               "&:hover": {
-                bgcolor: "rgba(255,255,255,0.06)",
+                bgcolor: "action.hover",
               },
             }}
           >
@@ -488,10 +485,10 @@ export default function Sidebar() {
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: "rgba(99,102,241,0.3)",
+                bgcolor: "primary.light",
                 fontSize: "0.75rem",
                 fontWeight: 700,
-                color: "white",
+                color: "primary.contrastText",
                 flexShrink: 0,
               }}
             >
@@ -509,7 +506,7 @@ export default function Sidebar() {
                   sx={{
                     fontSize: "0.75rem",
                     fontWeight: 600,
-                    color: "rgba(255,255,255,0.8)",
+                    color: "text.primary",
                     lineHeight: 1.2,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -522,7 +519,7 @@ export default function Sidebar() {
                 <Typography
                   sx={{
                     fontSize: "0.65rem",
-                    color: "rgba(255,255,255,0.4)",
+                    color: "text.secondary",
                     mt: 0.25,
                   }}
                 >

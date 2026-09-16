@@ -201,7 +201,10 @@ export default function MobileSidebar() {
         paper: {
           sx: {
             width: 280,
-            bgcolor: "primary.dark",
+            boxSizing: "border-box",
+            bgcolor: "background.default",
+            borderRight: "1px solid",
+            borderColor: "divider",
           },
         },
       }}
@@ -231,11 +234,16 @@ export default function MobileSidebar() {
               width: 40,
               height: 40,
               borderRadius: 2,
-              background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
-              boxShadow: "0 4px 12px rgba(99, 102, 241, 0.4)",
+              bgcolor: "primary.main",
+              boxShadow: "none",
             }}
           >
-            <GraduationCap size={22} color="white" />
+            <Box
+              component="img"
+              src="/image/logo.png"
+              alt={`${appConfig.appName} logo`}
+              sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+            />
           </Box>
 
           <Box>
@@ -243,7 +251,7 @@ export default function MobileSidebar() {
               sx={{
                 fontWeight: 800,
                 fontSize: "1.1rem",
-                color: "white",
+                color: "text.primary",
                 letterSpacing: "-0.02em",
               }}
             >
@@ -253,7 +261,7 @@ export default function MobileSidebar() {
             <Typography
               sx={{
                 fontSize: "0.7rem",
-                color: "rgba(255,255,255,0.5)",
+                color: "text.secondary",
               }}
             >
               {appConfig.institutionName}
@@ -261,7 +269,7 @@ export default function MobileSidebar() {
           </Box>
         </Box>
 
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+        <Divider sx={{ borderColor: "divider" }} />
 
         {/* Navigation */}
         <List
@@ -288,18 +296,12 @@ export default function MobileSidebar() {
                         py: 1.25,
                         px: 1.5,
                         minHeight: 48,
-                        color: active ? "white" : "rgba(255,255,255,0.6)",
-                        background: active
-                          ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                          : "transparent",
-                        boxShadow: active
-                          ? "0 4px 12px rgba(99,102,241,0.3)"
-                          : "none",
+                        color: active ? "primary.main" : "text.secondary",
+                        bgcolor: active ? "action.selected" : "transparent",
+                        boxShadow: "none",
                         "&:hover": {
-                          bgcolor: active
-                            ? "rgba(99,102,241,0.8)"
-                            : "rgba(255,255,255,0.08)",
-                          color: "white",
+                          bgcolor: active ? "action.selected" : "action.hover",
+                          color: "primary.main",
                         },
                       }}
                     >
@@ -358,14 +360,14 @@ export default function MobileSidebar() {
                                 px: 2,
                                 minHeight: 40,
                                 color: childActive
-                                  ? "#a5b4fc"
-                                  : "rgba(255,255,255,0.5)",
+                                  ? "primary.main"
+                                  : "text.secondary",
                                 "&.Mui-selected": {
-                                  bgcolor: "rgba(99,102,241,0.15)",
+                                  bgcolor: "action.selected",
                                 },
                                 "&:hover": {
-                                  bgcolor: "rgba(255,255,255,0.06)",
-                                  color: "white",
+                                  bgcolor: "action.hover",
+                                  color: "primary.main",
                                 },
                               }}
                             >
@@ -413,18 +415,12 @@ export default function MobileSidebar() {
                     py: 1.25,
                     px: 1.5,
                     minHeight: 48,
-                    color: active ? "white" : "rgba(255,255,255,0.6)",
-                    background: active
-                      ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                      : "transparent",
-                    boxShadow: active
-                      ? "0 4px 12px rgba(99,102,241,0.3)"
-                      : "none",
+                    color: active ? "primary.main" : "text.secondary",
+                    bgcolor: active ? "action.selected" : "transparent",
+                    boxShadow: "none",
                     "&:hover": {
-                      bgcolor: active
-                        ? "rgba(99,102,241,0.8)"
-                        : "rgba(255,255,255,0.08)",
-                      color: "white",
+                      bgcolor: active ? "action.selected" : "action.hover",
+                      color: "primary.main",
                     },
                   }}
                 >
@@ -456,7 +452,7 @@ export default function MobileSidebar() {
 
         <Divider
           sx={{
-            borderColor: "rgba(255,255,255,0.08)",
+            borderColor: "divider",
           }}
         />
 
@@ -470,7 +466,7 @@ export default function MobileSidebar() {
                 borderRadius: 10,
                 py: 1.25,
                 px: 1.5,
-                color: "rgba(255,255,255,0.5)",
+                    color: "text.secondary",
                 "&:hover": {
                   bgcolor: "rgba(239,68,68,0.15)",
                   color: "#fca5a5",
@@ -514,7 +510,7 @@ export default function MobileSidebar() {
                 borderRadius: 2,
                 transition: "background-color 0.2s",
                 "&:hover": {
-                  bgcolor: "rgba(255,255,255,0.06)",
+                  bgcolor: "action.hover",
                 },
               }}
               onClick={(e) => setopenDialog(e.currentTarget)}
@@ -523,10 +519,10 @@ export default function MobileSidebar() {
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: "rgba(99,102,241,0.3)",
+                  bgcolor: "primary.light",
                   fontSize: "0.75rem",
                   fontWeight: 700,
-                  color: "white",
+                  color: "primary.contrastText",
                 }}
               >
                 {user.username?.[0]?.toUpperCase() || "U"}
@@ -537,7 +533,7 @@ export default function MobileSidebar() {
                   sx={{
                     fontSize: "0.75rem",
                     fontWeight: 600,
-                    color: "rgba(255,255,255,0.8)",
+                    color: "text.primary",
                     lineHeight: 1.2,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -550,7 +546,7 @@ export default function MobileSidebar() {
                 <Typography
                   sx={{
                     fontSize: "0.65rem",
-                    color: "rgba(255,255,255,0.4)",
+                    color: "text.secondary",
                     lineHeight: 1.4,
                   }}
                 >

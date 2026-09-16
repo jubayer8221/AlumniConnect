@@ -7,15 +7,15 @@ export const createAppTheme = (mode: ColorMode) =>
     palette: {
       mode,
       primary: {
-        main: "#6366f1",
-        light: "#818cf8",
-        dark: mode === "dark" ? "#020617" : "#1e293b",
+        main: "#0f766e",
+        light: "#2a9d8f",
+        dark: mode === "dark" ? "#102a28" : "#115e59",
         contrastText: "#ffffff",
       },
       secondary: {
-        main: "#ec4899",
-        light: "#f472b6",
-        dark: "#db2777",
+        main: "#c2410c",
+        light: "#ea580c",
+        dark: "#9a3412",
       },
       success: {
         main: "#10b981",
@@ -42,14 +42,14 @@ export const createAppTheme = (mode: ColorMode) =>
         contrastText: "#ffffff",
       },
       background: {
-        default: mode === "dark" ? "#0f172a" : "#f1f5f9",
-        paper: mode === "dark" ? "#1e293b" : "#ffffff",
+        default: mode === "dark" ? "#17211f" : "#f3f6f3",
+        paper: mode === "dark" ? "#21302d" : "#fffefa",
       },
       text: {
-        primary: mode === "dark" ? "#f8fafc" : "#0f172a",
-        secondary: mode === "dark" ? "#cbd5e1" : "#64748b",
+        primary: mode === "dark" ? "#edf5f2" : "#18312e",
+        secondary: mode === "dark" ? "#b8cbc6" : "#5b706b",
       },
-      divider: mode === "dark" ? "#334155" : "#e2e8f0",
+      divider: mode === "dark" ? "#38504b" : "#d8e3de",
     },
     typography: {
       fontFamily:
@@ -100,10 +100,10 @@ export const createAppTheme = (mode: ColorMode) =>
         styleOverrides: {
           body: {
             scrollbarWidth: "thin",
-            scrollbarColor: "#c7d2fe transparent",
+            scrollbarColor: `${mode === "dark" ? "#4f756d" : "#9ab9b0"} transparent`,
             "&::-webkit-scrollbar": { width: 6, height: 6 },
             "&::-webkit-scrollbar-thumb": {
-              background: "#c7d2fe",
+              background: mode === "dark" ? "#4f756d" : "#9ab9b0",
               borderRadius: 3,
             },
             "&::-webkit-scrollbar-track": { background: "transparent" },
@@ -115,7 +115,8 @@ export const createAppTheme = (mode: ColorMode) =>
           root: {
             boxShadow:
               "0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px 0 rgba(0,0,0,0.04)",
-            border: "1px solid #e2e8f0",
+            border: "1px solid",
+            borderColor: "divider",
           },
         },
       },

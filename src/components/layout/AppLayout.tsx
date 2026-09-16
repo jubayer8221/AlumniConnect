@@ -21,6 +21,7 @@ export default function AppLayout() {
           display: "flex",
           flexDirection: "column",
           minWidth: 0,
+          bgcolor: "background.default",
         }}
       >
         <Header />
@@ -31,6 +32,7 @@ export default function AppLayout() {
             p: { xs: 2, sm: 3, md: 3.5 },
             maxWidth: "100%",
             overflowX: "hidden",
+            bgcolor: "background.default",
           }}
         >
           <Outlet />
