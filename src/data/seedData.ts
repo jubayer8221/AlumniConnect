@@ -174,7 +174,7 @@ const alumniSeeds: AlumniSeed[] = [
     linkedinUrl: "https://linkedin.com/in/rahimhasan",
     facebookUrl: "https://facebook.com/rahim.hasan",
     websiteUrl: "https://rahimhasan.dev",
-    bio: "Passionate software engineer with 6+ years of experience building scalable web applications. Currently leading a team at ABC Technologies.",
+    bio: "Passionate software engineer with 6+ years of experience building scalable web applications. Currently leading a team at Sherpur Government Victoria Academy.",
     isMentor: true,
     willingToMentor: true,
     isVerified: true,

@@ -1,7 +1,7 @@
 export const appConfig = {
-  appName: "AlumniConnect",
-  institutionName: "ABC University",
-  institutionShortName: "ABCU",
+  appName: "Alumni Connect",
+  institutionName: "Sherpur Government Victoria Academy",
+  institutionShortName: "Victoria Academy",
   contactEmail: "info@abcuniversity.edu",
   contactPhone: "+880123-4567",
   address: "123 University Boulevard, Education City, EC 45678",
