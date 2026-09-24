@@ -68,7 +68,7 @@ export interface Alumni {
   secondarySchoolName?: string;
   hobby?: string;
   tShirtSize?: string;
-  sourceSerialNumber?: number;
+  SerialNumber?: number;
   isMentor?: boolean;
   willingToMentor?: boolean;
   isVerified?: boolean;

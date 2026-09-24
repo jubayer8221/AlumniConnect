@@ -42,12 +42,17 @@ export default function HeaderProfileDialog({
         paper: { sx: { borderRadius: 2, mt: 1, minWidth: 220 } },
       }}
     >
-      {/* <Typography
-        sx={{ px: 2, pt: 1.5, pb: 1, fontSize: "0.9rem", fontWeight: 600 }}
+      <Typography
+        sx={{ px: 2, pt: 1.5, pb: 0.25, fontSize: "0.9rem", fontWeight: 700 }}
       >
-        {username || "Account"}
-      </Typography> */}
-      
+        {user?.displayName || username || user?.username || "Account"}
+      </Typography>
+      <Typography
+        sx={{ px: 2, pb: 1.25, fontSize: "0.72rem", color: "text.secondary" }}
+      >
+        {role === "ADMIN" ? "Administrator" : "Alumni Member"}
+      </Typography>
+
       <List sx={{ pt: 0 }}>
         <ListItemButton
           onClick={() => go("/alumni/profile")}

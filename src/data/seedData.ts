@@ -95,7 +95,7 @@ const importedAlumniSeeds: AlumniSeed[] = AlumniRows.map((row) => ({
   secondarySchoolName: row.secondarySchoolName || undefined,
   hobby: row.hobby || undefined,
   tShirtSize: row.tShirtSize || undefined,
-  sourceSerialNumber: row.sourceSerialNumber,
+  SerialNumber: row.SerialNumber,
 }));
 
 export const seedAlumni: Alumni[] = [...importedAlumniSeeds].map((a, i) => ({
@@ -109,16 +109,25 @@ export const seedAlumni: Alumni[] = [...importedAlumniSeeds].map((a, i) => ({
 
 // ─── Credentials ───────────────────────────────────────────────────────────
 
-export const seedCredentials: CredentialRecord[] = seedAlumni.map((alumni) => ({
-  id: alumni.userId,
-  username: alumni.username,
-  password: "123456",
-  role: alumni.alumniId === "ADMIN" ? "ADMIN" : "ALUMNI",
-  alumniId: alumni.alumniId,
-  email: alumni.email,
-  phone: alumni.phone,
-  displayName: alumni.fullName,
-}));
+export const seedCredentials: CredentialRecord[] = [
+  {
+    id: "admin-user",
+    username: "admin",
+    password: "123456",
+    role: "ADMIN",
+    displayName: "Administrator",
+  },
+  ...seedAlumni.map((alumni) => ({
+    id: alumni.userId,
+    username: alumni.username,
+    password: "123456",
+    role: "ALUMNI" as const,
+    alumniId: alumni.alumniId,
+    email: alumni.email,
+    phone: alumni.phone,
+    displayName: alumni.fullName,
+  })),
+];
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 

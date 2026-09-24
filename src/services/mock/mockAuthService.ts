@@ -83,11 +83,15 @@ export const mockAuthService: AuthService = {
     await delay();
     const creds = ensureCredentials();
     const identifier = normalizeLoginIdentifier(credentials.username);
-    const found = creds.find(
+    const matchingCredentials = creds.filter(
       (c) =>
         matchesLoginIdentifier(c, identifier) &&
         c.password === credentials.password,
     );
+    const found =
+      identifier === "admin"
+        ? matchingCredentials.find((credential) => credential.role === "ADMIN")
+        : matchingCredentials[0];
     if (!found) {
       return {
         success: false,

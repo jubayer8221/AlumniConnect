@@ -131,6 +131,20 @@ export default function Header() {
           }}
           onClick={(e) => setopenDialog(e.currentTarget)}
         >
+          <Box
+            sx={{ display: { xs: "none", sm: "block" }, textAlign: "right" }}
+          >
+            <Typography
+              sx={{ fontSize: "0.8rem", fontWeight: 700, lineHeight: 1.2 }}
+            >
+              {user?.displayName || user?.username || "User"}
+            </Typography>
+            <Typography
+              sx={{ fontSize: "0.68rem", color: "text.secondary", mt: 0.25 }}
+            >
+              {role === "ADMIN" ? "Administrator" : "Alumni Member"}
+            </Typography>
+          </Box>
           <Avatar
             src={user?.profilePhoto}
             alt={user?.displayName || user?.username || "User"}

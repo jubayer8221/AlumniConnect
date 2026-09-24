@@ -208,7 +208,7 @@ export default function LoginPage() {
             {[
               {
                 icon: <Users size={20} />,
-                label: "5,000+ Alumni",
+                label: "320+ Alumni",
                 color: "#7dd3c7",
               },
               {
@@ -505,7 +505,7 @@ export default function LoginPage() {
               {
                 label: "Admin Portal",
                 username: "admin",
-                password: "admin123",
+                password: "123456",
                 color: "#0f766e",
                 bg: "rgba(15,118,110,0.08)",
               },

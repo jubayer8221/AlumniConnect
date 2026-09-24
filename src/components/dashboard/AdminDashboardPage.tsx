@@ -50,6 +50,7 @@ export default function AdminDashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { data, loading } = useAppSelector((s) => s.dashboard);
+  const { user } = useAppSelector((s) => s.auth);
 
   useEffect(() => {
     dispatch(fetchDashboardDataAsync());
@@ -113,7 +114,7 @@ export default function AdminDashboardPage() {
   return (
     <Box>
       <CommonPageHeader
-        title="Welcome back, Admin"
+        title={`Welcome back, ${user?.displayName || "Administrator"}`}
         subtitle={`Here's what's happening with your alumni community at ${appConfig.institutionName}.`}
       />
 
