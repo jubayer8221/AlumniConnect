@@ -1,5 +1,5 @@
 export const appConfig = {
-  appName: "Alumni Connect",
+  appName: "Alumni Network",
   institutionName: "Sherpur Government Victoria Academy",
   institutionShortName: "Victoria Academy",
   contactEmail: "info@abcuniversity.edu",
