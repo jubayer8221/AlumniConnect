@@ -38,7 +38,7 @@ import {
   Lock,
   Building2,
 } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   fetchAlumniByIdAsync,
@@ -63,6 +63,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { appConfig } from "@/config/appConfig";
 import type { Alumni } from "@/types/alumni";
 import AlumniProfileCard from "@/components/alumniProfile/AlumniProfileCard";
+import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
 // Joins whichever address fragments exist into one readable line instead of
 // listing village/union/thana/district/division/country as separate rows.
@@ -174,6 +175,7 @@ const MetaItem = ({
 
 export default function AlumniDetailsPage() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
@@ -184,10 +186,24 @@ export default function AlumniDetailsPage() {
   const [statusDialog, setStatusDialog] = useState<Alumni["status"] | null>(
     null,
   );
+  const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   useEffect(() => {
     if (profileId) dispatch(fetchAlumniByIdAsync(profileId));
   }, [dispatch, profileId]);
+
+  useEffect(() => {
+    if (!id) return;
+    if (selectedAlumni)
+      setBreadcrumbLabel(location.pathname, selectedAlumni.fullName);
+    return () => clearBreadcrumbLabel(location.pathname);
+  }, [
+    clearBreadcrumbLabel,
+    id,
+    location.pathname,
+    selectedAlumni,
+    setBreadcrumbLabel,
+  ]);
 
   if (loading && !selectedAlumni) return <CommonLoading />;
   if (!selectedAlumni)
@@ -255,7 +271,7 @@ export default function AlumniDetailsPage() {
         title="Alumni Profile"
         breadcrumbs={[
           { label: "Home", path: isAdmin ? "/dashboard" : "/alumni/dashboard" },
-          { label: "Alumni", path: "/alumni" },
+          { label: "Manage Alumni", path: "/alumni" },
           { label: alumni.fullName },
         ]}
         actions={
@@ -302,7 +318,7 @@ export default function AlumniDetailsPage() {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <IdCard size={16} /> View ID Card
+                  <IdCard size={16} /> View id Card
                 </Box>
               </MenuItem>
               {isAdmin && !alumni.isVerified && (
@@ -368,7 +384,7 @@ export default function AlumniDetailsPage() {
             icon={<GraduationCap size={20} />}
           >
             <InfoGrid>
-              <InfoRow label="Student ID" value={alumni.studentId} />
+              <InfoRow label="Student id" value={alumni.studentId} />
               <InfoRow
                 label="Registration Number"
                 value={alumni.registrationNumber}
@@ -584,7 +600,7 @@ export default function AlumniDetailsPage() {
         </Grid>
       </Grid>
 
-      {/* ID Card Dialog */}
+      {/* id Card Dialog */}
       <Dialog
         open={idCardOpen}
         onClose={() => setIdCardOpen(false)}
@@ -592,7 +608,7 @@ export default function AlumniDetailsPage() {
         fullWidth
         disableScrollLock
       >
-        <DialogTitle>Alumni ID Card</DialogTitle>
+        <DialogTitle>Alumni id Card</DialogTitle>
         <DialogContent>
           <Box
             sx={{
@@ -616,7 +632,7 @@ export default function AlumniDetailsPage() {
               variant="caption"
               sx={{ letterSpacing: 2, color: "text.secondary" }}
             >
-              ALUMNI ID CARD
+              ALUMNI id CARD
             </Typography>
             <Box sx={{ my: 2, display: "flex", justifyContent: "center" }}>
               <CommonAvatar
@@ -653,7 +669,7 @@ export default function AlumniDetailsPage() {
             sx={{ mt: 2 }}
             startIcon={<Printer size={18} />}
           >
-            Print ID Card
+            Print id Card
           </Button>
         </DialogContent>
       </Dialog>

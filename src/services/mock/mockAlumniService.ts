@@ -26,9 +26,9 @@ function ensureAlumni(): Alumni[] {
   if (alumni.length === 0) {
     alumni = [...seedAlumni];
     localStorageService.set(STORAGE_KEYS.ALUMNI, alumni);
-  } else if (!alumni.some((record) => record.alumniId === "ALM-ADMIN")) {
+  } else if (!alumni.some((record) => record.alumniId === "ADMIN")) {
     const adminProfile = seedAlumni.find(
-      (record) => record.alumniId === "ALM-ADMIN",
+      (record) => record.alumniId === "ADMIN",
     );
     if (adminProfile) {
       alumni = [adminProfile, ...alumni];
@@ -367,7 +367,10 @@ export const mockAlumniService: AlumniService = {
 
   async updatePrivacy(
     id: string,
-    privacy: Alumni["privacy"],
+    data: {
+      privacy: Alumni["privacy"];
+      sectionPrivacy: Alumni["sectionPrivacy"];
+    },
   ): Promise<ApiResponse<Alumni>> {
     await delay();
     const all = ensureAlumni();
@@ -378,7 +381,8 @@ export const mockAlumniService: AlumniService = {
         message: "Alumni not found",
         data: null as unknown as Alumni,
       };
-    all[idx].privacy = privacy;
+    all[idx].privacy = data.privacy;
+    all[idx].sectionPrivacy = data.sectionPrivacy;
     all[idx].updatedAt = new Date().toISOString();
     saveAlumni(all);
     return {

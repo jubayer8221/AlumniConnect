@@ -177,7 +177,7 @@ export default function AlumniListPage() {
                 whiteSpace: "nowrap",
               }}
             >
-              ID: {params.row.alumniId}
+              id: {params.row.alumniId}
             </Box>
           </Box>
         </Box>

@@ -1,8 +1,11 @@
 import type { Alumni } from "@/types/alumni";
 
-export function exportAlumniToCSV(alumni: Alumni[], filename = "alumni_export.csv"): void {
+export function exportAlumniToCSV(
+  alumni: Alumni[],
+  filename = "alumni_export.csv",
+): void {
   const headers = [
-    "Alumni ID",
+    "Alumni id",
     "First Name",
     "Last Name",
     "Email",
@@ -50,7 +53,7 @@ export function exportAlumniToCSV(alumni: Alumni[], filename = "alumni_export.cs
   const csvContent = [
     headers.join(","),
     ...rows.map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
     ),
   ].join("\n");
 

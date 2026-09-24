@@ -1,4 +1,9 @@
-import type { Alumni, CreateAlumniRequest, UpdateAlumniRequest, AlumniQueryParams } from "@/types/alumni";
+import type {
+  Alumni,
+  CreateAlumniRequest,
+  UpdateAlumniRequest,
+  AlumniQueryParams,
+} from "@/types/alumni";
 import type { PaginatedResponse, ApiResponse } from "@/types/common";
 
 export interface AlumniService {
@@ -9,7 +14,18 @@ export interface AlumniService {
   update(id: string, data: UpdateAlumniRequest): Promise<ApiResponse<Alumni>>;
   delete(id: string): Promise<ApiResponse<null>>;
   verify(id: string): Promise<ApiResponse<Alumni>>;
-  updateStatus(id: string, status: Alumni["status"]): Promise<ApiResponse<Alumni>>;
-  updatePrivacy(id: string, privacy: Alumni["privacy"]): Promise<ApiResponse<Alumni>>;
-  getDashboardData(): Promise<ApiResponse<import("@/types/dashboard").DashboardData>>;
+  updateStatus(
+    id: string,
+    status: Alumni["status"],
+  ): Promise<ApiResponse<Alumni>>;
+  updatePrivacy(
+    id: string,
+    data: {
+      privacy: Alumni["privacy"];
+      sectionPrivacy: Alumni["sectionPrivacy"];
+    },
+  ): Promise<ApiResponse<Alumni>>;
+  getDashboardData(): Promise<
+    ApiResponse<import("@/types/dashboard").DashboardData>
+  >;
 }

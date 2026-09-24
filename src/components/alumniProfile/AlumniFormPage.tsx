@@ -14,7 +14,7 @@ import {
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   fetchAlumniByIdAsync,
@@ -40,6 +40,7 @@ import {
 import type { CreateAlumniRequest, EducationEntry } from "@/types/alumni";
 import { generateUUID } from "@/utils/generateId";
 import { theme } from "@/store/theme";
+import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
 const genderOptions = [
   { label: "Male", value: "Male" },
@@ -203,8 +204,10 @@ export default function AlumniFormPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { id } = useParams();
+  const location = useLocation();
   const isEdit = !!id;
   const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
+  const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
   const [skillsInput, setSkillsInput] = useState("");
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(
     [],
@@ -383,6 +386,18 @@ export default function AlumniFormPage() {
     }
   }, [isEdit, selectedAlumni, reset]);
 
+  useEffect(() => {
+    if (!isEdit || !selectedAlumni) return;
+    setBreadcrumbLabel(location.pathname, selectedAlumni.fullName);
+    return () => clearBreadcrumbLabel(location.pathname);
+  }, [
+    clearBreadcrumbLabel,
+    isEdit,
+    location.pathname,
+    selectedAlumni,
+    setBreadcrumbLabel,
+  ]);
+
   const onSubmit = async (data: AlumniFormValues) => {
     const skills = skillsInput
       .split(",")
@@ -478,7 +493,7 @@ export default function AlumniFormPage() {
         }
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Alumni", path: "/alumni" },
+          { label: "Manage Alumni", path: "/alumni" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={
@@ -736,7 +751,7 @@ export default function AlumniFormPage() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <CommonInputField
                 name="studentId"
-                label="Student ID"
+                label="Student id"
                 control={control}
               />
             </Grid>

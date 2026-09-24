@@ -18,19 +18,17 @@ import {
   Bell,
   BarChart3,
   Settings,
-  LogOut,
-  GraduationCap,
   UserCircle,
   Briefcase,
   ChevronDown,
   Shield,
-  FileText,
   ListIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import { logoutAsync } from "@/Slice/authSlice";
 import { appConfig } from "@/config/appConfig";
+import { getRouteLabel } from "@/config/routeRegistry";
 import HeaderProfileDialog from "../alumniProfile/HeaderProfileDialog";
 
 interface NavItem {
@@ -46,17 +44,17 @@ interface NavItem {
 
 const adminNav: NavItem[] = [
   {
-    label: "Dashboard",
+    label: getRouteLabel("/dashboard"),
     path: "/dashboard",
     icon: <LayoutDashboard size={20} />,
   },
   {
-    label: "Profile",
+    label: getRouteLabel("/alumni/profile"),
     path: "/alumni/profile",
     icon: <UserCircle size={20} />,
     children: [
       {
-        label: "My Profile",
+        label: getRouteLabel("/alumni/profile"),
         path: "/alumni/profile",
         icon: <UserCircle size={16} />,
       },
@@ -72,35 +70,39 @@ const adminNav: NavItem[] = [
       //   icon: <Users size={16} />,
       // },
       {
-        label: "Settings & Privacy",
+        label: getRouteLabel("/alumni/settings-privacy"),
         path: "/alumni/settings-privacy",
         icon: <Shield size={16} />,
       },
     ],
   },
   {
-    label: "Alumni List",
-    path: "/alumni/directory",
-    // path: "/alumni",
+    label: getRouteLabel("/alumni"),
+    path: "/alumni",
     icon: <ListIcon size={16} />,
   },
   {
-    label: "Events",
+    label: getRouteLabel("/alumni/directory"),
+    path: "/alumni/directory",
+    icon: <ListIcon size={16} />,
+  },
+  {
+    label: getRouteLabel("/events"),
     path: "/events",
     icon: <CalendarDays size={20} />,
   },
   {
-    label: "Notices",
+    label: getRouteLabel("/notices"),
     path: "/notices",
     icon: <Bell size={20} />,
   },
   {
-    label: "Reports",
+    label: getRouteLabel("/reports"),
     path: "/reports",
     icon: <BarChart3 size={20} />,
   },
   {
-    label: "Settings",
+    label: getRouteLabel("/settings"),
     path: "/settings",
     icon: <Settings size={20} />,
   },
@@ -108,47 +110,47 @@ const adminNav: NavItem[] = [
 
 const alumniNav: NavItem[] = [
   {
-    label: "Dashboard",
+    label: getRouteLabel("/alumni/dashboard"),
     path: "/alumni/dashboard",
     icon: <LayoutDashboard size={20} />,
   },
   {
-    label: "Profile",
+    label: getRouteLabel("/alumni/profile"),
     path: "/alumni/profile",
     icon: <UserCircle size={20} />,
     children: [
       {
-        label: "My Profile",
+        label: getRouteLabel("/alumni/profile"),
         path: "/alumni/profile",
         icon: <UserCircle size={16} />,
       },
       {
-        label: "Settings & Privacy",
+        label: getRouteLabel("/alumni/settings-privacy"),
         path: "/alumni/settings-privacy",
         icon: <Shield size={16} />,
       },
     ],
   },
   {
-    label: "Alumni List",
+    label: getRouteLabel("/alumni/directory"),
     path: "/alumni/directory",
     icon: <Users size={16} />,
   },
   {
-    label: "Events",
+    label: getRouteLabel("/alumni/events"),
     path: "/alumni/events",
     icon: <CalendarDays size={20} />,
   },
   {
-    label: "Notices",
+    label: getRouteLabel("/alumni/notices"),
     path: "/alumni/notices",
     icon: <Bell size={20} />,
   },
-  {
-    label: "My Account",
-    path: "/alumni/account",
-    icon: <Briefcase size={20} />,
-  },
+  // {
+  //   label: getRouteLabel("/alumni/account"),
+  //   path: "/alumni/account",
+  //   icon: <Briefcase size={20} />,
+  // },
 ];
 
 export default function Sidebar() {

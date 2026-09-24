@@ -23,13 +23,24 @@ const initialState: UIState = {
 };
 
 const uiSlice = createSlice({
-  name: "ui", initialState,
+  name: "ui",
+  initialState,
   reducers: {
-    toggleSidebar(state) { state.sidebarOpen = !state.sidebarOpen; },
-    toggleSidebarCollapse(state) { state.sidebarCollapsed = !state.sidebarCollapsed; },
-    toggleMobileSidebar(state) { state.mobileSidebarOpen = !state.mobileSidebarOpen; },
-    closeMobileSidebar(state) { state.mobileSidebarOpen = false; },
-    setTheme(state, action: PayloadAction<"light" | "dark">) { state.theme = action.payload; },
+    toggleSidebar(state) {
+      state.sidebarOpen = !state.sidebarOpen;
+    },
+    toggleSidebarCollapse(state) {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+    },
+    toggleMobileSidebar(state) {
+      state.mobileSidebarOpen = !state.mobileSidebarOpen;
+    },
+    closeMobileSidebar(state) {
+      state.mobileSidebarOpen = false;
+    },
+    setTheme(state, action: PayloadAction<"light" | "dark">) {
+      state.theme = action.payload;
+    },
     showToast(state, action: PayloadAction<Omit<ToastMessage, "id">>) {
       state.toasts.push({ ...action.payload, id: Date.now().toString() });
     },
@@ -40,8 +51,13 @@ const uiSlice = createSlice({
 });
 
 export const {
-  toggleSidebar, toggleSidebarCollapse, toggleMobileSidebar, closeMobileSidebar,
-  setTheme, showToast, removeToast,
+  toggleSidebar,
+  toggleSidebarCollapse,
+  toggleMobileSidebar,
+  closeMobileSidebar,
+  setTheme,
+  showToast,
+  removeToast,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

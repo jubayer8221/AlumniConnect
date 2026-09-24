@@ -24,7 +24,7 @@ import AlumniDashboardPage from "@/components/dashboard/AlumniDashboardPage";
 import ProfileSetupPage from "@/components/alumniProfile/ProfileSetupPage";
 import SettingsPrivacyPage from "@/components/alumniProfile/SettingsPrivacyPage";
 import AlumniDirectoryPage from "@/components/alumniProfile/AlumniDirectoryPage";
-import AlumniAccountPage from "@/components/alumniProfile/AlumniAccountPage";
+// import AlumniAccountPage from "@/components/alumniProfile/AlumniAccountPage";
 import EventListPage from "@/components/event/EventListPage";
 import EventDetailsPage from "@/components/event/EventDetailsPage";
 import EventFormPage from "@/components/event/EventFormPage";
@@ -98,7 +98,7 @@ function AppRoutes() {
         <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
         <Route path="/alumni/notices" element={<NoticeListPage />} />
         <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
-        <Route path="/alumni/account" element={<AlumniAccountPage />} />
+        {/* <Route path="/alumni/account" element={<AlumniAccountPage />} /> */}
         <Route path="/alumni/create" element={<AlumniFormPage />} />
         <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
         <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
@@ -124,9 +124,16 @@ function AppRoutes() {
         <Route path="/notices/:id/edit" element={<NoticeFormPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/profile-setup" element={<ProfileSetupPage />} />
-        <Route path="/settings-privacy" element={<SettingsPrivacyPage />} />
       </Route>
+
+      <Route
+        path="/profile-setup"
+        element={<Navigate to="/alumni/profile-setup" replace />}
+      />
+      <Route
+        path="/settings-privacy"
+        element={<Navigate to="/alumni/settings-privacy" replace />}
+      />
 
       <Route
         path="*"

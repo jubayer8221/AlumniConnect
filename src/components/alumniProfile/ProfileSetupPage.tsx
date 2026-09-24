@@ -927,7 +927,7 @@ export default function ProfileSetupPage() {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <CommonInputField
                   name="studentId"
-                  label="Student ID"
+                  label="Student id"
                   control={control}
                 />
               </Grid>

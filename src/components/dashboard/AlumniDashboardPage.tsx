@@ -72,7 +72,12 @@ export default function AlumniDashboardPage() {
 
   const completion = calculateProfileCompletion(selectedAlumni);
   const missing = getMissingProfileFields(selectedAlumni);
-  const firstName = selectedAlumni.firstName;
+  const welcomeName =
+    selectedAlumni.firstName?.trim() ||
+    selectedAlumni.fullName?.trim() ||
+    user?.displayName?.trim() ||
+    user?.username ||
+    "there";
 
   const quickActions = [
     {
@@ -131,7 +136,7 @@ export default function AlumniDashboardPage() {
   return (
     <Box>
       <CommonPageHeader
-        title={`Welcome back, ${firstName}!`}
+        title={`Welcome back, ${welcomeName}!`}
         subtitle="Here's an overview of your alumni profile and community."
       />
 

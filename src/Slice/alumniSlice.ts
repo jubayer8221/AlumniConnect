@@ -1,5 +1,14 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
-import type { Alumni, AlumniFilters, CreateAlumniRequest, UpdateAlumniRequest } from "@/types/alumni";
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
+import type {
+  Alumni,
+  AlumniFilters,
+  CreateAlumniRequest,
+  UpdateAlumniRequest,
+} from "@/types/alumni";
 import { alumniService } from "@/services";
 
 interface AlumniState {
@@ -43,7 +52,7 @@ export const fetchAlumniAsync = createAsyncThunk(
       filters: state.alumni.filters,
     });
     return res;
-  }
+  },
 );
 
 export const fetchAlumniByIdAsync = createAsyncThunk(
@@ -52,7 +61,7 @@ export const fetchAlumniByIdAsync = createAsyncThunk(
     const res = await alumniService.getById(id);
     if (!res.success) throw new Error(res.message);
     return res.data;
-  }
+  },
 );
 
 export const createAlumniAsync = createAsyncThunk(
@@ -61,16 +70,19 @@ export const createAlumniAsync = createAsyncThunk(
     const res = await alumniService.create(data);
     if (!res.success) return rejectWithValue(res.message);
     return res.data;
-  }
+  },
 );
 
 export const updateAlumniAsync = createAsyncThunk(
   "alumni/update",
-  async ({ id, data }: { id: string; data: UpdateAlumniRequest }, { rejectWithValue }) => {
+  async (
+    { id, data }: { id: string; data: UpdateAlumniRequest },
+    { rejectWithValue },
+  ) => {
     const res = await alumniService.update(id, data);
     if (!res.success) return rejectWithValue(res.message);
     return res.data;
-  }
+  },
 );
 
 export const deleteAlumniAsync = createAsyncThunk(
@@ -79,7 +91,7 @@ export const deleteAlumniAsync = createAsyncThunk(
     const res = await alumniService.delete(id);
     if (!res.success) return rejectWithValue(res.message);
     return id;
-  }
+  },
 );
 
 export const verifyAlumniAsync = createAsyncThunk(
@@ -88,25 +100,42 @@ export const verifyAlumniAsync = createAsyncThunk(
     const res = await alumniService.verify(id);
     if (!res.success) return rejectWithValue(res.message);
     return res.data;
-  }
+  },
 );
 
 export const updateAlumniStatusAsync = createAsyncThunk(
   "alumni/updateStatus",
-  async ({ id, status }: { id: string; status: Alumni["status"] }, { rejectWithValue }) => {
+  async (
+    { id, status }: { id: string; status: Alumni["status"] },
+    { rejectWithValue },
+  ) => {
     const res = await alumniService.updateStatus(id, status);
     if (!res.success) return rejectWithValue(res.message);
     return res.data;
-  }
+  },
 );
 
 export const updateAlumniPrivacyAsync = createAsyncThunk(
   "alumni/updatePrivacy",
-  async ({ id, privacy }: { id: string; privacy: Alumni["privacy"] }, { rejectWithValue }) => {
-    const res = await alumniService.updatePrivacy(id, privacy);
+  async (
+    {
+      id,
+      privacy,
+      sectionPrivacy,
+    }: {
+      id: string;
+      privacy: Alumni["privacy"];
+      sectionPrivacy: Alumni["sectionPrivacy"];
+    },
+    { rejectWithValue },
+  ) => {
+    const res = await alumniService.updatePrivacy(id, {
+      privacy,
+      sectionPrivacy,
+    });
     if (!res.success) return rejectWithValue(res.message);
     return res.data;
-  }
+  },
 );
 
 const alumniSlice = createSlice({
@@ -133,7 +162,10 @@ const alumniSlice = createSlice({
       state.pageSize = action.payload;
       state.pageNumber = 1;
     },
-    setSort(state, action: PayloadAction<{ sortBy: string; sortDirection: "asc" | "desc" }>) {
+    setSort(
+      state,
+      action: PayloadAction<{ sortBy: string; sortDirection: "asc" | "desc" }>,
+    ) {
       state.sortBy = action.payload.sortBy;
       state.sortDirection = action.payload.sortDirection;
     },
@@ -205,22 +237,34 @@ const alumniSlice = createSlice({
       })
       .addCase(verifyAlumniAsync.fulfilled, (state, action) => {
         state.selectedAlumni = action.payload;
-        state.items = state.items.map((a) => (a.id === action.payload.id ? action.payload : a));
+        state.items = state.items.map((a) =>
+          a.id === action.payload.id ? action.payload : a,
+        );
       })
       .addCase(updateAlumniStatusAsync.fulfilled, (state, action) => {
         state.selectedAlumni = action.payload;
-        state.items = state.items.map((a) => (a.id === action.payload.id ? action.payload : a));
+        state.items = state.items.map((a) =>
+          a.id === action.payload.id ? action.payload : a,
+        );
       })
       .addCase(updateAlumniPrivacyAsync.fulfilled, (state, action) => {
         state.selectedAlumni = action.payload;
-        state.items = state.items.map((a) => (a.id === action.payload.id ? action.payload : a));
+        state.items = state.items.map((a) =>
+          a.id === action.payload.id ? action.payload : a,
+        );
       });
   },
 });
 
 export const {
-  setFilters, clearFilters, setSearch, setPage, setPageSize, setSort,
-  setSelectedAlumni, clearError,
+  setFilters,
+  clearFilters,
+  setSearch,
+  setPage,
+  setPageSize,
+  setSort,
+  setSelectedAlumni,
+  clearError,
 } = alumniSlice.actions;
 
 export default alumniSlice.reducer;

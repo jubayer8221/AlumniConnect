@@ -296,12 +296,12 @@ export default function AlumniProfileCard({
           bgcolor: "background.paper",
         }}
       >
-        {/* Alumni ID */}
-        <MetaItem
+        {/* Alumni id */}
+        {/* <MetaItem
           icon={<GraduationCap size={16} />}
-          label="Alumni ID"
+          label="Alumni id"
           value={alumni.alumniId}
-        />
+        /> */}
 
         {/* Batch */}
         {alumni.batch && (

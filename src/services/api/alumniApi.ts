@@ -1,5 +1,10 @@
 import type { AlumniService } from "@/services/interfaces/AlumniService";
-import type { Alumni, CreateAlumniRequest, UpdateAlumniRequest, AlumniQueryParams } from "@/types/alumni";
+import type {
+  Alumni,
+  CreateAlumniRequest,
+  UpdateAlumniRequest,
+  AlumniQueryParams,
+} from "@/types/alumni";
 import type { PaginatedResponse, ApiResponse } from "@/types/common";
 import type { DashboardData } from "@/types/dashboard";
 import { apiClient } from "./apiClient";
@@ -21,7 +26,10 @@ export const restAlumniService: AlumniService = {
     const res = await apiClient.post("/alumni", data);
     return res.data;
   },
-  async update(id: string, data: UpdateAlumniRequest): Promise<ApiResponse<Alumni>> {
+  async update(
+    id: string,
+    data: UpdateAlumniRequest,
+  ): Promise<ApiResponse<Alumni>> {
     const res = await apiClient.put(`/alumni/${id}`, data);
     return res.data;
   },
@@ -33,12 +41,21 @@ export const restAlumniService: AlumniService = {
     const res = await apiClient.patch(`/alumni/${id}/verify`);
     return res.data;
   },
-  async updateStatus(id: string, status: Alumni["status"]): Promise<ApiResponse<Alumni>> {
+  async updateStatus(
+    id: string,
+    status: Alumni["status"],
+  ): Promise<ApiResponse<Alumni>> {
     const res = await apiClient.patch(`/alumni/${id}/status`, { status });
     return res.data;
   },
-  async updatePrivacy(id: string, privacy: Alumni["privacy"]): Promise<ApiResponse<Alumni>> {
-    const res = await apiClient.patch(`/alumni/${id}/privacy`, privacy);
+  async updatePrivacy(
+    id: string,
+    data: {
+      privacy: Alumni["privacy"];
+      sectionPrivacy: Alumni["sectionPrivacy"];
+    },
+  ): Promise<ApiResponse<Alumni>> {
+    const res = await apiClient.patch(`/alumni/${id}/privacy`, data);
     return res.data;
   },
   async getDashboardData(): Promise<ApiResponse<DashboardData>> {

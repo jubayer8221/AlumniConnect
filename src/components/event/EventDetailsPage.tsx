@@ -21,7 +21,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   fetchEventByIdAsync,
@@ -41,6 +41,7 @@ import {
 } from "@/components/common";
 import { formatDate, formatTime } from "@/utils/dateUtils";
 import { isUpcoming } from "@/utils/dateUtils";
+import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
 export default function EventDetailsPage({
   isAdmin = false,
@@ -48,6 +49,7 @@ export default function EventDetailsPage({
   isAdmin?: boolean;
 }) {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { selectedEvent, registrations, loading } = useAppSelector(
@@ -55,6 +57,7 @@ export default function EventDetailsPage({
   );
   const { user } = useAppSelector((s) => s.auth);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   useEffect(() => {
     if (id) {
@@ -62,6 +65,19 @@ export default function EventDetailsPage({
       dispatch(fetchEventRegistrationsAsync(id));
     }
   }, [dispatch, id]);
+
+  useEffect(() => {
+    if (!id) return;
+    if (selectedEvent)
+      setBreadcrumbLabel(location.pathname, selectedEvent.title);
+    return () => clearBreadcrumbLabel(location.pathname);
+  }, [
+    clearBreadcrumbLabel,
+    id,
+    location.pathname,
+    selectedEvent,
+    setBreadcrumbLabel,
+  ]);
 
   if (loading && !selectedEvent) return <CommonLoading />;
   if (!selectedEvent) return <CommonEmptyState title="Event not found" />;

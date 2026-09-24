@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
   Box,
   Card,
@@ -19,6 +20,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Grid,
+  Alert,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import {
@@ -35,12 +37,14 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  KeyRound,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   fetchAlumniByIdAsync,
   updateAlumniPrivacyAsync,
 } from "@/Slice/alumniSlice";
+import { changePasswordAsync } from "@/Slice/authSlice";
 import { showToast } from "@/Slice/uiSlice";
 import {
   CommonPageHeader,
@@ -49,12 +53,15 @@ import {
   CommonInputField,
   CommonSelectField,
   CommonCheckbox,
+  CommonButton,
 } from "@/components/common";
 import type {
   SectionPrivacy,
   PrivacyLevel,
   AlumniPrivacy,
 } from "@/types/alumni";
+import { ChangePasswordRequest } from "@/types/auth";
+import { changePasswordSchema } from "@/validation/authValidation";
 
 const defaultSectionPrivacy: SectionPrivacy = {
   personalInfo: "ALUMNI_ONLY",
@@ -186,6 +193,34 @@ export default function SettingsPrivacyPage() {
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { error } = useAppSelector((s) => s.auth);
+
+  const { control, handleSubmit, reset } = useForm<ChangePasswordRequest>({
+    resolver: yupResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = async (data: ChangePasswordRequest) => {
+    const res = await dispatch(changePasswordAsync(data));
+    if (res.meta.requestStatus === "fulfilled") {
+      dispatch(
+        showToast({
+          message: "Password changed successfully",
+          severity: "success",
+        }),
+      );
+      reset();
+    } else {
+      dispatch(
+        showToast({ message: "Failed to change password", severity: "error" }),
+      );
+    }
+  };
+
   const alumniInfoForm = useForm({
     defaultValues: {
       username: selectedAlumni?.username ?? "",
@@ -268,7 +303,7 @@ export default function SettingsPrivacyPage() {
           id: selectedAlumni.id,
           privacy: legacyPrivacy,
           sectionPrivacy,
-        } as any),
+        }),
       );
 
       if (result.meta.requestStatus === "fulfilled") {
@@ -793,6 +828,61 @@ export default function SettingsPrivacyPage() {
           </Button>
         </Box>
       )}
+
+      <Card
+        sx={{
+          mt: 3,
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          maxWidth: "100%",
+        }}
+      >
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <KeyRound size={20} className="text-blue-600" />
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              Change Password
+            </Typography>
+          </Box>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+            Account: {user?.username}
+          </Typography>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <CommonInputField
+                name="currentPassword"
+                label="Current Password"
+                control={control}
+                type="password"
+                required
+              />
+              <CommonInputField
+                name="newPassword"
+                label="New Password"
+                control={control}
+                type="password"
+                required
+              />
+              <CommonInputField
+                name="confirmPassword"
+                label="Confirm New Password"
+                control={control}
+                type="password"
+                required
+              />
+              <CommonButton type="submit" loading={loading}>
+                Change Password
+              </CommonButton>
+            </Box>
+          </form>
+        </CardContent>
+      </Card>
     </Box>
   );
 }

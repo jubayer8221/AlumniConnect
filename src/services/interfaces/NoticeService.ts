@@ -1,4 +1,9 @@
-import type { Notice, CreateNoticeRequest, UpdateNoticeRequest, NoticeQueryParams } from "@/types/notice";
+import type {
+  Notice,
+  CreateNoticeRequest,
+  UpdateNoticeRequest,
+  NoticeQueryParams,
+} from "@/types/notice";
 import type { PaginatedResponse, ApiResponse } from "@/types/common";
 
 export interface NoticeService {

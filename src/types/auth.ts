@@ -25,6 +25,7 @@ export interface CredentialRecord {
   role: UserRole;
   alumniId?: string;
   email?: string;
+  phone?: string;
   displayName?: string;
 }
 

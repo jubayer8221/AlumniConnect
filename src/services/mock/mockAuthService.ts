@@ -26,15 +26,49 @@ function ensureCredentials(): CredentialRecord[] {
     creds = [...seedCredentials];
     localStorageService.set(STORAGE_KEYS.CREDENTIALS, creds);
   } else {
-    const admin = creds.find(
-      (credential) => credential.id === "cred-admin-001",
+    const storedById = new Map(
+      creds.map((credential) => [credential.id, credential]),
     );
-    if (admin && !admin.alumniId) {
-      admin.alumniId = "ALM-ADMIN";
+    let changed = false;
+    for (const seedCredential of seedCredentials) {
+      const storedCredential = storedById.get(seedCredential.id);
+      if (!storedCredential) {
+        creds.push(seedCredential);
+        changed = true;
+        continue;
+      }
+      if (
+        storedCredential.username !== seedCredential.username ||
+        storedCredential.password !== seedCredential.password ||
+        storedCredential.alumniId !== seedCredential.alumniId ||
+        storedCredential.phone !== seedCredential.phone
+      ) {
+        Object.assign(storedCredential, seedCredential);
+        changed = true;
+      }
+    }
+    if (changed) {
       localStorageService.set(STORAGE_KEYS.CREDENTIALS, creds);
     }
   }
   return creds;
+}
+
+function normalizeLoginIdentifier(value: string): string {
+  const trimmed = value.trim().toLowerCase();
+  if (trimmed.includes("@")) {
+    return trimmed.replace(/\s+/g, "").replace(/[.,;]+$/, "");
+  }
+  return trimmed.replace(/\D/g, "");
+}
+
+function matchesLoginIdentifier(
+  credential: CredentialRecord,
+  identifier: string,
+): boolean {
+  return [credential.username, credential.email, credential.phone]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => normalizeLoginIdentifier(value) === identifier);
 }
 
 function getProfilePhoto(alumniId?: string): string | undefined {
@@ -48,9 +82,10 @@ export const mockAuthService: AuthService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     await delay();
     const creds = ensureCredentials();
+    const identifier = normalizeLoginIdentifier(credentials.username);
     const found = creds.find(
       (c) =>
-        c.username.toLowerCase() === credentials.username.toLowerCase() &&
+        matchesLoginIdentifier(c, identifier) &&
         c.password === credentials.password,
     );
     if (!found) {

@@ -487,7 +487,7 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Demo Section (EXACT Demo Data Maintained) */}
-          <Divider sx={{ my: 3.5 }}>
+          {/* <Divider sx={{ my: 3.5 }}>
             <Chip
               label="Quick Demo Login"
               size="small"
@@ -564,7 +564,7 @@ export default function LoginPage() {
                 </Typography>
               </Button>
             ))}
-          </Stack>
+          </Stack> */}
         </Box>
       </Box>
     </Box>

@@ -1,5 +1,10 @@
 import type { NoticeService } from "@/services/interfaces/NoticeService";
-import type { Notice, CreateNoticeRequest, UpdateNoticeRequest, NoticeQueryParams } from "@/types/notice";
+import type {
+  Notice,
+  CreateNoticeRequest,
+  UpdateNoticeRequest,
+  NoticeQueryParams,
+} from "@/types/notice";
 import type { PaginatedResponse, ApiResponse } from "@/types/common";
 import { apiClient } from "./apiClient";
 
@@ -16,7 +21,10 @@ export const restNoticeService: NoticeService = {
     const res = await apiClient.post("/notices", data);
     return res.data;
   },
-  async update(id: string, data: UpdateNoticeRequest): Promise<ApiResponse<Notice>> {
+  async update(
+    id: string,
+    data: UpdateNoticeRequest,
+  ): Promise<ApiResponse<Notice>> {
     const res = await apiClient.put(`/notices/${id}`, data);
     return res.data;
   },

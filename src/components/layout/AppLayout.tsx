@@ -3,41 +3,57 @@ import Sidebar from "./Sidebar";
 import MobileSidebar from "./MobileSidebar";
 import Header from "./Header";
 import { Outlet } from "react-router-dom";
+import Breadcrumbs from "@/components/common/Breadcrumbs";
+import { BreadcrumbLabelProvider } from "@/components/common/breadcrumbLabelContext";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-export default function AppLayout() {
+function AuthenticatedContent() {
+  useDocumentTitle();
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        minHeight: "100vh",
-        bgcolor: "background.default",
-      }}
-    >
-      <Sidebar />
-      <MobileSidebar />
+    <>
+      <Breadcrumbs />
       <Box
+        component="main"
         sx={{
           flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 0,
+          p: { xs: 2, sm: 3, md: 3.5 },
+          maxWidth: "100%",
+          overflowX: "hidden",
           bgcolor: "background.default",
         }}
       >
-        <Header />
+        <Outlet />
+      </Box>
+    </>
+  );
+}
+
+export default function AppLayout() {
+  return (
+    <BreadcrumbLabelProvider>
+      <Box
+        sx={{
+          display: "flex",
+          minHeight: "100vh",
+          bgcolor: "background.default",
+        }}
+      >
+        <Sidebar />
+        <MobileSidebar />
         <Box
-          component="main"
           sx={{
             flexGrow: 1,
-            p: { xs: 2, sm: 3, md: 3.5 },
-            maxWidth: "100%",
-            overflowX: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
             bgcolor: "background.default",
           }}
         >
-          <Outlet />
+          <Header />
+          <AuthenticatedContent />
         </Box>
       </Box>
-    </Box>
+    </BreadcrumbLabelProvider>
   );
 }

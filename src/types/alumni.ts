@@ -65,6 +65,10 @@ export interface Alumni {
   facebookUrl?: string;
   websiteUrl?: string;
   bio?: string;
+  secondarySchoolName?: string;
+  hobby?: string;
+  tShirtSize?: string;
+  sourceSerialNumber?: number;
   isMentor?: boolean;
   willingToMentor?: boolean;
   isVerified?: boolean;

@@ -1,7 +1,7 @@
 export function generateAlumniId(existing: string[] = []): string {
   let max = 0;
   for (const id of existing) {
-    const num = parseInt(id.replace("ALM-", ""), 10);
+    const num = parseInt(id.replace("", ""), 10);
     if (!isNaN(num) && num > max) max = num;
   }
   return `ALM-${String(max + 1).padStart(6, "0")}`;
