@@ -45,7 +45,7 @@ export default function HeaderProfileDialog({
       <Typography
         sx={{ px: 2, pt: 1.5, pb: 0.25, fontSize: "0.9rem", fontWeight: 700 }}
       >
-        {user?.displayName || username || user?.username || "Account"}
+        {user?.displayName || username || user?.username}
       </Typography>
       <Typography
         sx={{ px: 2, pb: 1.25, fontSize: "0.72rem", color: "text.secondary" }}

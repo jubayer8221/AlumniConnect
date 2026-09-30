@@ -40,8 +40,11 @@ function ensureCredentials(): CredentialRecord[] {
       if (
         storedCredential.username !== seedCredential.username ||
         storedCredential.password !== seedCredential.password ||
+        storedCredential.role !== seedCredential.role ||
         storedCredential.alumniId !== seedCredential.alumniId ||
-        storedCredential.phone !== seedCredential.phone
+        storedCredential.phone !== seedCredential.phone ||
+        storedCredential.email !== seedCredential.email ||
+        storedCredential.displayName !== seedCredential.displayName
       ) {
         Object.assign(storedCredential, seedCredential);
         changed = true;

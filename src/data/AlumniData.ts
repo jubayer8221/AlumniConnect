@@ -1,8 +1,13 @@
+import type { UserRole } from "@/types/auth";
+
 export interface AlumniRow {
   id: string;
   alumniId: string;
   userId: string;
   username: string;
+  role: UserRole;
+  roleId: string;
+  roleName: string;
   fullName: string;
   profilePhoto: string | null;
   gender?: string | null;
@@ -47,7 +52,18 @@ export interface AlumniRow {
   SerialNumber: number;
 }
 
-export const AlumniRows: AlumniRow[] = [
+export const userRole = [
+  { roleId: "001", roleName: "Admin", IsActive: true },
+  { roleId: "002", roleName: "Manager", IsActive: true },
+  { roleId: "003", roleName: "Moderator", IsActive: true },
+  { roleId: "004", roleName: "Alumni Member", IsActive: true },
+] as const;
+
+type AlumniRowSeed = Omit<AlumniRow, "role" | "roleId" | "roleName"> & {
+  role?: UserRole;
+};
+
+const alumniRowSeeds: AlumniRowSeed[] = [
   {
     id: "0001",
     alumniId: "000001",
@@ -687,7 +703,7 @@ export const AlumniRows: AlumniRow[] = [
     gender: null,
     dateOfBirth: null,
     bloodGroup: "A+",
-    email: "mirmuhammadwahidmurd@@gmail.com",
+    email: "mirmuhammadwahidmurd@gmail.com",
     phone: "01716205012",
     presentAddress: null,
     permanentAddress: "Nabinagar,Sherpur",
@@ -7869,7 +7885,7 @@ export const AlumniRows: AlumniRow[] = [
     gender: null,
     dateOfBirth: null,
     bloodGroup: "A+",
-    email: "nahhikamall73@@gmail.com",
+    email: "nahhikamall73@gmail.com",
     phone: "01717646967",
     presentAddress: null,
     permanentAddress: "Kharamapur,Sherpur",
@@ -15446,4 +15462,67 @@ export const AlumniRows: AlumniRow[] = [
     tShirtSize: null,
     SerialNumber: 320,
   },
+  {
+    id: "0321",
+    alumniId: "000321",
+    userId: "0321",
+    username: "admin",
+    role: "ADMIN",
+    fullName: "System Admin",
+    profilePhoto: null,
+    gender: null,
+    dateOfBirth: null,
+    bloodGroup: "B+",
+    email: "admin@gamil.com",
+    phone: "01234567890",
+    presentAddress: null,
+    permanentAddress: "In the system",
+    city: null,
+    country: "Bangladesh",
+    studentId: null,
+    registrationNumber: null,
+    programId: "prog-ssc",
+    programName: "SSC",
+    departmentId: null,
+    departmentName: null,
+    facultyId: null,
+    facultyName: null,
+    admissionYear: null,
+    graduationYear: 1998,
+    graduationSemester: null,
+    batch: "1998",
+    rollNumber: null,
+    currentOccupation: "Banker",
+    designation: "Banker",
+    companyName: null,
+    industry: null,
+    workLocation: null,
+    skills: [],
+    linkedinUrl: null,
+    facebookUrl: null,
+    websiteUrl: null,
+    bio: null,
+    isMentor: true,
+    willingToMentor: false,
+    isVerified: true,
+    status: "ACTIVE",
+    secondarySchoolName: "Sherpur govt. Victoria accademy",
+    hobby: "Writing",
+    tShirtSize: "XL",
+    SerialNumber: 321,
+  },
 ];
+
+export const AlumniRows: AlumniRow[] = alumniRowSeeds.map((row) => {
+  const role = row.role ?? "ALUMNI";
+  const roleId = role === "ADMIN" ? "001" : "004";
+
+  return {
+    ...row,
+    role,
+    roleId,
+    roleName:
+      userRole.find((catalogRole) => catalogRole.roleId === roleId)?.roleName ??
+      "Alumni Member",
+  };
+});

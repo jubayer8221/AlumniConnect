@@ -2,7 +2,9 @@ import type { CredentialRecord } from "@/types/auth";
 import type { Alumni, AlumniPrivacy } from "@/types/alumni";
 import type { EventItem, EventRegistration } from "@/types/event";
 import type { Notice } from "@/types/notice";
-import { AlumniRows } from "@/data/AlumniData";
+import { AlumniRows, userRole } from "@/data/AlumniData";
+
+export { userRole };
 
 const defaultPrivacy: AlumniPrivacy = {
   showEmail: true,
@@ -36,6 +38,7 @@ type AlumniSeed = Omit<
   | "privacy"
   | "verificationStatus"
 > & {
+  role: (typeof AlumniRows)[number]["role"];
   fullName: string;
   createdAt?: string;
   updatedAt?: string;
@@ -46,6 +49,7 @@ const importedAlumniSeeds: AlumniSeed[] = AlumniRows.map((row) => ({
   alumniId: row.alumniId || row.id,
   userId: row.userId || `cred-alm-${row.id}`,
   username: row.username || row.email || `alumni${row.id}`,
+  role: row.role,
   fullName: row.fullName,
   profilePhoto: row.profilePhoto || undefined,
   gender:
@@ -98,7 +102,7 @@ const importedAlumniSeeds: AlumniSeed[] = AlumniRows.map((row) => ({
   SerialNumber: row.SerialNumber,
 }));
 
-export const seedAlumni: Alumni[] = [...importedAlumniSeeds].map((a, i) => ({
+export const seedAlumni = [...importedAlumniSeeds].map((a, i) => ({
   ...a,
   username: a.username,
   privacy: { ...defaultPrivacy },
@@ -117,16 +121,18 @@ export const seedCredentials: CredentialRecord[] = [
     role: "ADMIN",
     displayName: "Administrator",
   },
-  ...seedAlumni.map((alumni) => ({
-    id: alumni.userId,
-    username: alumni.username,
-    password: "123456",
-    role: "ALUMNI" as const,
-    alumniId: alumni.alumniId,
-    email: alumni.email,
-    phone: alumni.phone,
-    displayName: alumni.fullName,
-  })),
+  ...seedAlumni
+    .filter((alumni) => alumni.role !== "ADMIN")
+    .map((alumni) => ({
+      id: alumni.userId,
+      username: alumni.username,
+      password: "123456",
+      role: alumni.role,
+      alumniId: alumni.alumniId,
+      email: alumni.email,
+      phone: alumni.phone,
+      displayName: alumni.fullName,
+    })),
 ];
 
 // ─── Events ─────────────────────────────────────────────────────────────────
