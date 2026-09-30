@@ -115,7 +115,7 @@ export default function AdminDashboardPage() {
     <Box>
       <CommonPageHeader
         title={`Welcome back, ${user?.displayName || "Administrator"}`}
-        subtitle={`Here's what's happening with your alumni community at ${appConfig.institutionName}.`}
+        subtitle={`Alumni community of ${appConfig.institutionName}.`}
       />
 
       <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }} sx={{ mb: 3 }}>
