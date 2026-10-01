@@ -29,14 +29,7 @@ function isoDaysFromNow(days: number): string {
 
 type AlumniSeed = Omit<
   Alumni,
-  | "fullName"
-  | "firstName"
-  | "middleName"
-  | "lastName"
-  | "createdAt"
-  | "updatedAt"
-  | "privacy"
-  | "verificationStatus"
+  "fullName" | "createdAt" | "updatedAt" | "privacy" | "verificationStatus"
 > & {
   role: (typeof AlumniRows)[number]["role"];
   fullName: string;
@@ -113,13 +106,18 @@ export const seedAlumni = [...importedAlumniSeeds].map((a, i) => ({
 
 // ─── Credentials ───────────────────────────────────────────────────────────
 
+const adminAlumni = seedAlumni.find((alumni) => alumni.role === "ADMIN");
+
 export const seedCredentials: CredentialRecord[] = [
   {
     id: "admin-user",
     username: "admin",
     password: "123456",
     role: "ADMIN",
-    displayName: "Administrator",
+    alumniId: adminAlumni?.alumniId,
+    email: adminAlumni?.email,
+    phone: adminAlumni?.phone,
+    displayName: adminAlumni?.fullName ?? "System Admin",
   },
   ...seedAlumni
     .filter((alumni) => alumni.role !== "ADMIN")

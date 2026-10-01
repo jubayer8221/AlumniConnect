@@ -1,8 +1,7 @@
 import type { Alumni } from "@/types/alumni";
 
 const REQUIRED_PROFILE_FIELDS: (keyof Alumni)[] = [
-  "firstName",
-  "lastName",
+  "fullName",
   "profilePhoto",
   "email",
   "phone",
@@ -15,8 +14,7 @@ const REQUIRED_PROFILE_FIELDS: (keyof Alumni)[] = [
 ];
 
 const FIELD_LABELS: Record<string, string> = {
-  firstName: "First Name",
-  lastName: "Last Name",
+  fullName: "Full Name",
   profilePhoto: "Profile Photo",
   email: "Email",
   phone: "Phone",

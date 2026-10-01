@@ -174,24 +174,12 @@ export const mockAlumniService: AlumniService = {
     const existingIds = all.map((a) => a.alumniId);
     const alumniId = generateAlumniId(existingIds);
     const now = new Date().toISOString();
-    const fullName =
-      data.fullName?.trim() ||
-      [data.firstName, data.middleName, data.lastName]
-        .filter(Boolean)
-        .join(" ") ||
-      "New Alumni";
-    const [firstNamePart, ...remainingNameParts] = fullName.split(/\s+/);
-    const lastNamePart = remainingNameParts.length
-      ? remainingNameParts[remainingNameParts.length - 1]
-      : "";
+    const fullName = data.fullName?.trim() || "New Alumni";
     const newAlumni: Alumni = {
       id: generateUUID(),
       alumniId,
       userId: generateUUID(),
       username: data.username,
-      firstName: firstNamePart || fullName,
-      middleName: data.middleName,
-      lastName: lastNamePart || fullName,
       fullName,
       nativeName: data.nativeName,
       profilePhoto: data.profilePhoto,
@@ -288,13 +276,7 @@ export const mockAlumniService: AlumniService = {
         message: "Alumni not found",
         data: null as unknown as Alumni,
       };
-    const fullName =
-      data.fullName?.trim() ||
-      (data.middleName || all[idx].middleName
-        ? `${data.firstName || all[idx].firstName} ${data.middleName || all[idx].middleName || ""} ${data.lastName || all[idx].lastName}`
-            .replace(/\s+/g, " ")
-            .trim()
-        : `${data.firstName || all[idx].firstName} ${data.lastName || all[idx].lastName}`);
+    const fullName = data.fullName?.trim() || all[idx].fullName;
     const updated: Alumni = {
       ...all[idx],
       ...data,

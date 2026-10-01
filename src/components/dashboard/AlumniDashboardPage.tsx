@@ -73,7 +73,6 @@ export default function AlumniDashboardPage() {
   const completion = calculateProfileCompletion(selectedAlumni);
   const missing = getMissingProfileFields(selectedAlumni);
   const welcomeName =
-    selectedAlumni.firstName?.trim() ||
     selectedAlumni.fullName?.trim() ||
     user?.displayName?.trim() ||
     user?.username ||

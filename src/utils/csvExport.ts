@@ -6,8 +6,7 @@ export function exportAlumniToCSV(
 ): void {
   const headers = [
     "Alumni id",
-    "First Name",
-    "Last Name",
+    "Full Name",
     "Email",
     "Phone",
     "Gender",
@@ -29,8 +28,7 @@ export function exportAlumniToCSV(
 
   const rows = alumni.map((a) => [
     a.alumniId,
-    a.firstName,
-    a.lastName,
+    a.fullName,
     a.email,
     a.phone,
     a.gender || "",
@@ -50,12 +48,16 @@ export function exportAlumniToCSV(
     a.isMentor ? "Yes" : "No",
   ]);
 
-  const csvContent = [
-    headers.join(","),
-    ...rows.map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-    ),
-  ].join("\n");
+  const encodeCell = (cell: unknown) => {
+    const value = cell == null ? "" : String(cell);
+    const safeValue = /^[\u0000-\u0020]*[=+\-@]/.test(value)
+      ? `'${value}`
+      : value;
+    return `"${safeValue.replace(/"/g, '""')}"`;
+  };
+  const csvContent =
+    "\uFEFF" +
+    [headers, ...rows].map((row) => row.map(encodeCell).join(",")).join("\r\n");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
@@ -66,5 +68,5 @@ export function exportAlumniToCSV(
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

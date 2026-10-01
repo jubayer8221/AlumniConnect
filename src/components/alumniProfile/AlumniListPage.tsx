@@ -5,16 +5,14 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   IconButton,
-  Menu,
-  MenuItem,
   Chip,
+  Tooltip,
 } from "@mui/material";
 import {
   View,
   LayoutGrid,
   Plus,
   Download,
-  MoreVertical,
   Eye,
   Pencil,
   Trash2,
@@ -27,6 +25,7 @@ import {
   setSearch,
   setPage,
   setPageSize,
+  setSort,
   deleteAlumniAsync,
   verifyAlumniAsync,
 } from "@/Slice/alumniSlice";
@@ -48,18 +47,25 @@ import AlumniFilters from "@/components/alumniProfile/AlumniFilters";
 import type { GridColDef } from "@mui/x-data-grid";
 import type { Alumni } from "@/types/alumni";
 import { exportAlumniToCSV } from "@/utils/csvExport";
+import { alumniService } from "@/services";
 
 export default function AlumniListPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { items, loading, totalCount, pageNumber, pageSize, search, filters } =
-    useAppSelector((s) => s.alumni);
+  const {
+    items,
+    loading,
+    totalCount,
+    pageNumber,
+    pageSize,
+    search,
+    filters,
+    sortBy,
+    sortDirection,
+  } = useAppSelector((s) => s.alumni);
   const [view, setView] = useState<"table" | "grid">("table");
+  const [exporting, setExporting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Alumni | null>(null);
-  const [actionRow, setActionRow] = useState<{
-    alumni: Alumni;
-    anchor: HTMLElement | null;
-  }>({ alumni: null as unknown as Alumni, anchor: null });
 
   const load = useCallback(() => {
     dispatch(fetchAlumniAsync());
@@ -111,11 +117,64 @@ export default function AlumniListPage() {
     }
   };
 
-  const handleExport = () => {
-    exportAlumniToCSV(items);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const exportedAlumni = new Map<string, Alumni>();
+      const exportPageSize = 100;
+      let exportPage = 1;
+      let exportTotalCount = Number.POSITIVE_INFINITY;
+
+      while (exportedAlumni.size < exportTotalCount) {
+        const response = await alumniService.getAll({
+          pageNumber: exportPage,
+          pageSize: exportPageSize,
+          search,
+          filters,
+          sortBy: "fullName",
+          sortDirection: "asc",
+        });
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to load alumni");
+        }
+
+        exportTotalCount = response.data.totalCount;
+        const previousCount = exportedAlumni.size;
+        response.data.items.forEach((alumni) =>
+          exportedAlumni.set(alumni.id, alumni),
+        );
+
+        if (
+          response.data.items.length === 0 ||
+          exportedAlumni.size === previousCount
+        ) {
+          break;
+        }
+        exportPage += 1;
+      }
+
+      exportAlumniToCSV(Array.from(exportedAlumni.values()));
+      dispatch(
+        showToast({
+          message: `${exportedAlumni.size} alumni exported successfully`,
+          severity: "success",
+        }),
+      );
+    } catch (error) {
+      dispatch(
+        showToast({
+          message:
+            error instanceof Error ? error.message : "Failed to export alumni",
+          severity: "error",
+        }),
+      );
+    } finally {
+      setExporting(false);
+    }
   };
 
-  const columns: GridColDef[] = [
+  const columns: GridColDef<Alumni>[] = [
     {
       field: "serial",
       headerName: "#",
@@ -167,7 +226,7 @@ export default function AlumniListPage() {
             >
               {params.row.fullName}
             </Box>
-            <Box
+            {/* <Box
               sx={{
                 mt: 0.35,
                 fontSize: "0.72rem",
@@ -178,7 +237,7 @@ export default function AlumniListPage() {
               }}
             >
               id: {params.row.alumniId}
-            </Box>
+            </Box> */}
           </Box>
         </Box>
       ),
@@ -201,76 +260,65 @@ export default function AlumniListPage() {
       headerName: "Actions",
       width: 100,
       sortable: false,
-      renderCell: (params) => (
-        <>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              setActionRow({
-                alumni: params.row as Alumni,
-                anchor: e.currentTarget,
-              });
-            }}
-          >
-            <MoreVertical size={16} />
-          </IconButton>
-          <Menu
-            anchorEl={actionRow.anchor}
-            open={actionRow.alumni?.id === (params.row as Alumni).id}
-            onClose={() =>
-              setActionRow({ alumni: null as unknown as Alumni, anchor: null })
-            }
-          >
-            <MenuItem
-              onClick={() => {
-                setActionRow({
-                  alumni: null as unknown as Alumni,
-                  anchor: null,
-                });
-                navigate(`/alumni/${actionRow.alumni.id}`);
+      filterable: false,
+      renderCell: ({ row }) => (
+        <Box onClick={(event) => event.stopPropagation()} sx={{ gap: 1 }}>
+          <Tooltip title="View alumni">
+            <IconButton
+              size="small"
+              aria-label={`View ${row.fullName}`}
+              onClick={() => navigate(`/alumni/${row.id}`)}
+              sx={{
+                color: "text.secondary",
+                bgcolor: "white",
+                "&:hover": {
+                  bgcolor: "primary.main",
+                  color: "primary.contrastText",
+                },
               }}
             >
-              <Eye size={16} className="mr-2" /> View
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                setActionRow({
-                  alumni: null as unknown as Alumni,
-                  anchor: null,
-                });
-                navigate(`/alumni/${actionRow.alumni.id}/edit`);
+              <Eye size={16} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit alumni">
+            <IconButton
+              sx={{
+                color: "text.secondary",
+                bgcolor: "white",
+                "&:hover": {
+                  bgcolor: "primary.main",
+                  color: "primary.contrastText",
+                },
               }}
+              size="small"
+              aria-label={`Edit ${row.fullName}`}
+              onClick={() => navigate(`/alumni/${row.id}/edit`)}
             >
-              <Pencil size={16} className="mr-2" /> Edit
-            </MenuItem>
-            {!actionRow.alumni?.isVerified && (
-              <MenuItem
-                onClick={() => {
-                  handleVerify(actionRow.alumni);
-                  setActionRow({
-                    alumni: null as unknown as Alumni,
-                    anchor: null,
-                  });
-                }}
+              <Pencil size={16} />
+            </IconButton>
+          </Tooltip>
+          {/* {!row.isVerified && (
+            <Tooltip title="Verify alumni">
+              <IconButton
+                size="small"
+                aria-label={`Verify ${row.fullName}`}
+                onClick={() => void handleVerify(row)}
               >
-                <BadgeCheck size={16} className="mr-2" /> Verify
-              </MenuItem>
-            )}
-            <MenuItem
-              onClick={() => {
-                setDeleteTarget(actionRow.alumni);
-                setActionRow({
-                  alumni: null as unknown as Alumni,
-                  anchor: null,
-                });
-              }}
+                <BadgeCheck size={16} />
+              </IconButton>
+            </Tooltip>
+          )} */}
+          {/* <Tooltip title="Delete alumni">
+            <IconButton
+              size="small"
+              aria-label={`Delete ${row.fullName}`}
               sx={{ color: "error.main" }}
+              onClick={() => setDeleteTarget(row)}
             >
-              <Trash2 size={16} className="mr-2" /> Delete
-            </MenuItem>
-          </Menu>
-        </>
+              <Trash2 size={16} />
+            </IconButton>
+          </Tooltip> */}
+        </Box>
       ),
     },
   ];
@@ -278,11 +326,11 @@ export default function AlumniListPage() {
   return (
     <Box>
       <CommonPageHeader
-        title="Alumni List"
+        title="Alumni Directory"
         subtitle={`${totalCount} alumni registered`}
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Alumni" },
+          { label: "Alumni Directory" },
         ]}
         actions={
           <>
@@ -290,6 +338,7 @@ export default function AlumniListPage() {
               variant="outlined"
               startIcon={<Download size={18} />}
               onClick={handleExport}
+              loading={exporting}
             >
               Export CSV
             </CommonButton>
@@ -350,19 +399,35 @@ export default function AlumniListPage() {
         <>
           <CommonDataGrid
             columns={columns}
-            rows={items as unknown as Record<string, unknown>[]}
+            rows={items}
             rowCount={totalCount}
             page={pageNumber - 1}
             pageSize={pageSize}
+            sortModel={[{ field: sortBy, sort: sortDirection }]}
+            paginationMode="server"
+            sortingMode="server"
+            filterMode="server"
             loading={loading}
+            hideFooter
             onPaginationModelChange={(m) => {
-              handlePage(m.page + 1);
-              handlePageSize(m.pageSize);
+              if (m.pageSize !== pageSize) {
+                handlePageSize(m.pageSize);
+              } else {
+                handlePage(m.page + 1);
+              }
             }}
-            onRowClick={(params) => navigate(`/alumni/${params.id}`)}
-            getRowId={(row) => (row as unknown as Alumni).id}
+            onSortModelChange={(model) => {
+              const sort = model[0];
+              dispatch(
+                setSort({
+                  sortBy: sort?.field ?? "fullName",
+                  sortDirection: sort?.sort ?? "asc",
+                }),
+              );
+            }}
+            getRowId={(row) => row.id}
             rowHeight={64}
-            height={500}
+            height={Math.max(260, items.length * 64 + 120)}
           />
           <CommonPagination
             count={Math.ceil(totalCount / pageSize)}

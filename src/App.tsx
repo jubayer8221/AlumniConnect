@@ -93,7 +93,12 @@ function AppRoutes() {
           path="/alumni/settings-privacy"
           element={<SettingsPrivacyPage />}
         />
-        <Route path="/alumni/directory" element={<AlumniDirectoryPage />} />
+        <Route
+          path="/alumni/directory"
+          element={
+            role === "ADMIN" ? <AlumniListPage /> : <AlumniDirectoryPage />
+          }
+        />
         <Route path="/alumni/events" element={<EventListPage />} />
         <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
         <Route path="/alumni/notices" element={<NoticeListPage />} />
@@ -113,7 +118,10 @@ function AppRoutes() {
         }
       >
         <Route path="/dashboard" element={<AdminDashboardPage />} />
-        <Route path="/alumni" element={<AlumniListPage />} />
+        <Route
+          path="/alumni"
+          element={<Navigate to="/alumni/directory" replace />}
+        />
         <Route path="/events" element={<EventListPage isAdmin />} />
         <Route path="/events/create" element={<EventFormPage />} />
         <Route path="/events/:id" element={<EventDetailsPage isAdmin />} />

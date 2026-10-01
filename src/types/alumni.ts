@@ -13,9 +13,6 @@ export interface Alumni {
   alumniId: string;
   userId: string;
   username: string;
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
   fullName: string;
   nativeName?: string;
   profilePhoto?: string;
@@ -169,9 +166,6 @@ export interface AlumniFilters {
 }
 
 export interface CreateAlumniRequest {
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
   fullName?: string;
   nativeName?: string;
   gender?: Gender;

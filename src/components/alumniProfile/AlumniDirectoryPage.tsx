@@ -3,17 +3,9 @@ import {
   Grid,
   ToggleButtonGroup,
   ToggleButton,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   IconButton,
-  Chip,
   alpha,
+  Typography,
 } from "@mui/material";
 import { List, LayoutGrid, Eye, Pencil, BadgeCheck, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -24,6 +16,7 @@ import {
   setSearch,
   setPage,
   setPageSize,
+  setSort,
 } from "@/Slice/alumniSlice";
 import {
   CommonPageHeader,
@@ -34,9 +27,12 @@ import {
   CommonAvatar,
   CommonStatusBadge,
   CommonButton,
+  CommonDataGrid,
 } from "@/components/common";
 import AlumniCard from "@/components/alumniProfile/AlumniCard";
 import AlumniFilters from "@/components/alumniProfile/AlumniFilters";
+import type { GridColDef } from "@mui/x-data-grid";
+import type { Alumni } from "@/types/alumni";
 
 const NAVY = "#132038";
 const TEAL = "#2dd4bf";
@@ -45,17 +41,112 @@ export default function AlumniDirectoryPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { role } = useAppSelector((s) => s.auth);
-  const { items, loading, totalCount, pageNumber, pageSize, search } =
-    useAppSelector((s) => s.alumni);
+  const {
+    items,
+    loading,
+    totalCount,
+    pageNumber,
+    pageSize,
+    search,
+    filters,
+    sortBy,
+    sortDirection,
+  } = useAppSelector((s) => s.alumni);
   const [view, setView] = useState<"table" | "grid">("grid");
   const isAdmin = role === "ADMIN";
 
   useEffect(() => {
     dispatch(fetchAlumniAsync());
-  }, [dispatch, pageNumber, pageSize]);
+  }, [dispatch, pageNumber, pageSize, search, filters, sortBy, sortDirection]);
+
+  const columns: GridColDef<Alumni>[] = [
+    {
+      field: "fullName",
+      headerName: "Alumni",
+      minWidth: 220,
+      flex: 1,
+      renderCell: ({ row }) => (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            gap: 1.5,
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <CommonAvatar src={row.profilePhoto} name={row.fullName} size={36} />
+          <Typography
+            noWrap
+            sx={{
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              color: NAVY,
+              minWidth: 0,
+            }}
+          >
+            {row.fullName}
+          </Typography>
+        </Box>
+      ),
+    },
+
+    {
+      field: "departmentName",
+      headerName: "Department",
+      minWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "batch",
+      headerName: "Batch",
+      width: 100,
+      valueGetter: (_value, row) => row.batch || row.graduationYear || "—",
+    },
+    {
+      field: "designation",
+      headerName: "Designation",
+      minWidth: 180,
+      flex: 1,
+      valueGetter: (_value, row) =>
+        [row.designation, row.companyName].filter(Boolean).join(" · ") || "—",
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 120,
+      renderCell: ({ row }) => <CommonStatusBadge status={row.status} />,
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 100,
+      sortable: false,
+      filterable: false,
+      renderCell: ({ row }) => (
+        <Box onClick={(event) => event.stopPropagation()}>
+          <IconButton
+            size="small"
+            aria-label={`View ${row.fullName}`}
+            onClick={() => navigate(`/alumni/${row.id}`)}
+          >
+            <Eye size={16} />
+          </IconButton>
+          <IconButton
+            size="small"
+            aria-label={`Edit ${row.fullName}`}
+            onClick={() => navigate(`/alumni/${row.id}/edit`)}
+          >
+            <Pencil size={16} />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
 
   return (
-    <Box>
+    <Box sx={{ width: "100%", pb: 4 }}>
       <CommonPageHeader
         title="Alumni List"
         subtitle={`${totalCount} alumni in the community`}
@@ -124,16 +215,18 @@ export default function AlumniDirectoryPage() {
           message="No alumni match your search criteria."
         />
       ) : view === "grid" ? (
-        <Grid container spacing={2}>
-          {items.map((alum) => (
-            <Grid key={alum.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <AlumniCard
-                alumni={alum}
-                onEdit={() => navigate(`/alumni/${alum.id}/edit`)}
-              />
-            </Grid>
-          ))}
-          <Grid size={{ xs: 12 }}>
+        <Box>
+          <Grid container spacing={2}>
+            {items.map((alum) => (
+              <Grid key={alum.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <AlumniCard
+                  alumni={alum}
+                  onEdit={() => navigate(`/alumni/${alum.id}/edit`)}
+                />
+              </Grid>
+            ))}
+          </Grid>
+          <Box sx={{ mt: 3 }}>
             <CommonPagination
               count={Math.ceil(totalCount / pageSize)}
               page={pageNumber}
@@ -141,130 +234,43 @@ export default function AlumniDirectoryPage() {
               pageSize={pageSize}
               onPageSizeChange={(s) => dispatch(setPageSize(s))}
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       ) : (
         <Box>
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
+          <CommonDataGrid
+            columns={columns}
+            rows={items}
+            rowCount={totalCount}
+            page={pageNumber - 1}
+            pageSize={pageSize}
+            sortModel={[{ field: sortBy, sort: sortDirection }]}
+            paginationMode="server"
+            sortingMode="server"
+            filterMode="server"
+            autoHeight
+            hideFooter
+            rowHeight={64}
+            onPaginationModelChange={(model) => {
+              if (model.pageSize !== pageSize) {
+                dispatch(setPageSize(model.pageSize));
+              } else {
+                dispatch(setPage(model.page + 1));
+              }
             }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow
-                  sx={{
-                    "& th": {
-                      fontWeight: 700,
-                      color: "text.secondary",
-                      bgcolor: alpha(NAVY, 0.03),
-                    },
-                  }}
-                >
-                  <TableCell>Alumni</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Batch</TableCell>
-                  <TableCell>Designation</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {items.map((alum) => (
-                  <TableRow
-                    key={alum.id}
-                    hover
-                    sx={{ cursor: "pointer" }}
-                    onClick={() => navigate(`/alumni/${alum.id}`)}
-                  >
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
-                      >
-                        <CommonAvatar
-                          src={alum.profilePhoto}
-                          name={alum.fullName}
-                          size={36}
-                        />
-                        <Box sx={{ minWidth: 0 }}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                            }}
-                          >
-                            <Typography
-                              sx={{ fontWeight: 600, fontSize: "0.875rem" }}
-                            >
-                              {alum.fullName}
-                            </Typography>
-                            {alum.isVerified && (
-                              <BadgeCheck size={14} color={TEAL} />
-                            )}
-                          </Box>
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "text.secondary" }}
-                          >
-                            {alum.alumniId}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {alum.departmentName || "—"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={alum.batch || alum.graduationYear || "—"}
-                        size="small"
-                        sx={{
-                          bgcolor: alpha(TEAL, 0.12),
-                          color: "#0f9c8f",
-                          fontWeight: 600,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {alum.designation || "—"}
-                        {alum.companyName ? ` · ${alum.companyName}` : ""}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <CommonStatusBadge status={alum.status} />
-                    </TableCell>
-                    <TableCell
-                      align="right"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/alumni/${alum.id}`)}
-                      >
-                        <Eye size={16} />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/alumni/${alum.id}/edit`)}
-                      >
-                        <Pencil size={16} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+            onSortModelChange={(model) => {
+              const sort = model[0];
+              dispatch(
+                setSort({
+                  sortBy: sort?.field ?? "fullName",
+                  sortDirection: sort?.sort ?? "asc",
+                }),
+              );
+            }}
+            getRowId={(row) => row.id}
+          />
 
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: 3 }}>
             <CommonPagination
               count={Math.ceil(totalCount / pageSize)}
               page={pageNumber}

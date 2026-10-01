@@ -35,7 +35,11 @@ export const loginAsync = createAsyncThunk(
 );
 
 export const logoutAsync = createAsyncThunk("auth/logout", async () => {
-  await authService.logout();
+  try {
+    await authService.logout();
+  } finally {
+    await localStorageService.clearSiteData();
+  }
 });
 
 export const restoreSessionAsync = createAsyncThunk(

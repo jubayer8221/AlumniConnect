@@ -62,7 +62,10 @@ function normalizeLoginIdentifier(value: string): string {
   if (trimmed.includes("@")) {
     return trimmed.replace(/\s+/g, "").replace(/[.,;]+$/, "");
   }
-  return trimmed.replace(/\D/g, "");
+  if (/^\+?[\d\s().-]+$/.test(trimmed)) {
+    return trimmed.replace(/\D/g, "");
+  }
+  return trimmed;
 }
 
 function matchesLoginIdentifier(

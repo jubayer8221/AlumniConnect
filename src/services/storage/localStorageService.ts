@@ -14,9 +14,7 @@ export const localStorageService = {
   set<T>(key: string, value: T): void {
     try {
       localStorage.setItem(PREFIX + key, JSON.stringify(value));
-    } catch {
-      // Storage full or unavailable — fail silently in demo mode
-    }
+    } catch {}
   },
 
   remove(key: string): void {
@@ -34,6 +32,31 @@ export const localStorageService = {
         .forEach((k) => localStorage.removeItem(k));
     } catch {
       // ignore
+    }
+  },
+
+  async clearSiteData(): Promise<void> {
+    this.clear();
+
+    try {
+      Object.keys(sessionStorage)
+        .filter((k) => k.startsWith(PREFIX))
+        .forEach((k) => sessionStorage.removeItem(k));
+    } catch {
+      // Ignore unavailable session storage.
+    }
+
+    if (typeof caches !== "undefined") {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames
+            .filter((name) => name.startsWith(PREFIX))
+            .map((name) => caches.delete(name)),
+        );
+      } catch {
+        // Ignore unavailable Cache Storage.
+      }
     }
   },
 

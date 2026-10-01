@@ -77,11 +77,6 @@ const adminNav: NavItem[] = [
     ],
   },
   {
-    label: getRouteLabel("/alumni"),
-    path: "/alumni",
-    icon: <ListIcon size={16} />,
-  },
-  {
     label: getRouteLabel("/alumni/directory"),
     path: "/alumni/directory",
     icon: <ListIcon size={16} />,
