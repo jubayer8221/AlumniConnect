@@ -1,20 +1,17 @@
-import { Box, Card, CardContent } from "@mui/material";
+import { Box } from "@mui/material";
 import { Save, ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
-  fetchEventByIdAsync,
   createEventAsync,
   updateEventAsync,
-} from "@/Slice/eventSlice";
-import { showToast } from "@/Slice/uiSlice";
-import {
-  eventSchema,
-  type EventFormValues,
-} from "@/validation/eventValidation";
+  fetchEventByIdAsync,
+} from "@/store/Slice/eventSlice";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
@@ -26,6 +23,34 @@ import {
   CommonCard,
 } from "@/components/common";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
+import { getApiErrorMessage } from "@/utils/apiError";
+
+/* ============================================================
+   Form validation — inline
+   ============================================================ */
+const eventSchema = yup.object({
+  title: yup.string().trim().required("Title is required"),
+  description: yup.string().trim().required("Description is required"),
+  eventType: yup.string().required("Event type is required"),
+  date: yup.string().required("Event date is required"),
+  startTime: yup.string().required("Start time is required"),
+  endTime: yup.string().required("End time is required"),
+  location: yup.string().trim().required("Location is required"),
+  venue: yup.string().trim().required("Venue is required"),
+  organizer: yup.string().trim().required("Organizer is required"),
+  registrationDeadline: yup
+    .string()
+    .required("Registration deadline is required"),
+  capacity: yup
+    .number()
+    .typeError("Capacity must be a number")
+    .required("Capacity is required")
+    .min(1, "Capacity must be at least 1"),
+  status: yup.string().required("Status is required"),
+  image: yup.string().optional(),
+});
+
+type EventFormValues = yup.InferType<typeof eventSchema>;
 
 const eventTypeOptions = [
   "Reunion",
@@ -38,6 +63,7 @@ const eventTypeOptions = [
   "Webinar",
   "Other",
 ].map((v) => ({ label: v, value: v }));
+
 const statusOptions = [
   { label: "Upcoming", value: "UPCOMING" },
   { label: "Ongoing", value: "ONGOING" },
@@ -51,8 +77,10 @@ export default function EventFormPage() {
   const { id } = useParams();
   const location = useLocation();
   const isEdit = !!id;
+
   const { selectedEvent, loading } = useAppSelector((s) => s.events);
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
+
   const { control, handleSubmit, reset, formState } = useForm<EventFormValues>({
     resolver: yupResolver(eventSchema) as never,
     defaultValues: {
@@ -71,11 +99,17 @@ export default function EventFormPage() {
     },
   });
 
+  // ★ Fetch the existing event when editing, only if not already loaded
   useEffect(() => {
-    if (isEdit && id) dispatch(fetchEventByIdAsync(id));
-  }, [dispatch, isEdit, id]);
+    if (isEdit && id && (!selectedEvent || selectedEvent.id !== id)) {
+      void dispatch(fetchEventByIdAsync(id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, id]);
+
+  // Populate the form once the event is in the store
   useEffect(() => {
-    if (isEdit && selectedEvent) {
+    if (isEdit && selectedEvent && selectedEvent.id === id) {
       reset({
         title: selectedEvent.title,
         description: selectedEvent.description,
@@ -91,7 +125,7 @@ export default function EventFormPage() {
         status: selectedEvent.status as never,
       });
     }
-  }, [isEdit, selectedEvent, reset]);
+  }, [isEdit, id, selectedEvent, reset]);
 
   useEffect(() => {
     if (!isEdit || !selectedEvent) return;
@@ -105,31 +139,58 @@ export default function EventFormPage() {
     setBreadcrumbLabel,
   ]);
 
+  // ★ Real submit handler — actually dispatches the create/update thunk
   const onSubmit = async (data: EventFormValues) => {
-    if (isEdit && id) {
-      const res = await dispatch(
-        updateEventAsync({ id, data: { ...data, id } }),
+    try {
+      if (isEdit && id) {
+        const res = await dispatch(
+          updateEventAsync({
+            id,
+            data: { ...data, id } as never,
+          }),
+        );
+
+        if (updateEventAsync.fulfilled.match(res)) {
+          dispatch(
+            showToast({
+              message: "Event updated successfully",
+              severity: "success",
+            }),
+          );
+          navigate(`/events/${id}`);
+        } else {
+          const message =
+            typeof res.payload === "string"
+              ? res.payload
+              : "Unable to update event";
+          dispatch(showToast({ message, severity: "error" }));
+        }
+      } else {
+        const res = await dispatch(createEventAsync(data as never));
+
+        if (createEventAsync.fulfilled.match(res)) {
+          dispatch(
+            showToast({
+              message: "Event created successfully",
+              severity: "success",
+            }),
+          );
+          navigate("/events");
+        } else {
+          const message =
+            typeof res.payload === "string"
+              ? res.payload
+              : "Unable to create event";
+          dispatch(showToast({ message, severity: "error" }));
+        }
+      }
+    } catch (error) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(error, "Unable to save event"),
+          severity: "error",
+        }),
       );
-      if (res.meta.requestStatus === "fulfilled") {
-        dispatch(
-          showToast({
-            message: "Event updated successfully",
-            severity: "success",
-          }),
-        );
-        navigate(`/events/${id}`);
-      }
-    } else {
-      const res = await dispatch(createEventAsync(data as never));
-      if (res.meta.requestStatus === "fulfilled") {
-        dispatch(
-          showToast({
-            message: "Event created successfully",
-            severity: "success",
-          }),
-        );
-        navigate("/events");
-      }
     }
   };
 

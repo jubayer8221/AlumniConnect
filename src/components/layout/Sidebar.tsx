@@ -19,14 +19,13 @@ import {
   BarChart3,
   Settings,
   UserCircle,
-  Briefcase,
   ChevronDown,
   Shield,
   ListIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { useAppSelector, useAppDispatch } from "@/hooks";
-import { logoutAsync } from "@/Slice/authSlice";
+import { useAppSelector } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
 import { appConfig } from "@/config/appConfig";
 import { getRouteLabel } from "@/config/routeRegistry";
 import HeaderProfileDialog from "../alumniProfile/HeaderProfileDialog";
@@ -35,11 +34,7 @@ interface NavItem {
   label: string;
   path: string;
   icon: React.ReactNode;
-  children?: {
-    label: string;
-    path: string;
-    icon?: React.ReactNode;
-  }[];
+  children?: { label: string; path: string; icon?: React.ReactNode }[];
 }
 
 const adminNav: NavItem[] = [
@@ -58,17 +53,6 @@ const adminNav: NavItem[] = [
         path: "/alumni/profile",
         icon: <UserCircle size={16} />,
       },
-      // {
-      //   label: "Profile Setup",
-      //   path: "/alumni/profile-setup",
-      //   icon: <FileText size={16} />,
-      // },
-
-      // {
-      //   label: "Alumni Directory",
-      //   path: "/alumni/directory",
-      //   icon: <Users size={16} />,
-      // },
       {
         label: getRouteLabel("/alumni/settings-privacy"),
         path: "/alumni/settings-privacy",
@@ -141,21 +125,12 @@ const alumniNav: NavItem[] = [
     path: "/alumni/notices",
     icon: <Bell size={20} />,
   },
-  // {
-  //   label: getRouteLabel("/alumni/account"),
-  //   path: "/alumni/account",
-  //   icon: <Briefcase size={20} />,
-  // },
 ];
 
 export default function Sidebar() {
   const location = useLocation();
-  const dispatch = useAppDispatch();
-
-  const { role, user } = useAppSelector((s) => s.auth);
+  const { authUser: user, role } = useAuth();
   const collapsed = useAppSelector((s) => s.ui.sidebarCollapsed);
-
-  // HeaderProfileDialog state
   const [openDialog, setopenDialog] = useState<HTMLElement | null>(null);
 
   const navItems = role === "ADMIN" ? adminNav : alumniNav;
@@ -168,7 +143,6 @@ export default function Sidebar() {
       path !== "/alumni" &&
       location.pathname.startsWith(path));
 
-  // For items with children, auto-expand if any child is active
   const initialExpanded = navItems
     .filter((item) =>
       item.children?.some(
@@ -222,19 +196,12 @@ export default function Sidebar() {
               >
                 {item.icon}
               </ListItemIcon>
-
               <ListItemText
                 primary={item.label}
                 slotProps={{
-                  primary: {
-                    sx: {
-                      fontSize: "0.875rem",
-                      fontWeight: 600,
-                    },
-                  },
+                  primary: { sx: { fontSize: "0.875rem", fontWeight: 600 } },
                 }}
               />
-
               <ChevronDown
                 size={16}
                 style={{
@@ -246,16 +213,9 @@ export default function Sidebar() {
           </ListItem>
 
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <List
-              disablePadding
-              sx={{
-                pl: 3,
-                mb: 0.5,
-              }}
-            >
+            <List disablePadding sx={{ pl: 3, mb: 0.5 }}>
               {item.children!.map((child) => {
                 const childActive = location.pathname === child.path;
-
                 return (
                   <ListItem key={child.path} disablePadding>
                     <ListItemButton
@@ -268,9 +228,7 @@ export default function Sidebar() {
                         px: 2,
                         minHeight: 36,
                         color: childActive ? "primary.main" : "text.secondary",
-                        "&.Mui-selected": {
-                          bgcolor: "action.selected",
-                        },
+                        "&.Mui-selected": { bgcolor: "action.selected" },
                         "&:hover": {
                           bgcolor: "action.hover",
                           color: "primary.main",
@@ -278,24 +236,15 @@ export default function Sidebar() {
                       }}
                     >
                       {child.icon && (
-                        <ListItemIcon
-                          sx={{
-                            minWidth: 28,
-                            color: "inherit",
-                          }}
-                        >
+                        <ListItemIcon sx={{ minWidth: 28, color: "inherit" }}>
                           {child.icon}
                         </ListItemIcon>
                       )}
-
                       <ListItemText
                         primary={child.label}
                         slotProps={{
                           primary: {
-                            sx: {
-                              fontSize: "0.8rem",
-                              fontWeight: 500,
-                            },
+                            sx: { fontSize: "0.8rem", fontWeight: 500 },
                           },
                         }}
                       />
@@ -340,17 +289,11 @@ export default function Sidebar() {
           >
             {item.icon}
           </ListItemIcon>
-
           {!collapsed && (
             <ListItemText
               primary={item.label}
               slotProps={{
-                primary: {
-                  sx: {
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                  },
-                },
+                primary: { sx: { fontSize: "0.875rem", fontWeight: 600 } },
               }}
             />
           )}
@@ -378,7 +321,6 @@ export default function Sidebar() {
         overflow: "hidden",
       }}
     >
-      {/* Logo */}
       <Box
         sx={{
           display: "flex",
@@ -397,7 +339,6 @@ export default function Sidebar() {
             width: 40,
             height: 40,
             borderRadius: 2,
-            // bgcolor: "primary.main",
             flexShrink: 0,
             boxShadow: "none",
           }}
@@ -423,13 +364,8 @@ export default function Sidebar() {
             >
               {appConfig.appName}
             </Typography>
-
             <Typography
-              sx={{
-                fontSize: "0.7rem",
-                color: "text.secondary",
-                mt: 0.25,
-              }}
+              sx={{ fontSize: "0.7rem", color: "text.secondary", mt: 0.25 }}
             >
               {appConfig.institutionShortName}
             </Typography>
@@ -437,7 +373,6 @@ export default function Sidebar() {
         )}
       </Box>
 
-      {/* Navigation */}
       <List
         sx={{
           flex: 1,
@@ -450,15 +385,9 @@ export default function Sidebar() {
         {navItems.map(renderNavItem)}
       </List>
 
-      <Divider
-        sx={{
-          borderColor: "divider",
-        }}
-      />
+      <Divider sx={{ borderColor: "divider" }} />
 
-      {/* Bottom Section */}
       <Box sx={{ p: collapsed ? 1.5 : 2 }}>
-        {/* User Profile */}
         {user && (
           <Box
             onClick={(e) => setopenDialog(e.currentTarget)}
@@ -473,9 +402,7 @@ export default function Sidebar() {
               cursor: "pointer",
               borderRadius: 2,
               transition: "background-color 0.2s ease",
-              "&:hover": {
-                bgcolor: "action.hover",
-              },
+              "&:hover": { bgcolor: "action.hover" },
             }}
           >
             <Avatar
@@ -493,14 +420,8 @@ export default function Sidebar() {
             >
               {!user.profilePhoto && (user.username?.[0]?.toUpperCase() || "U")}
             </Avatar>
-
             {!collapsed && (
-              <Box
-                sx={{
-                  minWidth: 0,
-                  overflow: "hidden",
-                }}
-              >
+              <Box sx={{ minWidth: 0, overflow: "hidden" }}>
                 <Typography
                   sx={{
                     fontSize: "0.75rem",
@@ -514,7 +435,6 @@ export default function Sidebar() {
                 >
                   {user.displayName || user.username}
                 </Typography>
-
                 <Typography
                   sx={{
                     fontSize: "0.65rem",
@@ -530,7 +450,6 @@ export default function Sidebar() {
         )}
       </Box>
 
-      {/* Profile Dialog */}
       <HeaderProfileDialog
         anchorEl={openDialog}
         onClose={() => setopenDialog(null)}

@@ -1,11 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Grid,
   ToggleButtonGroup,
   ToggleButton,
   IconButton,
-  Chip,
   Tooltip,
 } from "@mui/material";
 import {
@@ -15,29 +14,26 @@ import {
   Download,
   Eye,
   Pencil,
-  Trash2,
   BadgeCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
+import { useAlumni } from "@/hooks/useAlumni";
 import {
-  fetchAlumniAsync,
   setSearch,
   setPage,
   setPageSize,
   setSort,
-  deleteAlumniAsync,
-  verifyAlumniAsync,
-} from "@/Slice/alumniSlice";
-import { showToast } from "@/Slice/uiSlice";
+} from "@/store/Slice/alumniSlice";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonSearchField,
   CommonDataGrid,
   CommonPagination,
   CommonEmptyState,
+  CommonErrorState,
   CommonLoading,
-  CommonConfirmDialog,
   CommonStatusBadge,
   CommonButton,
   CommonAvatar,
@@ -45,127 +41,109 @@ import {
 import AlumniCard from "@/components/alumniProfile/AlumniCard";
 import AlumniFilters from "@/components/alumniProfile/AlumniFilters";
 import type { GridColDef } from "@mui/x-data-grid";
-import type { Alumni } from "@/types/alumni";
+import type { AlumniProfileFullModel } from "@/types/alumni";
 import { exportAlumniToCSV } from "@/utils/csvExport";
-import { alumniService } from "@/services";
+import { getApiErrorMessage } from "@/utils/apiError";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 export default function AlumniListPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
   const {
-    items,
+    alumniData: items,
     loading,
     totalCount,
-    pageNumber,
-    pageSize,
-    search,
-    filters,
-    sortBy,
-    sortDirection,
-  } = useAppSelector((s) => s.alumni);
+    fetchAlumniData,
+    setAlumniActive,
+  } = useAlumni();
+
+  const { search, filters, pageNumber, pageSize, sortBy, sortDirection } =
+    useAppSelector((s) => s.alumni);
+
+  const debouncedSearch = useDebouncedValue(search);
   const [view, setView] = useState<"table" | "grid">("table");
   const [exporting, setExporting] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Alumni | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    dispatch(fetchAlumniAsync());
-  }, [dispatch]);
+    void fetchAlumniData({
+      search: debouncedSearch || undefined,
+      status: filters.status,
+      programId: filters.programId,
+      graduationYear: filters.graduationYear,
+      pageNumber,
+      pageSize,
+    }).catch((err) =>
+      setError(getApiErrorMessage(err, "Unable to load alumni")),
+    );
+  }, [debouncedSearch, filters, pageNumber, pageSize, fetchAlumniData]);
 
   useEffect(() => {
     load();
-  }, [load, pageNumber, pageSize, search, filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, filters, pageNumber, pageSize]);
 
-  const handleSearch = (val: string) => {
-    dispatch(setSearch(val));
-  };
-  const handlePage = (p: number) => {
-    dispatch(setPage(p));
-  };
-  const handlePageSize = (s: number) => {
-    dispatch(setPageSize(s));
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    const res = await dispatch(deleteAlumniAsync(deleteTarget.id));
-    if (res.meta.requestStatus === "fulfilled") {
+  const handleToggleActive = async (row: AlumniProfileFullModel) => {
+    try {
+      const nextActive = row.status !== "ACTIVE";
+      await setAlumniActive(row.alumniID, nextActive, {
+        search: debouncedSearch || undefined,
+        status: filters.status,
+        programId: filters.programId,
+        graduationYear: filters.graduationYear,
+        pageNumber,
+        pageSize,
+      });
       dispatch(
         showToast({
-          message: "Alumni deleted successfully",
+          message: nextActive ? "Alumni activated" : "Alumni deactivated",
           severity: "success",
         }),
       );
-      load();
-    } else {
-      dispatch(
-        showToast({ message: "Failed to delete alumni", severity: "error" }),
-      );
-    }
-    setDeleteTarget(null);
-  };
-
-  const handleVerify = async (alumni: Alumni) => {
-    const res = await dispatch(verifyAlumniAsync(alumni.id));
-    if (res.meta.requestStatus === "fulfilled") {
+    } catch (err) {
       dispatch(
         showToast({
-          message: "Alumni verified successfully",
-          severity: "success",
+          message: getApiErrorMessage(err, "Unable to update status"),
+          severity: "error",
         }),
       );
-      load();
     }
   };
 
   const handleExport = async () => {
     setExporting(true);
     try {
-      const exportedAlumni = new Map<string, Alumni>();
-      const exportPageSize = 100;
-      let exportPage = 1;
-      let exportTotalCount = Number.POSITIVE_INFINITY;
+      const exported: AlumniProfileFullModel[] = [];
+      let page = 1;
+      let total = Number.POSITIVE_INFINITY;
 
-      while (exportedAlumni.size < exportTotalCount) {
-        const response = await alumniService.getAll({
-          pageNumber: exportPage,
-          pageSize: exportPageSize,
-          search,
-          filters,
-          sortBy: "fullName",
-          sortDirection: "asc",
+      while (exported.length < total) {
+        const res = await fetchAlumniData({
+          search: debouncedSearch || undefined,
+          status: filters.status,
+          programId: filters.programId,
+          graduationYear: filters.graduationYear,
+          pageNumber: page,
+          pageSize: 100,
         });
-
-        if (!response.success) {
-          throw new Error(response.message || "Failed to load alumni");
-        }
-
-        exportTotalCount = response.data.totalCount;
-        const previousCount = exportedAlumni.size;
-        response.data.items.forEach((alumni) =>
-          exportedAlumni.set(alumni.id, alumni),
-        );
-
-        if (
-          response.data.items.length === 0 ||
-          exportedAlumni.size === previousCount
-        ) {
-          break;
-        }
-        exportPage += 1;
+        total = res.totalRecords;
+        if (!res.items.length) break;
+        exported.push(...res.items);
+        page += 1;
       }
 
-      exportAlumniToCSV(Array.from(exportedAlumni.values()));
+      exportAlumniToCSV(exported);
       dispatch(
         showToast({
-          message: `${exportedAlumni.size} alumni exported successfully`,
+          message: `${exported.length} alumni exported successfully`,
           severity: "success",
         }),
       );
-    } catch (error) {
+    } catch (err) {
       dispatch(
         showToast({
-          message:
-            error instanceof Error ? error.message : "Failed to export alumni",
+          message: getApiErrorMessage(err, "Failed to export alumni"),
           severity: "error",
         }),
       );
@@ -174,7 +152,7 @@ export default function AlumniListPage() {
     }
   };
 
-  const columns: GridColDef<Alumni>[] = [
+  const columns: GridColDef<AlumniProfileFullModel>[] = [
     {
       field: "serial",
       headerName: "#",
@@ -185,7 +163,7 @@ export default function AlumniListPage() {
       renderCell: (params) => (
         <Box sx={{ color: "text.secondary", fontWeight: 600 }}>
           {(pageNumber - 1) * pageSize +
-            items.findIndex((item) => item.id === params.row.id) +
+            items.findIndex((item) => item.alumniID === params.row.alumniID) +
             1}
         </Box>
       ),
@@ -205,14 +183,10 @@ export default function AlumniListPage() {
           }}
         >
           <CommonAvatar
-            src={params.row.profilePhoto as string | undefined}
-            name={params.row.fullName as string}
+            src={params.row.personalInformation.profilePhoto ?? undefined}
+            name={params.row.personalInformation.fullName}
             size={40}
-            sx={{
-              flexShrink: 0,
-              fontSize: "0.8rem",
-              fontWeight: 700,
-            }}
+            sx={{ flexShrink: 0, fontSize: "0.8rem", fontWeight: 700 }}
           />
           <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
             <Box
@@ -224,31 +198,56 @@ export default function AlumniListPage() {
                 whiteSpace: "nowrap",
               }}
             >
-              {params.row.fullName}
+              {params.row.personalInformation.fullName}
             </Box>
-            {/* <Box
-              sx={{
-                mt: 0.35,
-                fontSize: "0.72rem",
-                color: "text.secondary",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              id: {params.row.alumniId}
-            </Box> */}
           </Box>
         </Box>
       ),
     },
-    { field: "email", headerName: "Email", width: 200 },
-    { field: "phone", headerName: "Phone", width: 140 },
-    { field: "departmentName", headerName: "Department", width: 160 },
-    { field: "batch", headerName: "Batch", width: 80 },
-    { field: "graduationYear", headerName: "Grad Year", width: 100 },
-    { field: "companyName", headerName: "Company", width: 160 },
-    { field: "designation", headerName: "Designation", width: 160 },
+    {
+      field: "email",
+      headerName: "Email",
+      width: 200,
+      valueGetter: (_v, row) => row.contactInformation.email ?? "",
+    },
+    {
+      field: "phone",
+      headerName: "Phone",
+      width: 140,
+      valueGetter: (_v, row) => row.contactInformation.phone ?? "",
+    },
+    {
+      field: "departmentName",
+      headerName: "Department",
+      width: 160,
+      valueGetter: (_v, row) =>
+        row.academicInformation[0]?.departmentName ?? "",
+    },
+    {
+      field: "batch",
+      headerName: "Batch",
+      width: 80,
+      valueGetter: (_v, row) => row.academicInformation[0]?.batch ?? "",
+    },
+    {
+      field: "graduationYear",
+      headerName: "Grad Year",
+      width: 100,
+      valueGetter: (_v, row) =>
+        row.academicInformation[0]?.graduationYear ?? "",
+    },
+    {
+      field: "companyName",
+      headerName: "Company",
+      width: 160,
+      valueGetter: (_v, row) => row.jobExperience[0]?.companyname ?? "",
+    },
+    {
+      field: "designation",
+      headerName: "Designation",
+      width: 160,
+      valueGetter: (_v, row) => row.jobExperience[0]?.designation ?? "",
+    },
     {
       field: "status",
       headerName: "Status",
@@ -258,7 +257,7 @@ export default function AlumniListPage() {
     {
       field: "actions",
       headerName: "Actions",
-      width: 100,
+      width: 120,
       sortable: false,
       filterable: false,
       renderCell: ({ row }) => (
@@ -266,8 +265,7 @@ export default function AlumniListPage() {
           <Tooltip title="View alumni">
             <IconButton
               size="small"
-              aria-label={`View ${row.fullName}`}
-              onClick={() => navigate(`/alumni/${row.id}`)}
+              onClick={() => navigate(`/alumni/${row.alumniID}`)}
               sx={{
                 color: "text.secondary",
                 bgcolor: "white",
@@ -282,6 +280,8 @@ export default function AlumniListPage() {
           </Tooltip>
           <Tooltip title="Edit alumni">
             <IconButton
+              size="small"
+              onClick={() => navigate(`/alumni/${row.alumniID}/edit`)}
               sx={{
                 color: "text.secondary",
                 bgcolor: "white",
@@ -290,34 +290,22 @@ export default function AlumniListPage() {
                   color: "primary.contrastText",
                 },
               }}
-              size="small"
-              aria-label={`Edit ${row.fullName}`}
-              onClick={() => navigate(`/alumni/${row.id}/edit`)}
             >
               <Pencil size={16} />
             </IconButton>
           </Tooltip>
-          {/* {!row.isVerified && (
-            <Tooltip title="Verify alumni">
-              <IconButton
-                size="small"
-                aria-label={`Verify ${row.fullName}`}
-                onClick={() => void handleVerify(row)}
-              >
-                <BadgeCheck size={16} />
-              </IconButton>
-            </Tooltip>
-          )} */}
-          {/* <Tooltip title="Delete alumni">
+          <Tooltip title={row.status === "ACTIVE" ? "Deactivate" : "Activate"}>
             <IconButton
               size="small"
-              aria-label={`Delete ${row.fullName}`}
-              sx={{ color: "error.main" }}
-              onClick={() => setDeleteTarget(row)}
+              onClick={() => void handleToggleActive(row)}
+              sx={{
+                color:
+                  row.status === "ACTIVE" ? "warning.main" : "success.main",
+              }}
             >
-              <Trash2 size={16} />
+              <BadgeCheck size={16} />
             </IconButton>
-          </Tooltip> */}
+          </Tooltip>
         </Box>
       ),
     },
@@ -345,7 +333,7 @@ export default function AlumniListPage() {
             <CommonButton
               variant="contained"
               startIcon={<Plus size={18} />}
-              onClick={() => navigate("/alumni/create")}
+              onClick={() => navigate("/alumni/new")}
             >
               Add Alumni
             </CommonButton>
@@ -365,7 +353,7 @@ export default function AlumniListPage() {
         <Box sx={{ flexGrow: 1, minWidth: 250 }}>
           <CommonSearchField
             value={search}
-            onChange={handleSearch}
+            onChange={(v) => dispatch(setSearch(v))}
             placeholder="Search by name, company, profession..."
           />
         </Box>
@@ -386,14 +374,16 @@ export default function AlumniListPage() {
 
       <AlumniFilters />
 
-      {loading ? (
+      {error && !items.length ? (
+        <CommonErrorState message={error} onRetry={load} />
+      ) : loading ? (
         <CommonLoading fullHeight={false} />
       ) : items.length === 0 ? (
         <CommonEmptyState
           title="No alumni found"
           message="No alumni match your search criteria."
           actionLabel="Add Alumni"
-          onAction={() => navigate("/alumni/create")}
+          onAction={() => navigate("/alumni/new")}
         />
       ) : view === "table" ? (
         <>
@@ -411,9 +401,9 @@ export default function AlumniListPage() {
             hideFooter
             onPaginationModelChange={(m) => {
               if (m.pageSize !== pageSize) {
-                handlePageSize(m.pageSize);
+                dispatch(setPageSize(m.pageSize));
               } else {
-                handlePage(m.page + 1);
+                dispatch(setPage(m.page + 1));
               }
             }}
             onSortModelChange={(model) => {
@@ -425,49 +415,39 @@ export default function AlumniListPage() {
                 }),
               );
             }}
-            getRowId={(row) => row.id}
+            getRowId={(row) => row.alumniID}
             rowHeight={64}
             height={Math.max(260, items.length * 64 + 120)}
           />
           <CommonPagination
-            count={Math.ceil(totalCount / pageSize)}
+            count={Math.max(1, Math.ceil(totalCount / pageSize))}
             page={pageNumber}
-            onChange={handlePage}
+            onChange={(p) => dispatch(setPage(p))}
             pageSize={pageSize}
-            onPageSizeChange={handlePageSize}
+            onPageSizeChange={(s) => dispatch(setPageSize(s))}
           />
         </>
       ) : (
         <Grid container spacing={2}>
           {items.map((alum) => (
-            <Grid key={alum.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+            <Grid key={alum.alumniID} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <AlumniCard
                 alumni={alum}
-                onEdit={() => navigate(`/alumni/${alum.id}/edit`)}
-                onDelete={() => setDeleteTarget(alum)}
+                onEdit={() => navigate(`/alumni/${alum.alumniID}/edit`)}
               />
             </Grid>
           ))}
           <Grid size={{ xs: 12 }}>
             <CommonPagination
-              count={Math.ceil(totalCount / pageSize)}
+              count={Math.max(1, Math.ceil(totalCount / pageSize))}
               page={pageNumber}
-              onChange={handlePage}
+              onChange={(p) => dispatch(setPage(p))}
               pageSize={pageSize}
-              onPageSizeChange={handlePageSize}
+              onPageSizeChange={(s) => dispatch(setPageSize(s))}
             />
           </Grid>
         </Grid>
       )}
-
-      <CommonConfirmDialog
-        open={!!deleteTarget}
-        title="Delete Alumni"
-        message={`Are you sure you want to delete ${deleteTarget?.fullName}? This action cannot be undone.`}
-        confirmLabel="Delete"
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
     </Box>
   );
 }

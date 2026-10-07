@@ -28,8 +28,8 @@ import {
   deleteNoticeAsync,
   publishNoticeAsync,
   unpublishNoticeAsync,
-} from "@/Slice/noticeSlice";
-import { showToast } from "@/Slice/uiSlice";
+} from "@/store/Slice/noticeSlice";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonSearchField,
@@ -58,39 +58,40 @@ export default function NoticeListPage({
     anchor: HTMLElement | null;
   }>({ notice: null as unknown as Notice, anchor: null });
 
+  // ★ Fetch only if the store is empty
   useEffect(() => {
-    dispatch(fetchNoticesAsync());
-  }, [dispatch]);
+    if (!items || items.length === 0) {
+      void dispatch(fetchNoticesAsync());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     const res = await dispatch(deleteNoticeAsync(deleteTarget.id));
-    if (res.meta.requestStatus === "fulfilled") {
+    if (deleteNoticeAsync.fulfilled.match(res)) {
       dispatch(
         showToast({
           message: "Notice deleted successfully",
           severity: "success",
         }),
       );
-      dispatch(fetchNoticesAsync());
     }
     setDeleteTarget(null);
   };
 
   const handlePublish = async (notice: Notice) => {
     const res = await dispatch(publishNoticeAsync(notice.id));
-    if (res.meta.requestStatus === "fulfilled") {
+    if (publishNoticeAsync.fulfilled.match(res)) {
       dispatch(showToast({ message: "Notice published", severity: "success" }));
-      dispatch(fetchNoticesAsync());
     }
     setActionTarget({ notice: null as unknown as Notice, anchor: null });
   };
 
   const handleUnpublish = async (notice: Notice) => {
     const res = await dispatch(unpublishNoticeAsync(notice.id));
-    if (res.meta.requestStatus === "fulfilled") {
+    if (unpublishNoticeAsync.fulfilled.match(res)) {
       dispatch(showToast({ message: "Notice unpublished", severity: "info" }));
-      dispatch(fetchNoticesAsync());
     }
     setActionTarget({ notice: null as unknown as Notice, anchor: null });
   };
@@ -126,7 +127,7 @@ export default function NoticeListPage({
           <CommonSearchField
             value={search}
             onChange={(v) =>
-              dispatch(fetchNoticesAsync({ search: v } as never))
+              void dispatch(fetchNoticesAsync({ search: v } as never))
             }
             placeholder="Search notices..."
           />

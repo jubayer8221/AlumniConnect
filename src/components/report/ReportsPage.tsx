@@ -14,22 +14,11 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import {
-  Download,
-  BarChart3,
-  Users,
-  User,
-  Star,
-  CheckCircle,
-} from "lucide-react";
+import { Download, Users, User, Star, CheckCircle } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchDashboardDataAsync } from "@/Slice/dashboardSlice";
-import { fetchAlumniAsync } from "@/Slice/alumniSlice";
-import {
-  CommonPageHeader,
-  CommonLoading,
-  CommonCard,
-} from "@/components/common";
+import { useAlumni } from "@/hooks/useAlumni";
+import { fetchDashboardDataAsync } from "@/store/Slice/dashboardSlice";
+import { CommonPageHeader, CommonLoading } from "@/components/common";
 import { exportAlumniToCSV } from "@/utils/csvExport";
 import {
   BarChart,
@@ -60,12 +49,14 @@ const PIE_COLORS = [
 export default function ReportsPage() {
   const dispatch = useAppDispatch();
   const { data, loading } = useAppSelector((s) => s.dashboard);
-  const alumni = useAppSelector((s) => s.alumni.items);
+  const { alumniData: alumni, fetchAlumniData } = useAlumni();
 
   useEffect(() => {
-    dispatch(fetchDashboardDataAsync());
-    dispatch(fetchAlumniAsync());
-  }, [dispatch]);
+    if (!data) {
+      void dispatch(fetchDashboardDataAsync());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading && !data) return <CommonLoading />;
 
@@ -226,10 +217,12 @@ export default function ReportsPage() {
                           <TableCell>{d.label}</TableCell>
                           <TableCell align="right">{d.value}</TableCell>
                           <TableCell align="right">
-                            {(
-                              (d.value / data.summary.totalAlumni) *
-                              100
-                            ).toFixed(1)}
+                            {data.summary.totalAlumni > 0
+                              ? (
+                                  (d.value / data.summary.totalAlumni) *
+                                  100
+                                ).toFixed(1)
+                              : "0.0"}
                             %
                           </TableCell>
                         </TableRow>

@@ -1,12 +1,8 @@
 import { useState } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Alert,
-  Divider,
-  Chip,
   Stack,
   Button,
   IconButton,
@@ -16,10 +12,8 @@ import {
   Checkbox,
 } from "@mui/material";
 import {
-  LogIn,
   Eye,
   EyeOff,
-  Sparkles,
   Users,
   TrendingUp,
   Award,
@@ -28,49 +22,56 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { loginAsync } from "@/Slice/authSlice";
-import { loginSchema } from "@/validation/authValidation";
+import { useAppDispatch } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { showToast } from "@/store/Slice/uiSlice";
 import { CommonInputField, CommonButton } from "@/components/common";
 import { appConfig } from "@/config/appConfig";
-import type { LoginRequest } from "@/types/auth";
+
+/* ============================================================
+   Form validation — inline
+   ============================================================ */
+const loginSchema = yup.object({
+  username: yup
+    .string()
+    .trim()
+    .required("Username is required")
+    .max(100, "Username is too long"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .max(100, "Password is too long"),
+});
+
+type LoginFormValues = yup.InferType<typeof loginSchema>;
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useAppSelector((s) => s.auth);
+  const { login, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { control, handleSubmit, setValue } = useForm<LoginRequest>({
-    resolver: yupResolver(loginSchema) as never,
+  const { control, handleSubmit } = useForm<LoginFormValues>({
+    resolver: yupResolver(loginSchema),
     defaultValues: { username: "", password: "" },
   });
 
-  const onSubmit = async (data: LoginRequest) => {
-    const result = await dispatch(loginAsync(data));
-
-    if (loginAsync.fulfilled.match(result)) {
-      const role = result.payload.user.role;
-      navigate(role === "ADMIN" ? "/dashboard" : "/alumni/dashboard", {
+  const onSubmit = async (data: LoginFormValues) => {
+    setError(null);
+    try {
+      const user = await login(data);
+      navigate(user.role === "ADMIN" ? "/dashboard" : "/alumni/dashboard", {
         replace: true,
       });
-    }
-  };
-
-  const fillDemo = async (username: string, password: string) => {
-    setValue("username", username);
-    setValue("password", password);
-
-    const result = await dispatch(loginAsync({ username, password }));
-
-    if (loginAsync.fulfilled.match(result)) {
-      const role = result.payload.user.role;
-      navigate(role === "ADMIN" ? "/dashboard" : "/alumni/dashboard", {
-        replace: true,
-      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to sign in";
+      setError(message);
+      dispatch(showToast({ message, severity: "error" }));
     }
   };
 
@@ -96,7 +97,6 @@ export default function LoginPage() {
             "linear-gradient(135deg, #115e59 0%, #18312e 62%, #102a28 100%)",
         }}
       >
-        {/* Glow Effects */}
         <Box
           sx={{
             position: "absolute",
@@ -124,7 +124,6 @@ export default function LoginPage() {
           }}
         />
 
-        {/* Top Header Logo */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, zIndex: 1 }}>
           <Box
             sx={{
@@ -134,7 +133,6 @@ export default function LoginPage() {
               width: 48,
               height: 48,
               borderRadius: 3,
-              // bgcolor: "primary.main",
               boxShadow: "0 8px 24px rgba(15,118,110,0.35)",
             }}
           >
@@ -164,7 +162,6 @@ export default function LoginPage() {
           </Box>
         </Box>
 
-        {/* Hero Title & Subtitle */}
         <Box sx={{ zIndex: 1, my: "auto" }}>
           <Typography
             sx={{
@@ -203,7 +200,6 @@ export default function LoginPage() {
             with your university community.
           </Typography>
 
-          {/* Stats Badges */}
           <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 2 }}>
             {[
               {
@@ -251,11 +247,7 @@ export default function LoginPage() {
                   {stat.icon}
                 </Box>
                 <Typography
-                  sx={{
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    color: "white",
-                  }}
+                  sx={{ fontSize: "0.9rem", fontWeight: 600, color: "white" }}
                 >
                   {stat.label}
                 </Typography>
@@ -264,15 +256,18 @@ export default function LoginPage() {
           </Stack>
         </Box>
 
-        {/* Footer info on left */}
         <Typography
-          sx={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", zIndex: 1 }}
+          sx={{
+            fontSize: "0.8rem",
+            color: "rgba(255,255,255,0.4)",
+            zIndex: 1,
+          }}
         >
           © {new Date().getFullYear()} {appConfig.appName}. All rights reserved.
         </Typography>
       </Box>
 
-      {/* Right Side: Clean Login Form */}
+      {/* Right Side */}
       <Box
         sx={{
           flex: { xs: 1, md: 0.9 },
@@ -284,7 +279,6 @@ export default function LoginPage() {
         }}
       >
         <Box sx={{ maxWidth: 440, width: "100%" }}>
-          {/* Mobile Header */}
           <Box
             sx={{
               display: { xs: "flex", md: "none" },
@@ -302,7 +296,6 @@ export default function LoginPage() {
                 width: 44,
                 height: 44,
                 borderRadius: 2.5,
-                // bgcolor: "primary.main",
               }}
             >
               <Box
@@ -346,11 +339,10 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
-          {/* Email / Phone Login Method Tabs */}
           <Box sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}>
             <Tabs
               value={loginMethod}
-              onChange={(_, newValue) => setLoginMethod(newValue)}
+              onChange={(_, v) => setLoginMethod(v)}
               textColor="primary"
               indicatorColor="primary"
               sx={{
@@ -400,7 +392,6 @@ export default function LoginPage() {
                 }
                 required
               />
-
               <CommonInputField
                 name="password"
                 label="Password"
@@ -410,19 +401,14 @@ export default function LoginPage() {
                 required
                 endAdornment={
                   <IconButton
-                    onClick={() => setShowPassword((prev) => !prev)}
+                    onClick={() => setShowPassword((p) => !p)}
                     edge="end"
                     size="small"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </IconButton>
                 }
               />
-
-              {/* Remember me & Forgot Password */}
               <Box
                 sx={{
                   display: "flex",
@@ -471,7 +457,6 @@ export default function LoginPage() {
                 type="submit"
                 loading={loading}
                 fullWidth
-                // startIcon={<LogIn size={18} />}
                 sx={{
                   py: 1.4,
                   fontSize: "0.95rem",
@@ -485,86 +470,6 @@ export default function LoginPage() {
               </CommonButton>
             </Stack>
           </form>
-
-          {/* Quick Demo Section (EXACT Demo Data Maintained) */}
-          {/* <Divider sx={{ my: 3.5 }}>
-            <Chip
-              label="Quick Demo Login"
-              size="small"
-              sx={{
-                bgcolor: "rgba(15,118,110,0.08)",
-                color: "primary.main",
-                fontWeight: 600,
-                border: "none",
-              }}
-            />
-          </Divider>
-
-          <Stack spacing={1.25}>
-            {[
-              {
-                label: "Admin Portal",
-                username: "admin",
-                password: "123456",
-                color: "#0f766e",
-                bg: "rgba(15,118,110,0.08)",
-              },
-              {
-                label: "Rahim Hasan (Alumni)",
-                username: "rahim.hasan",
-                password: "123456",
-                color: "#c2410c",
-                bg: "rgba(194,65,12,0.08)",
-              },
-              {
-                label: "Nusrat Jahan (Alumni)",
-                username: "nusrat.jahan",
-                password: "123456",
-                color: "#0ea5e9",
-                bg: "rgba(14,165,233,0.08)",
-              },
-            ].map((demo) => (
-              <Button
-                key={demo.username}
-                fullWidth
-                variant="text"
-                onClick={() => fillDemo(demo.username, demo.password)}
-                sx={{
-                  justifyContent: "space-between",
-                  borderRadius: 2.5,
-                  py: 1.25,
-                  px: 2,
-                  bgcolor: demo.bg,
-                  color: demo.color,
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  textTransform: "none",
-                  border: "1px solid",
-                  borderColor: demo.color + "25",
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    bgcolor: demo.color + "18",
-                    borderColor: demo.color + "50",
-                    transform: "translateY(-1px)",
-                  },
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Sparkles size={16} />
-                  {demo.label}
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    opacity: 0.75,
-                    fontFamily: "monospace",
-                  }}
-                >
-                  {demo.username}
-                </Typography>
-              </Button>
-            ))}
-          </Stack> */}
         </Box>
       </Box>
     </Box>

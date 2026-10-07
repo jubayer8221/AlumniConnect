@@ -2,11 +2,15 @@ import { Box, Button, Typography } from "@mui/material";
 import { UploadCloud } from "lucide-react";
 
 interface CommonFileUploadProps {
-  onFileSelect: (dataUrl: string) => void;
+  /**
+   * Called with:
+   *  - dataUrl: base64 preview for immediate display
+   *  - file:    the raw File object (use this to upload to the server)
+   */
+  onFileSelect: (dataUrl: string, file: File) => void;
   accept?: string;
   label?: string;
   currentFile?: string;
-  /** Diameter of the circular preview, in px. Defaults to 160. */
   previewSize?: number;
 }
 
@@ -19,11 +23,11 @@ export default function CommonFileUpload({
 }: CommonFileUploadProps) {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => onFileSelect(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => onFileSelect(reader.result as string, file);
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -67,7 +71,7 @@ export default function CommonFileUpload({
           textAlign: "center",
         }}
       >
-        Click to upload an image
+        Click to upload an image (max 5 MB)
       </Typography>
     </Box>
   );

@@ -26,7 +26,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchDashboardDataAsync } from "@/Slice/dashboardSlice";
+import { useAuth } from "@/hooks/useAuth";
+import { fetchDashboardDataAsync } from "@/store/Slice/dashboardSlice";
 import {
   CommonLoading,
   CommonEmptyState,
@@ -49,12 +50,16 @@ const cardSx = {
 export default function AdminDashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { authUser: user } = useAuth();
   const { data, loading } = useAppSelector((s) => s.dashboard);
-  const { user } = useAppSelector((s) => s.auth);
 
+  // ★ Fetch only if store is empty
   useEffect(() => {
-    dispatch(fetchDashboardDataAsync());
-  }, [dispatch]);
+    if (!data) {
+      void dispatch(fetchDashboardDataAsync());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading && !data) return <CommonLoading />;
   if (!data) return <CommonEmptyState title="No dashboard data available" />;
@@ -65,7 +70,6 @@ export default function AdminDashboardPage() {
       value: data.summary.totalAlumni,
       icon: <Users size={22} />,
       color: "#6366f1",
-      // trend: 12.5,
     },
     {
       title: "Active",
@@ -111,6 +115,9 @@ export default function AdminDashboardPage() {
     },
   ];
 
+  const upcomingEvents = data.upcomingEvents ?? [];
+  const recentNotices = data.recentNotices ?? [];
+
   return (
     <Box>
       <CommonPageHeader
@@ -131,6 +138,7 @@ export default function AdminDashboardPage() {
       </Box>
 
       <Grid container spacing={{ xs: 2, md: 3 }}>
+        {/* ------------------ Recent Alumni ------------------ */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={cardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -169,62 +177,71 @@ export default function AdminDashboardPage() {
                   View All
                 </Button>
               </Box>
-              <List>
-                {data.recentAlumni.map((alum, i) => (
-                  <Box key={alum.id}>
-                    <ListItem
-                      sx={{
-                        px: 0,
-                        py: 1,
-                        "&:hover": { bgcolor: "action.hover" },
-                        borderRadius: 2,
-                        cursor: "pointer",
-                      }}
-                      onClick={() => navigate(`/alumni/${alum.id}`)}
-                    >
-                      <ListItemAvatar>
-                        <Avatar
-                          src={alum?.profilePhoto}
-                          alt={alum?.fullName}
-                          sx={{
-                            background:
-                              "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
-                            fontWeight: 700,
-                          }}
-                        >
-                          {!alum?.profilePhoto && alum?.fullName[0]}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {alum?.fullName}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "text.secondary" }}
+              {data.recentAlumni.length === 0 ? (
+                <CommonEmptyState title="No recent alumni" />
+              ) : (
+                <List>
+                  {data.recentAlumni.map((alum, i) => (
+                    <Box key={alum.id}>
+                      <ListItem
+                        sx={{
+                          px: 0,
+                          py: 1,
+                          "&:hover": { bgcolor: "action.hover" },
+                          borderRadius: 2,
+                          cursor: "pointer",
+                        }}
+                        onClick={() => navigate(`/alumni/${alum.id}`)}
+                      >
+                        <ListItemAvatar>
+                          <Avatar
+                            src={alum?.profilePhoto}
+                            alt={alum?.fullName}
+                            sx={{
+                              background:
+                                "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+                              fontWeight: 700,
+                            }}
                           >
-                            {alum.departmentName || "—"} • Added{" "}
-                            {fromNow(alum.createdAt)}
-                          </Typography>
-                        }
-                      />
-                      <Chip
-                        label={alum.alumniId}
-                        size="small"
-                        variant="outlined"
-                        sx={{ borderRadius: 1, fontSize: "0.7rem" }}
-                      />
-                    </ListItem>
-                    {i < data.recentAlumni.length - 1 && <Divider />}
-                  </Box>
-                ))}
-              </List>
+                            {!alum?.profilePhoto && alum?.fullName?.[0]}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {alum?.fullName}
+                            </Typography>
+                          }
+                          secondary={
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "text.secondary" }}
+                            >
+                              {alum.departmentName || "—"} • Added{" "}
+                              {fromNow(alum.createdAt ?? undefined)}
+                            </Typography>
+                          }
+                        />
+                        <Chip
+                          label={alum.alumniCode}
+                          size="small"
+                          variant="outlined"
+                          sx={{ borderRadius: 1, fontSize: "0.7rem" }}
+                        />
+                      </ListItem>
+                      {i < data.recentAlumni.length - 1 && <Divider />}
+                    </Box>
+                  ))}
+                </List>
+              )}
             </CardContent>
           </Card>
         </Grid>
+
+        {/* ------------------ Upcoming Events ------------------ */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={cardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -263,11 +280,11 @@ export default function AdminDashboardPage() {
                   View All
                 </Button>
               </Box>
-              {data.upcomingEvents.length === 0 ? (
+              {upcomingEvents.length === 0 ? (
                 <CommonEmptyState title="No upcoming events" />
               ) : (
                 <List>
-                  {data.upcomingEvents.map((evt, i) => (
+                  {upcomingEvents.map((evt, i) => (
                     <Box key={evt.id}>
                       <ListItem
                         sx={{
@@ -308,7 +325,7 @@ export default function AdminDashboardPage() {
                           }
                         />
                       </ListItem>
-                      {i < data.upcomingEvents.length - 1 && <Divider />}
+                      {i < upcomingEvents.length - 1 && <Divider />}
                     </Box>
                   ))}
                 </List>
@@ -316,35 +333,51 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </Grid>
+
+        {/* ------------------ Recent Notices ------------------ */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={cardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Box
-                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
               >
-                <Box
-                  sx={{
-                    width: 6,
-                    height: 24,
-                    borderRadius: 2,
-                    background: "linear-gradient(180deg, #f59e0b, #fbbf24)",
-                  }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: { xs: "1rem", md: "1.1rem" },
-                  }}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 24,
+                      borderRadius: 2,
+                      background: "linear-gradient(180deg, #f59e0b, #fbbf24)",
+                    }}
+                  />
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: { xs: "1rem", md: "1.1rem" },
+                    }}
+                  >
+                    Recent Notices
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  onClick={() => navigate("/notices")}
+                  sx={{ color: "#f59e0b", fontWeight: 600 }}
                 >
-                  Recent Notices
-                </Typography>
+                  View All
+                </Button>
               </Box>
-              {data.recentNotices.length === 0 ? (
+              {recentNotices.length === 0 ? (
                 <CommonEmptyState title="No notices" />
               ) : (
                 <List>
-                  {data.recentNotices.map((notice, i) => (
+                  {recentNotices.map((notice, i) => (
                     <Box key={notice.id}>
                       <ListItem
                         sx={{
@@ -386,7 +419,7 @@ export default function AdminDashboardPage() {
                           }
                         />
                       </ListItem>
-                      {i < data.recentNotices.length - 1 && <Divider />}
+                      {i < recentNotices.length - 1 && <Divider />}
                     </Box>
                   ))}
                 </List>
@@ -394,6 +427,8 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </Grid>
+
+        {/* ------------------ Pending Verification ------------------ */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={cardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
@@ -445,7 +480,7 @@ export default function AdminDashboardPage() {
                               fontWeight: 700,
                             }}
                           >
-                            {!alum?.profilePhoto && alum?.fullName[0]}
+                            {!alum?.profilePhoto && alum?.fullName?.[0]}
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText

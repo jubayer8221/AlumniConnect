@@ -22,3 +22,4 @@ export { default as CommonAvatar } from "./CommonAvatar";
 export { default as CommonTabs } from "./CommonTabs";
 export { default as NotFoundPage } from "./NotFoundPage";
 export { default as ToastContainer } from "./Toast";
+export { default as Can } from "./Can";

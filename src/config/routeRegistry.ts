@@ -57,7 +57,7 @@ export const routeRegistry: RouteDescriptor[] = [
   //     roles: ["admin", "alumni"],
   //   },
   {
-    pattern: "/alumni/create",
+    pattern: "/alumni/new",
     label: "Create Alumni",
     parentPattern: "/alumni",
     roles: ["admin", "alumni"],
@@ -80,7 +80,7 @@ export const routeRegistry: RouteDescriptor[] = [
   { pattern: "/alumni", label: "Manage Alumni", roles: ["admin"] },
   { pattern: "/events", label: "Events", roles: ["admin"] },
   {
-    pattern: "/events/create",
+    pattern: "/events/new",
     label: "Create Event",
     parentPattern: "/events",
     roles: ["admin"],

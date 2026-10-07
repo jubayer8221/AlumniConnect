@@ -1,42 +1,36 @@
-import {
-  AppBar,
-  Toolbar,
-  IconButton,
-  Box,
-  Typography,
-  Avatar,
-  Menu,
-  MenuItem,
-  Chip,
-  Divider,
-} from "@mui/material";
+import { AppBar, Toolbar, IconButton, Box, Avatar, Badge } from "@mui/material";
 import {
   Menu as MenuIcon,
   Bell,
-  ChevronDown,
   PanelLeftClose,
   PanelLeft,
   Moon,
   Sun,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks";
 import {
   setTheme,
   toggleMobileSidebar,
   toggleSidebarCollapse,
-} from "@/Slice/uiSlice";
-import { logoutAsync } from "@/Slice/authSlice";
+} from "@/store/Slice/uiSlice";
+import { useAuth } from "@/hooks/useAuth";
 import HeaderProfileDialog from "../alumniProfile/HeaderProfileDialog";
+import NotificationsPopover, {
+  getUnseenNoticeCount,
+} from "./NotificationsPopover";
 
 export default function Header() {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const { user, role } = useAppSelector((s) => s.auth);
+  const { authUser: user } = useAuth();
   const collapsed = useAppSelector((s) => s.ui.sidebarCollapsed);
   const colorMode = useAppSelector((s) => s.ui.theme);
+  const notices = useAppSelector((s) => s.notices.items);
   const [openDialog, setopenDialog] = useState<HTMLElement | null>(null);
+  const [notifAnchor, setNotifAnchor] = useState<HTMLElement | null>(null);
+
+  // Recompute on every render — cheap (max 20 rows)
+  const unseenCount = getUnseenNoticeCount(notices);
 
   return (
     <AppBar
@@ -53,7 +47,6 @@ export default function Header() {
       <Toolbar
         sx={{ minHeight: { xs: 60, md: 68 }, px: { xs: 1.5, sm: 2.5, md: 3 } }}
       >
-        {/* Mobile menu toggle */}
         <IconButton
           sx={{ display: { xs: "flex", md: "none" }, color: "inherit" }}
           onClick={() => dispatch(toggleMobileSidebar())}
@@ -61,7 +54,6 @@ export default function Header() {
           <MenuIcon size={22} />
         </IconButton>
 
-        {/* Desktop sidebar collapse toggle */}
         <IconButton
           sx={{
             display: { xs: "none", md: "flex" },
@@ -77,16 +69,6 @@ export default function Header() {
 
         <IconButton
           size="small"
-          title={
-            colorMode === "dark"
-              ? "Switch to light theme"
-              : "Switch to dark theme"
-          }
-          aria-label={
-            colorMode === "dark"
-              ? "Switch to light theme"
-              : "Switch to dark theme"
-          }
           onClick={() =>
             dispatch(setTheme(colorMode === "dark" ? "light" : "dark"))
           }
@@ -95,19 +77,13 @@ export default function Header() {
           {colorMode === "dark" ? <Sun size={20} /> : <Moon size={20} />}
         </IconButton>
 
-        {/* <Chip
-          label={role === "ADMIN" ? "Administrator" : "Alumni"}
-          size="small"
-          sx={{
-            mr: 1.5, display: { xs: "none", sm: "flex" },
-            bgcolor: role === "ADMIN" ? "rgba(99,102,241,0.1)" : "rgba(236,72,153,0.1)",
-            color: role === "ADMIN" ? "#6366f1" : "#ec4899",
-            fontWeight: 600, border: "none",
-          }}
-        /> */}
-
+        {/* ---- Notifications bell ---- */}
         <IconButton
           size="small"
+          onClick={(e) => setNotifAnchor(e.currentTarget)}
+          aria-label={`Notifications${
+            unseenCount > 0 ? ` (${unseenCount} new)` : ""
+          }`}
           sx={{
             mr: 1,
             color: "inherit",
@@ -115,9 +91,18 @@ export default function Header() {
             "&:hover": { bgcolor: "action.selected" },
           }}
         >
-          <Bell size={20} />
+          <Badge
+            badgeContent={unseenCount}
+            color="error"
+            max={99}
+            overlap="circular"
+            invisible={unseenCount === 0}
+          >
+            <Bell size={20} />
+          </Badge>
         </IconButton>
 
+        {/* ---- Profile avatar ---- */}
         <Box
           sx={{
             display: "flex",
@@ -131,20 +116,6 @@ export default function Header() {
           }}
           onClick={(e) => setopenDialog(e.currentTarget)}
         >
-          {/* <Box
-            sx={{ display: { xs: "none", sm: "block" }, textAlign: "right" }}
-          >
-            <Typography
-              sx={{ fontSize: "0.8rem", fontWeight: 700, lineHeight: 1.2 }}
-            >
-              {user?.displayName || user?.username || "User"}
-            </Typography>
-            <Typography
-              sx={{ fontSize: "0.68rem", color: "text.secondary", mt: 0.25 }}
-            >
-              {role === "ADMIN" ? "Administrator" : "Alumni Member"}
-            </Typography>
-          </Box> */}
           <Avatar
             src={user?.profilePhoto}
             alt={user?.displayName || user?.username || "User"}
@@ -165,6 +136,11 @@ export default function Header() {
           anchorEl={openDialog}
           onClose={() => setopenDialog(null)}
           username={user?.username}
+        />
+
+        <NotificationsPopover
+          anchorEl={notifAnchor}
+          onClose={() => setNotifAnchor(null)}
         />
       </Toolbar>
     </AppBar>

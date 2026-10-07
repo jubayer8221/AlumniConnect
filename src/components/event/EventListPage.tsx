@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Box,
   Grid,
@@ -9,6 +8,7 @@ import {
   Button,
   Tabs,
   Tab,
+  TextField,
 } from "@mui/material";
 import {
   CalendarDays,
@@ -18,20 +18,62 @@ import {
   Plus,
   ArrowRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchEventsAsync } from "@/Slice/eventSlice";
+import {
+  setPage,
+  setPageSize,
+  setSearch,
+  fetchEventsAsync,
+} from "@/store/Slice/eventSlice";
 import {
   CommonPageHeader,
   CommonSearchField,
   CommonEmptyState,
+  CommonErrorState,
   CommonLoading,
   CommonButton,
   CommonStatusBadge,
+  CommonPagination,
 } from "@/components/common";
 import { formatDate, formatTime } from "@/utils/dateUtils";
-import type { EventItem } from "@/types/event";
+import type { EventItem, EventFilters } from "@/types/event";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+
+// Tab indices — matches visual order (All first, then Upcoming, then Past)
+const TAB_ALL = 0;
+const TAB_UPCOMING = 1;
+const TAB_PAST = 2;
+
+/**
+ * Build the filter object sent to the API based on the active tab and
+ * the two date inputs. `TAB_ALL` sends nothing — the SP returns every
+ * event ordered by StartDate DESC.
+ */
+function buildFilters(
+  tab: number,
+  fromDate: string,
+  toDate: string,
+): EventFilters {
+  if (tab === TAB_UPCOMING) {
+    return {
+      status: "UPCOMING",
+      dateFrom: fromDate || undefined,
+      dateTo: toDate || undefined,
+    };
+  }
+  if (tab === TAB_PAST) {
+    return {
+      dateFrom: fromDate || undefined,
+      dateTo: toDate || new Date().toISOString().slice(0, 10),
+    };
+  }
+  return {
+    dateFrom: fromDate || undefined,
+    dateTo: toDate || undefined,
+  };
+}
 
 export default function EventListPage({
   isAdmin = false,
@@ -40,18 +82,61 @@ export default function EventListPage({
 }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { items, loading, totalCount, search, pageNumber } = useAppSelector(
-    (s) => s.events,
-  );
-  const [tab, setTab] = useState(0);
 
+  const { items, loading, error, totalCount, search, pageNumber, pageSize } =
+    useAppSelector((s) => s.events);
+
+  const [tab, setTab] = useState(TAB_ALL);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
+
+  /* ============================================================
+     Effect 1 — Initial mount
+     Fetch only if the store is empty. If we already have cached
+     events (user visited the page earlier), skip the network call.
+     ============================================================ */
   useEffect(() => {
-    dispatch(fetchEventsAsync());
-  }, [dispatch, pageNumber]);
+    if (!items || items.length === 0) {
+      void dispatch(
+        fetchEventsAsync({
+          pageNumber,
+          pageSize,
+          search: debouncedSearch || undefined,
+          filters: buildFilters(tab, fromDate, toDate),
+        }),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  /* ============================================================
+     Effect 2 — Filter / search / pagination changes
+     Refetch whenever any of these change. Skip the very first
+     render because Effect 1 already handled the mount case.
+     ============================================================ */
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    void dispatch(
+      fetchEventsAsync({
+        pageNumber,
+        pageSize,
+        search: debouncedSearch || undefined,
+        filters: buildFilters(tab, fromDate, toDate),
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, tab, fromDate, toDate, pageNumber, pageSize]);
+
+  // Client-side filter safety net — the server already filters, but
+  // this keeps the UI consistent if an event's status changes mid-session.
   const filtered = items.filter((e) => {
-    if (tab === 0) return e.status === "UPCOMING";
-    if (tab === 1) return e.status === "COMPLETED";
+    if (tab === TAB_UPCOMING) return e.status === "UPCOMING";
+    if (tab === TAB_PAST) return e.status === "COMPLETED";
     return true;
   });
 
@@ -70,7 +155,7 @@ export default function EventListPage({
           isAdmin ? (
             <CommonButton
               startIcon={<Plus size={18} />}
-              onClick={() => navigate("/events/create")}
+              onClick={() => navigate("/events/new")}
             >
               Create Event
             </CommonButton>
@@ -82,19 +167,62 @@ export default function EventListPage({
         <Box sx={{ flexGrow: 1, minWidth: 250 }}>
           <CommonSearchField
             value={search}
-            onChange={(v) => dispatch(fetchEventsAsync({ search: v } as never))}
+            onChange={(value) => dispatch(setSearch(value))}
             placeholder="Search events..."
           />
         </Box>
+        <TextField
+          label="From"
+          type="date"
+          size="small"
+          value={fromDate}
+          onChange={(event) => {
+            setFromDate(event.target.value);
+            dispatch(setPage(1));
+          }}
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+        <TextField
+          label="To"
+          type="date"
+          size="small"
+          value={toDate}
+          onChange={(event) => {
+            setToDate(event.target.value);
+            dispatch(setPage(1));
+          }}
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
       </Box>
 
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+      <Tabs
+        value={tab}
+        onChange={(_, value) => {
+          setTab(value);
+          dispatch(setPage(1));
+        }}
+        sx={{ mb: 2 }}
+      >
+        <Tab label="All Events" />
         <Tab label="Upcoming" />
         <Tab label="Past Events" />
-        <Tab label="All Events" />
       </Tabs>
 
-      {loading ? (
+      {error && !items.length ? (
+        <CommonErrorState
+          message={error}
+          onRetry={() =>
+            void dispatch(
+              fetchEventsAsync({
+                pageNumber,
+                pageSize,
+                search: debouncedSearch || undefined,
+                filters: buildFilters(tab, fromDate, toDate),
+              }),
+            )
+          }
+        />
+      ) : loading ? (
         <CommonLoading fullHeight={false} />
       ) : filtered.length === 0 ? (
         <CommonEmptyState
@@ -222,6 +350,15 @@ export default function EventListPage({
             </Grid>
           ))}
         </Grid>
+      )}
+      {totalCount > 0 && (
+        <CommonPagination
+          count={Math.max(1, Math.ceil(totalCount / pageSize))}
+          page={pageNumber}
+          pageSize={pageSize}
+          onChange={(page) => dispatch(setPage(page))}
+          onPageSizeChange={(size) => dispatch(setPageSize(size))}
+        />
       )}
     </Box>
   );

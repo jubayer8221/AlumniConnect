@@ -1,7 +1,7 @@
 import type { AuthService } from "@/services/interfaces/AuthService";
 import type {
   LoginRequest,
-  LoginResponse,
+  LoginApiResponse,
   User,
   AuthSession,
   ChangePasswordRequest,
@@ -85,7 +85,7 @@ function getProfilePhoto(alumniId?: string): string | undefined {
 }
 
 export const mockAuthService: AuthService = {
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
+  async login(credentials: LoginRequest): Promise<LoginApiResponse> {
     await delay();
     const creds = ensureCredentials();
     const identifier = normalizeLoginIdentifier(credentials.username);

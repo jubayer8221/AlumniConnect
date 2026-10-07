@@ -8,91 +8,23 @@ import {
 } from "@mui/material";
 import { Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
-import type { AlumniFilters as FilterType } from "@/types/alumni";
 import { useAppSelector, useAppDispatch } from "@/hooks";
-import { setFilters, clearFilters } from "@/Slice/alumniSlice";
+import {
+  setFilters,
+  clearFilters,
+  type AlumniFilters as FilterType,
+} from "@/store/Slice/alumniSlice";
 
-const years = Array.from({ length: 20 }, (_, i) => 2025 - i);
-const departments = [
-  "Computer Science",
-  "Electrical Engineering",
-  "Business Administration",
-  "Civil Engineering",
-  "Architecture",
-  "Mechanical Engineering",
-  "Pharmacy",
-  "English",
-  "Biotechnology",
-  "Environmental Science",
-  "Psychology",
-  "Law",
-  "Information Systems",
-  "Agriculture",
-  "Statistics",
-];
+const years = Array.from(
+  { length: 20 },
+  (_, i) => new Date().getFullYear() - i,
+);
+
 const programs = [
-  "BSc in Computer Science",
-  "BSc in Electrical Engineering",
-  "Bachelor of Business Administration",
-  "BSc in Civil Engineering",
-  "Bachelor of Architecture",
-  "BSc in Mechanical Engineering",
-  "Bachelor of Pharmacy",
-  "BA in English Literature",
-  "BSc in Biotechnology",
-  "BSc in Environmental Science",
-  "BA in Psychology",
-  "LLB in Law",
-  "BSc in Information Systems",
-  "BSc in Agriculture",
-  "BSc in Statistics",
-  "BBA in Finance",
-  "BBA in Marketing",
-];
-const industries = [
-  "Information Technology",
-  "Finance",
-  "Healthcare",
-  "Construction",
-  "Education",
-  "Media",
-  "Legal",
-  "Telecommunications",
-  "Manufacturing",
-  "Energy",
-  "Consulting",
-  "Environmental",
-  "Agriculture",
-  "Human Resources",
-  "FMCG",
-];
-const cities = [
-  "Dhaka",
-  "Chittagong",
-  "Sylhet",
-  "Khulna",
-  "Rajshahi",
-  "New York",
-  "London",
-  "Toronto",
-  "Singapore",
-  "Dubai",
-  "Berlin",
-  "Sydney",
-  "Tokyo",
-  "Kolkata",
-];
-const countries = [
-  "Bangladesh",
-  "USA",
-  "UK",
-  "Canada",
-  "Singapore",
-  "UAE",
-  "Germany",
-  "Australia",
-  "Japan",
-  "India",
+  { label: "SSC", value: 1 },
+  { label: "HSC", value: 2 },
+  { label: "Honours", value: 3 },
+  { label: "Masters", value: 4 },
 ];
 
 export default function AlumniFilters() {
@@ -139,63 +71,42 @@ export default function AlumniFilters() {
           }}
         >
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
-                label="Department"
-                value={local.departmentId || ""}
-                onChange={(e) =>
-                  setLocal({
-                    ...local,
-                    departmentId: e.target.value || undefined,
-                  })
-                }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                {departments.map((d) => (
-                  <MenuItem key={d} value={d}>
-                    {d}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
               <TextField
                 select
                 size="small"
                 margin="dense"
                 fullWidth
                 label="Program"
-                value={local.programId || ""}
+                value={local.programId ?? ""}
                 onChange={(e) =>
-                  setLocal({ ...local, programId: e.target.value || undefined })
+                  setLocal({
+                    ...local,
+                    programId: e.target.value
+                      ? Number(e.target.value)
+                      : undefined,
+                  })
                 }
               >
                 <MenuItem value="">
                   <em>All</em>
                 </MenuItem>
                 {programs.map((p) => (
-                  <MenuItem key={p} value={p}>
-                    {p}
+                  <MenuItem key={p.value} value={p.value}>
+                    {p.label}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
               <TextField
                 select
                 size="small"
                 margin="dense"
                 fullWidth
                 label="Graduation Year"
-                value={local.graduationYear || ""}
+                value={local.graduationYear ?? ""}
                 onChange={(e) =>
                   setLocal({
                     ...local,
@@ -216,114 +127,16 @@ export default function AlumniFilters() {
               </TextField>
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
-                label="Gender"
-                value={local.gender || ""}
-                onChange={(e) =>
-                  setLocal({
-                    ...local,
-                    gender:
-                      (e.target.value as FilterType["gender"]) || undefined,
-                  })
-                }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                <MenuItem value="Male">Male</MenuItem>
-                <MenuItem value="Female">Female</MenuItem>
-                <MenuItem value="Other">Other</MenuItem>
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
-                label="City"
-                value={local.city || ""}
-                onChange={(e) =>
-                  setLocal({ ...local, city: e.target.value || undefined })
-                }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                {cities.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
-                label="Country"
-                value={local.country || ""}
-                onChange={(e) =>
-                  setLocal({ ...local, country: e.target.value || undefined })
-                }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                {countries.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
-                label="Industry"
-                value={local.industry || ""}
-                onChange={(e) =>
-                  setLocal({ ...local, industry: e.target.value || undefined })
-                }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                {industries.map((i) => (
-                  <MenuItem key={i} value={i}>
-                    {i}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
               <TextField
                 select
                 size="small"
                 margin="dense"
                 fullWidth
                 label="Status"
-                value={local.status || ""}
+                value={local.status ?? ""}
                 onChange={(e) =>
-                  setLocal({
-                    ...local,
-                    status:
-                      (e.target.value as FilterType["status"]) || undefined,
-                  })
+                  setLocal({ ...local, status: e.target.value || undefined })
                 }
               >
                 <MenuItem value="">
@@ -331,71 +144,16 @@ export default function AlumniFilters() {
                 </MenuItem>
                 <MenuItem value="ACTIVE">Active</MenuItem>
                 <MenuItem value="INACTIVE">Inactive</MenuItem>
-                <MenuItem value="PENDING">Pending</MenuItem>
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
-                label="Verified"
-                value={
-                  local.isVerified === undefined ? "" : String(local.isVerified)
-                }
-                onChange={(e) =>
-                  setLocal({
-                    ...local,
-                    isVerified:
-                      e.target.value === ""
-                        ? undefined
-                        : e.target.value === "true",
-                  })
-                }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                <MenuItem value="true">Verified</MenuItem>
-                <MenuItem value="false">Unverified</MenuItem>
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
-                label="Mentor Available"
-                value={
-                  local.willingToMentor === undefined
-                    ? ""
-                    : String(local.willingToMentor)
-                }
-                onChange={(e) =>
-                  setLocal({
-                    ...local,
-                    willingToMentor:
-                      e.target.value === ""
-                        ? undefined
-                        : e.target.value === "true",
-                  })
-                }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                <MenuItem value="true">Yes</MenuItem>
-                <MenuItem value="false">No</MenuItem>
               </TextField>
             </Grid>
 
             <Grid
-              size={{ xs: 12, sm: 6, md: 3, lg: 4 }}
-              sx={{ display: "flex", justifyContent: "flex-end" }}
+              size={{ xs: 12, sm: 6, md: 3, lg: 3 }}
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
             >
               <Button
                 variant="contained"

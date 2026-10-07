@@ -5,7 +5,6 @@ import {
   CardContent,
   Typography,
   Chip,
-  Button,
   Grid,
   Divider,
   Alert,
@@ -23,24 +22,25 @@ import {
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
 import {
-  fetchEventByIdAsync,
   registerForEventAsync,
   cancelEventRegistrationAsync,
   fetchEventRegistrationsAsync,
+  fetchEventByIdAsync,
   deleteEventAsync,
-} from "@/Slice/eventSlice";
-import { showToast } from "@/Slice/uiSlice";
+} from "@/store/Slice/eventSlice";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonLoading,
   CommonEmptyState,
+  CommonErrorState,
   CommonStatusBadge,
   CommonButton,
   CommonConfirmDialog,
 } from "@/components/common";
-import { formatDate, formatTime } from "@/utils/dateUtils";
-import { isUpcoming } from "@/utils/dateUtils";
+import { formatDate, formatTime, isUpcoming } from "@/utils/dateUtils";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
 export default function EventDetailsPage({
@@ -52,18 +52,19 @@ export default function EventDetailsPage({
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { selectedEvent, registrations, loading } = useAppSelector(
+  const { authUser: user } = useAuth();
+
+  const { selectedEvent, registrations, loading, error } = useAppSelector(
     (s) => s.events,
   );
-  const { user } = useAppSelector((s) => s.auth);
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchEventByIdAsync(id));
-      dispatch(fetchEventRegistrationsAsync(id));
-    }
+    if (!id) return;
+    void dispatch(fetchEventByIdAsync(id));
+    void dispatch(fetchEventRegistrationsAsync(id));
   }, [dispatch, id]);
 
   useEffect(() => {
@@ -80,6 +81,15 @@ export default function EventDetailsPage({
   ]);
 
   if (loading && !selectedEvent) return <CommonLoading />;
+  if (error && !selectedEvent)
+    return (
+      <CommonErrorState
+        message={error}
+        onRetry={() => {
+          if (id) void dispatch(fetchEventByIdAsync(id));
+        }}
+      />
+    );
   if (!selectedEvent) return <CommonEmptyState title="Event not found" />;
 
   const evt = selectedEvent;
@@ -93,14 +103,15 @@ export default function EventDetailsPage({
   const basePath = isAdmin ? "/events" : "/alumni/events";
 
   const handleRegister = async () => {
+    if (!id) return;
     const res = await dispatch(
-      registerForEventAsync({ eventId: evt.id, alumniId: myAlumniId }),
+      registerForEventAsync({ eventId: id, alumniId: myAlumniId }),
     );
-    if (res.meta.requestStatus === "fulfilled") {
+    if (registerForEventAsync.fulfilled.match(res)) {
       dispatch(
         showToast({ message: "Registered successfully!", severity: "success" }),
       );
-      dispatch(fetchEventRegistrationsAsync(evt.id));
+      void dispatch(fetchEventRegistrationsAsync(id));
     } else {
       dispatch(
         showToast({ message: "Registration failed", severity: "error" }),
@@ -109,20 +120,22 @@ export default function EventDetailsPage({
   };
 
   const handleCancel = async () => {
+    if (!id) return;
     const res = await dispatch(
-      cancelEventRegistrationAsync({ eventId: evt.id, alumniId: myAlumniId }),
+      cancelEventRegistrationAsync({ eventId: id, alumniId: myAlumniId }),
     );
-    if (res.meta.requestStatus === "fulfilled") {
+    if (cancelEventRegistrationAsync.fulfilled.match(res)) {
       dispatch(
         showToast({ message: "Registration cancelled", severity: "info" }),
       );
-      dispatch(fetchEventRegistrationsAsync(evt.id));
+      void dispatch(fetchEventRegistrationsAsync(id));
     }
   };
 
   const handleDelete = async () => {
-    const res = await dispatch(deleteEventAsync(evt.id));
-    if (res.meta.requestStatus === "fulfilled") {
+    if (!id) return;
+    const res = await dispatch(deleteEventAsync(id));
+    if (deleteEventAsync.fulfilled.match(res)) {
       dispatch(
         showToast({
           message: "Event deleted successfully",

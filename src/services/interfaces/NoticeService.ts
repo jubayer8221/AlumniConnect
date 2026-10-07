@@ -1,17 +1,20 @@
+import type { ApiResponse, PagedResult } from "@/types/api";
 import type {
-  Notice,
   CreateNoticeRequest,
-  UpdateNoticeRequest,
+  Notice,
   NoticeQueryParams,
+  UpdateNoticeRequest,
 } from "@/types/notice";
-import type { PaginatedResponse, ApiResponse } from "@/types/common";
 
 export interface NoticeService {
-  getAll(params?: NoticeQueryParams): Promise<PaginatedResponse<Notice>>;
+  getAll(params: NoticeQueryParams): Promise<ApiResponse<PagedResult<Notice>>>;
   getById(id: string): Promise<ApiResponse<Notice>>;
-  create(data: CreateNoticeRequest): Promise<ApiResponse<Notice>>;
-  update(id: string, data: UpdateNoticeRequest): Promise<ApiResponse<Notice>>;
-  delete(id: string): Promise<ApiResponse<null>>;
+  create(payload: CreateNoticeRequest): Promise<ApiResponse<Notice>>;
+  update(
+    id: string,
+    payload: UpdateNoticeRequest,
+  ): Promise<ApiResponse<Notice>>;
+  remove(id: string): Promise<ApiResponse<boolean>>;
   publish(id: string): Promise<ApiResponse<Notice>>;
   unpublish(id: string): Promise<ApiResponse<Notice>>;
 }

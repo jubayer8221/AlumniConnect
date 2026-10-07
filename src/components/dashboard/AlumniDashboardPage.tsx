@@ -12,7 +12,6 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
-  Avatar,
 } from "@mui/material";
 import {
   UserCircle,
@@ -23,19 +22,17 @@ import {
   Users,
   CalendarDays,
   ArrowRight,
-  Award,
   Bell,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchAlumniByIdAsync } from "@/Slice/alumniSlice";
-import { fetchEventsAsync } from "@/Slice/eventSlice";
-import { fetchNoticesAsync } from "@/Slice/noticeSlice";
+import { useAuth } from "@/hooks/useAuth";
+import { useAlumni } from "@/hooks/useAlumni";
+import { fetchEventsAsync } from "@/store/Slice/eventSlice";
+import { fetchNoticesAsync } from "@/store/Slice/noticeSlice";
 import {
   CommonLoading,
   CommonPageHeader,
-  CommonCard,
-  CommonAvatar,
   CommonEmptyState,
 } from "@/components/common";
 import {
@@ -56,24 +53,33 @@ const cardSx = {
 export default function AlumniDashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user } = useAppSelector((s) => s.auth);
-  const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
+
+  const { authUser: user } = useAuth();
+  const { selectedAlumni, loading, fetchAlumniById } = useAlumni();
+
   const events = useAppSelector((s) => s.events.items);
   const notices = useAppSelector((s) => s.notices.items);
 
   useEffect(() => {
-    if (user?.alumniId) dispatch(fetchAlumniByIdAsync(user.alumniId));
+    if (user?.alumniId) {
+      void fetchAlumniById(user.alumniId).catch(() => undefined);
+    }
     dispatch(fetchEventsAsync({ pageNumber: 1, pageSize: 5 } as never));
     dispatch(fetchNoticesAsync({ pageNumber: 1, pageSize: 5 } as never));
-  }, [dispatch, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, user?.alumniId]);
 
   if (loading && !selectedAlumni) return <CommonLoading />;
   if (!selectedAlumni) return <CommonEmptyState title="Profile not found" />;
 
+  const p = selectedAlumni.personalInformation;
+  const firstEdu = selectedAlumni.academicInformation[0];
+
   const completion = calculateProfileCompletion(selectedAlumni);
   const missing = getMissingProfileFields(selectedAlumni);
+
   const welcomeName =
-    selectedAlumni.fullName?.trim() ||
+    p.fullName?.trim() ||
     user?.displayName?.trim() ||
     user?.username ||
     "there";
@@ -82,13 +88,13 @@ export default function AlumniDashboardPage() {
     {
       label: "View Profile",
       icon: <UserCircle size={20} />,
-      path: `/alumni/${selectedAlumni.id}`,
+      path: `/alumni/${selectedAlumni.alumniID}`,
       color: "#6366f1",
     },
     {
       label: "Edit Profile",
       icon: <Pencil size={20} />,
-      path: `/alumni/${selectedAlumni.id}/edit`,
+      path: "/alumni/profile-setup",
       color: "#ec4899",
     },
     {
@@ -108,25 +114,25 @@ export default function AlumniDashboardPage() {
   const infoCards = [
     {
       label: "My Profile",
-      value: selectedAlumni.fullName,
+      value: p.fullName,
       icon: <UserCircle size={22} />,
       color: "#6366f1",
     },
     {
       label: "My Batch",
-      value: selectedAlumni.batch || "—",
+      value: firstEdu?.batch || "—",
       icon: <Calendar size={22} />,
       color: "#10b981",
     },
     {
       label: "My Department",
-      value: selectedAlumni.departmentName || "—",
+      value: firstEdu?.departmentName || "—",
       icon: <Building2 size={22} />,
       color: "#f59e0b",
     },
     {
       label: "Graduation Year",
-      value: selectedAlumni.graduationYear?.toString() || "—",
+      value: firstEdu?.graduationYear?.toString() || "—",
       icon: <GraduationCap size={22} />,
       color: "#8b5cf6",
     },

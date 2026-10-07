@@ -1,11 +1,10 @@
-import { lazy, Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { Provider } from "react-redux";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from "@mui/material";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { store } from "@/store/store";
 import { createAppTheme } from "@/store/theme";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { restoreSessionAsync } from "@/Slice/authSlice";
 import AppLayout from "@/components/layout/AppLayout";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import {
@@ -24,7 +23,7 @@ import AlumniDashboardPage from "@/components/dashboard/AlumniDashboardPage";
 import ProfileSetupPage from "@/components/alumniProfile/ProfileSetupPage";
 import SettingsPrivacyPage from "@/components/alumniProfile/SettingsPrivacyPage";
 import AlumniDirectoryPage from "@/components/alumniProfile/AlumniDirectoryPage";
-// import AlumniAccountPage from "@/components/alumniProfile/AlumniAccountPage";
+import AlumniAccountPage from "@/components/alumniProfile/AlumniAccountPage";
 import EventListPage from "@/components/event/EventListPage";
 import EventDetailsPage from "@/components/event/EventDetailsPage";
 import EventFormPage from "@/components/event/EventFormPage";
@@ -33,29 +32,36 @@ import NoticeDetailsPage from "@/components/notice/NoticeDetailsPage";
 import NoticeFormPage from "@/components/notice/NoticeFormPage";
 import ReportsPage from "@/components/report/ReportsPage";
 import SettingsPage from "@/components/settings/SettingsPage";
+import { useAppDispatch, useAppSelector } from "./hooks/useAppDispatch";
+// import { useAppDispatch, useAppSelector } from "@/hooks";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
+    mutations: { retry: 0 },
+  },
+});
 
 function AppRoutes() {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, role } = useAppSelector((s) => s.auth);
+  const token = useAppSelector((s) => s.auth.token);
+  const user = useAppSelector((s) => s.auth.authUser);
+
+  const isAuthenticated = Boolean(token && user);
+  const role = user?.role ?? null;
 
   useEffect(() => {
-    dispatch(restoreSessionAsync());
-  }, [dispatch]);
-
-  if (isAuthenticated === undefined) {
-    return <CommonLoading message="Loading your session..." fullScreen />;
-  }
+    if (!isAuthenticated) queryClient.clear();
+  }, [isAuthenticated]);
 
   return (
     <Routes>
       <Route
         path="/"
         element={
-          isAuthenticated === undefined ? (
-            <CommonLoading message="Loading your session..." fullScreen />
-          ) : isAuthenticated ? (
+          isAuthenticated ? (
             <Navigate
-              to={role === "ADMIN" ? "/dashboard" : "/alumni/dashboard"}
+              to={role === "ADMIN" ? "/dashboard" : "/alumni/profile"}
               replace
             />
           ) : (
@@ -68,7 +74,7 @@ function AppRoutes() {
         element={
           isAuthenticated ? (
             <Navigate
-              to={role === "ADMIN" ? "/dashboard" : "/alumni/dashboard"}
+              to={role === "ADMIN" ? "/dashboard" : "/alumni/profile"}
               replace
             />
           ) : (
@@ -93,18 +99,17 @@ function AppRoutes() {
           path="/alumni/settings-privacy"
           element={<SettingsPrivacyPage />}
         />
-        <Route
-          path="/alumni/directory"
-          element={
-            role === "ADMIN" ? <AlumniListPage /> : <AlumniDirectoryPage />
-          }
-        />
+        <Route path="/alumni/directory" element={<AlumniDirectoryPage />} />
         <Route path="/alumni/events" element={<EventListPage />} />
         <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
         <Route path="/alumni/notices" element={<NoticeListPage />} />
         <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
-        {/* <Route path="/alumni/account" element={<AlumniAccountPage />} /> */}
-        <Route path="/alumni/create" element={<AlumniFormPage />} />
+        <Route path="/alumni/account" element={<AlumniAccountPage />} />
+        <Route path="/alumni/new" element={<AlumniFormPage />} />
+        <Route
+          path="/alumni/create"
+          element={<Navigate to="/alumni/new" replace />}
+        />
         <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
         <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
       </Route>
@@ -118,12 +123,13 @@ function AppRoutes() {
         }
       >
         <Route path="/dashboard" element={<AdminDashboardPage />} />
-        <Route
-          path="/alumni"
-          element={<Navigate to="/alumni/directory" replace />}
-        />
+        <Route path="/alumni" element={<AlumniListPage />} />
         <Route path="/events" element={<EventListPage isAdmin />} />
-        <Route path="/events/create" element={<EventFormPage />} />
+        <Route path="/events/new" element={<EventFormPage />} />
+        <Route
+          path="/events/create"
+          element={<Navigate to="/events/new" replace />}
+        />
         <Route path="/events/:id" element={<EventDetailsPage isAdmin />} />
         <Route path="/events/:id/edit" element={<EventFormPage />} />
         <Route path="/notices" element={<NoticeListPage isAdmin />} />
@@ -178,7 +184,9 @@ function AppTheme() {
 export default function App() {
   return (
     <Provider store={store}>
-      <AppTheme />
+      <QueryClientProvider client={queryClient}>
+        <AppTheme />
+      </QueryClientProvider>
     </Provider>
   );
 }

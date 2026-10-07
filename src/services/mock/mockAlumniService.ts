@@ -42,6 +42,16 @@ function saveAlumni(alumni: Alumni[]): void {
   localStorageService.set(STORAGE_KEYS.ALUMNI, alumni);
 }
 
+function matchesAlumniId(alumni: Alumni, id: string): boolean {
+  if (alumni.id === id || alumni.alumniId === id) return true;
+  const requestedId = Number(id);
+  return (
+    Number.isFinite(requestedId) &&
+    (Number(alumni.id) === requestedId ||
+      Number(alumni.alumniId) === requestedId)
+  );
+}
+
 function matchesFilters(
   alumni: Alumni,
   filters?: AlumniFilters,
@@ -147,7 +157,7 @@ export const mockAlumniService: AlumniService = {
   async getById(id: string): Promise<ApiResponse<Alumni>> {
     await delay();
     const all = ensureAlumni();
-    const found = all.find((a) => a.id === id || a.alumniId === id);
+    const found = all.find((alumni) => matchesAlumniId(alumni, id));
     if (!found)
       return {
         success: false,
@@ -269,7 +279,7 @@ export const mockAlumniService: AlumniService = {
   ): Promise<ApiResponse<Alumni>> {
     await delay();
     const all = ensureAlumni();
-    const idx = all.findIndex((a) => a.id === id || a.alumniId === id);
+    const idx = all.findIndex((alumni) => matchesAlumniId(alumni, id));
     if (idx === -1)
       return {
         success: false,
@@ -296,7 +306,7 @@ export const mockAlumniService: AlumniService = {
   async delete(id: string): Promise<ApiResponse<null>> {
     await delay();
     const all = ensureAlumni();
-    const filtered = all.filter((a) => a.id !== id && a.alumniId !== id);
+    const filtered = all.filter((alumni) => !matchesAlumniId(alumni, id));
     if (filtered.length === all.length)
       return { success: false, message: "Alumni not found", data: null };
     saveAlumni(filtered);
@@ -310,7 +320,7 @@ export const mockAlumniService: AlumniService = {
   async verify(id: string): Promise<ApiResponse<Alumni>> {
     await delay();
     const all = ensureAlumni();
-    const idx = all.findIndex((a) => a.id === id || a.alumniId === id);
+    const idx = all.findIndex((alumni) => matchesAlumniId(alumni, id));
     if (idx === -1)
       return {
         success: false,
@@ -334,7 +344,7 @@ export const mockAlumniService: AlumniService = {
   ): Promise<ApiResponse<Alumni>> {
     await delay();
     const all = ensureAlumni();
-    const idx = all.findIndex((a) => a.id === id || a.alumniId === id);
+    const idx = all.findIndex((alumni) => matchesAlumniId(alumni, id));
     if (idx === -1)
       return {
         success: false,
@@ -356,7 +366,7 @@ export const mockAlumniService: AlumniService = {
   ): Promise<ApiResponse<Alumni>> {
     await delay();
     const all = ensureAlumni();
-    const idx = all.findIndex((a) => a.id === id || a.alumniId === id);
+    const idx = all.findIndex((alumni) => matchesAlumniId(alumni, id));
     if (idx === -1)
       return {
         success: false,

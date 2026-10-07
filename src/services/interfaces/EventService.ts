@@ -1,28 +1,37 @@
+import type { ApiResponse, PagedResult } from "@/types/api";
 import type {
-  EventItem,
   CreateEventRequest,
-  UpdateEventRequest,
+  EventItem,
   EventQueryParams,
   EventRegistration,
+  UpdateEventRequest,
 } from "@/types/event";
-import type { PaginatedResponse, ApiResponse } from "@/types/common";
 
 export interface EventService {
-  getAll(params?: EventQueryParams): Promise<PaginatedResponse<EventItem>>;
+  getAll(
+    params: EventQueryParams,
+  ): Promise<ApiResponse<PagedResult<EventItem>>>;
+
   getById(id: string): Promise<ApiResponse<EventItem>>;
-  create(data: CreateEventRequest): Promise<ApiResponse<EventItem>>;
-  update(id: string, data: UpdateEventRequest): Promise<ApiResponse<EventItem>>;
-  delete(id: string): Promise<ApiResponse<null>>;
+
+  create(payload: CreateEventRequest): Promise<ApiResponse<EventItem>>;
+
+  update(
+    id: string,
+    payload: UpdateEventRequest,
+  ): Promise<ApiResponse<EventItem>>;
+
+  remove(id: string): Promise<ApiResponse<boolean>>;
+
+  getRegistrations(eventId: string): Promise<ApiResponse<EventRegistration[]>>;
+
   register(
     eventId: string,
     alumniId: string,
   ): Promise<ApiResponse<EventRegistration>>;
+
   cancelRegistration(
     eventId: string,
     alumniId: string,
-  ): Promise<ApiResponse<null>>;
-  getRegistrations(eventId: string): Promise<ApiResponse<EventRegistration[]>>;
-  getMyRegistrations(
-    alumniId: string,
-  ): Promise<ApiResponse<EventRegistration[]>>;
+  ): Promise<ApiResponse<boolean>>;
 }

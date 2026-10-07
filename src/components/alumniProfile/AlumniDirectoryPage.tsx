@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Grid,
@@ -7,17 +8,12 @@ import {
   alpha,
   Typography,
 } from "@mui/material";
-import { List, LayoutGrid, Eye, Pencil, BadgeCheck, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { List, LayoutGrid, Eye, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchAlumniAsync,
-  setSearch,
-  setPage,
-  setPageSize,
-  setSort,
-} from "@/Slice/alumniSlice";
+import { useAuth } from "@/hooks/useAuth";
+import { useAlumni } from "@/hooks/useAlumni";
+import { setSearch, setPage, setPageSize } from "@/store/Slice/alumniSlice";
 import {
   CommonPageHeader,
   CommonSearchField,
@@ -26,13 +22,16 @@ import {
   CommonLoading,
   CommonAvatar,
   CommonStatusBadge,
-  CommonButton,
   CommonDataGrid,
+  CommonErrorState,
+  CommonButton,
 } from "@/components/common";
 import AlumniCard from "@/components/alumniProfile/AlumniCard";
 import AlumniFilters from "@/components/alumniProfile/AlumniFilters";
 import type { GridColDef } from "@mui/x-data-grid";
-import type { Alumni } from "@/types/alumni";
+import type { AlumniProfileFullModel } from "@/types/alumni";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 const NAVY = "#132038";
 const TEAL = "#2dd4bf";
@@ -40,26 +39,73 @@ const TEAL = "#2dd4bf";
 export default function AlumniDirectoryPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { role } = useAppSelector((s) => s.auth);
+
+  const { role } = useAuth();
   const {
-    items,
+    alumniData: items,
     loading,
     totalCount,
-    pageNumber,
-    pageSize,
-    search,
-    filters,
-    sortBy,
-    sortDirection,
-  } = useAppSelector((s) => s.alumni);
+    fetchAlumniData,
+  } = useAlumni();
+
+  const { search, filters, pageNumber, pageSize } = useAppSelector(
+    (s) => s.alumni,
+  );
+
+  const debouncedSearch = useDebouncedValue(search);
   const [view, setView] = useState<"table" | "grid">("grid");
-  const isAdmin = role === "ADMIN";
+  const [error, setError] = useState<string | null>(null);
 
+  const canAddAlumni = role === "ADMIN" || role === "MODERATOR";
+
+  const load = useCallback(
+    (overrideQuery?: {
+      search?: string;
+      pageNumber?: number;
+      pageSize?: number;
+    }) => {
+      void fetchAlumniData({
+        search: overrideQuery?.search ?? (debouncedSearch || undefined),
+        status: filters.status,
+        programId: filters.programId,
+        graduationYear: filters.graduationYear,
+        pageNumber: overrideQuery?.pageNumber ?? pageNumber,
+        pageSize: overrideQuery?.pageSize ?? pageSize,
+      }).catch((err) =>
+        setError(getApiErrorMessage(err, "Unable to load alumni")),
+      );
+    },
+    [debouncedSearch, filters, pageNumber, pageSize, fetchAlumniData],
+  );
+
+  /* ============================================================
+     Effect 1 — Initial mount
+     Fetch only if the store is empty. If the user already visited
+     this page in the session, the cached data is reused.
+     ============================================================ */
   useEffect(() => {
-    dispatch(fetchAlumniAsync());
-  }, [dispatch, pageNumber, pageSize, search, filters, sortBy, sortDirection]);
+    if (!items || items.length === 0) {
+      load();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const columns: GridColDef<Alumni>[] = [
+  /* ============================================================
+     Effect 2 — Search / filter / pagination changes
+     Refetch unconditionally. Skip the very first render because
+     Effect 1 already handled the mount case.
+     ============================================================ */
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, filters, pageNumber, pageSize]);
+
+  const columns: GridColDef<AlumniProfileFullModel>[] = [
     {
       field: "fullName",
       headerName: "Alumni",
@@ -70,13 +116,16 @@ export default function AlumniDirectoryPage() {
           sx={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "flex-start",
             gap: 1.5,
             width: "100%",
             height: "100%",
           }}
         >
-          <CommonAvatar src={row.profilePhoto} name={row.fullName} size={36} />
+          <CommonAvatar
+            src={row.personalInformation.profilePhoto ?? undefined}
+            name={row.personalInformation.fullName}
+            size={36}
+          />
           <Typography
             noWrap
             sx={{
@@ -86,31 +135,37 @@ export default function AlumniDirectoryPage() {
               minWidth: 0,
             }}
           >
-            {row.fullName}
+            {row.personalInformation.fullName}
           </Typography>
         </Box>
       ),
     },
-
     {
       field: "departmentName",
       headerName: "Department",
       minWidth: 150,
       flex: 1,
+      valueGetter: (_v, row) =>
+        row.academicInformation[0]?.departmentName ?? "",
     },
     {
       field: "batch",
       headerName: "Batch",
       width: 100,
-      valueGetter: (_value, row) => row.batch || row.graduationYear || "—",
+      valueGetter: (_v, row) =>
+        row.academicInformation[0]?.batch ??
+        row.academicInformation[0]?.graduationYear ??
+        "—",
     },
     {
       field: "designation",
       headerName: "Designation",
       minWidth: 180,
       flex: 1,
-      valueGetter: (_value, row) =>
-        [row.designation, row.companyName].filter(Boolean).join(" · ") || "—",
+      valueGetter: (_v, row) =>
+        [row.jobExperience[0]?.designation, row.jobExperience[0]?.companyname]
+          .filter(Boolean)
+          .join(" · ") || "—",
     },
     {
       field: "status",
@@ -128,17 +183,9 @@ export default function AlumniDirectoryPage() {
         <Box onClick={(event) => event.stopPropagation()}>
           <IconButton
             size="small"
-            aria-label={`View ${row.fullName}`}
-            onClick={() => navigate(`/alumni/${row.id}`)}
+            onClick={() => navigate(`/alumni/${row.alumniID}`)}
           >
             <Eye size={16} />
-          </IconButton>
-          <IconButton
-            size="small"
-            aria-label={`Edit ${row.fullName}`}
-            onClick={() => navigate(`/alumni/${row.id}/edit`)}
-          >
-            <Pencil size={16} />
           </IconButton>
         </Box>
       ),
@@ -155,11 +202,11 @@ export default function AlumniDirectoryPage() {
           { label: "Directory" },
         ]}
         actions={
-          isAdmin ? (
+          canAddAlumni ? (
             <CommonButton
               variant="contained"
               startIcon={<Plus size={18} />}
-              onClick={() => navigate("/alumni/create")}
+              onClick={() => navigate("/alumni/new")}
             >
               Add Alumni
             </CommonButton>
@@ -207,28 +254,29 @@ export default function AlumniDirectoryPage() {
 
       <AlumniFilters />
 
-      {loading ? (
+      {error && !items.length ? (
+        <CommonErrorState message={error} onRetry={() => load()} />
+      ) : loading ? (
         <CommonLoading fullHeight={false} />
       ) : items.length === 0 ? (
         <CommonEmptyState
           title="No alumni found"
           message="No alumni match your search criteria."
+          actionLabel={canAddAlumni ? "Add Alumni" : undefined}
+          onAction={canAddAlumni ? () => navigate("/alumni/new") : undefined}
         />
       ) : view === "grid" ? (
         <Box>
           <Grid container spacing={2}>
             {items.map((alum) => (
-              <Grid key={alum.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                <AlumniCard
-                  alumni={alum}
-                  onEdit={() => navigate(`/alumni/${alum.id}/edit`)}
-                />
+              <Grid key={alum.alumniID} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <AlumniCard alumni={alum} />
               </Grid>
             ))}
           </Grid>
           <Box sx={{ mt: 3 }}>
             <CommonPagination
-              count={Math.ceil(totalCount / pageSize)}
+              count={Math.max(1, Math.ceil(totalCount / pageSize))}
               page={pageNumber}
               onChange={(p) => dispatch(setPage(p))}
               pageSize={pageSize}
@@ -244,35 +292,21 @@ export default function AlumniDirectoryPage() {
             rowCount={totalCount}
             page={pageNumber - 1}
             pageSize={pageSize}
-            sortModel={[{ field: sortBy, sort: sortDirection }]}
             paginationMode="server"
             sortingMode="server"
             filterMode="server"
             autoHeight
             hideFooter
             rowHeight={64}
-            onPaginationModelChange={(model) => {
-              if (model.pageSize !== pageSize) {
-                dispatch(setPageSize(model.pageSize));
-              } else {
-                dispatch(setPage(model.page + 1));
-              }
+            onPaginationModelChange={(m) => {
+              if (m.pageSize !== pageSize) dispatch(setPageSize(m.pageSize));
+              else dispatch(setPage(m.page + 1));
             }}
-            onSortModelChange={(model) => {
-              const sort = model[0];
-              dispatch(
-                setSort({
-                  sortBy: sort?.field ?? "fullName",
-                  sortDirection: sort?.sort ?? "asc",
-                }),
-              );
-            }}
-            getRowId={(row) => row.id}
+            getRowId={(row) => row.alumniID}
           />
-
           <Box sx={{ mt: 3 }}>
             <CommonPagination
-              count={Math.ceil(totalCount / pageSize)}
+              count={Math.max(1, Math.ceil(totalCount / pageSize))}
               page={pageNumber}
               onChange={(p) => dispatch(setPage(p))}
               pageSize={pageSize}
