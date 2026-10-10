@@ -21,7 +21,7 @@ function getDescriptor(path: string): RouteDescriptor | undefined {
 
 export default function Breadcrumbs() {
   const location = useLocation();
-  const role = useAppSelector((state) => state.auth.role);
+  const role = useAppSelector((state) => state.auth.authUser?.role ?? null);
   const { labels } = useBreadcrumbLabels();
   const currentDescriptor = getDescriptor(location.pathname);
 

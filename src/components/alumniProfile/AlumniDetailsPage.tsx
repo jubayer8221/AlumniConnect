@@ -29,17 +29,14 @@ import {
   Facebook,
   Globe,
   Award,
-  BadgeCheck,
   Github,
   Instagram,
   Shield,
   Printer,
   IdCard,
   MoreVertical,
-  Lock,
-  Building2,
-  Users,
   Twitter,
+  X,
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch } from "@/hooks";
@@ -49,7 +46,6 @@ import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonEmptyState,
-  CommonErrorState,
   CommonAvatar,
   CommonButton,
   CommonConfirmDialog,
@@ -157,6 +153,7 @@ export default function AlumniDetailsPage() {
   const profileId = id ?? user?.alumniId;
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [idCardOpen, setIdCardOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [statusDialog, setStatusDialog] = useState<
     "ACTIVE" | "INACTIVE" | null
   >(null);
@@ -294,6 +291,12 @@ export default function AlumniDetailsPage() {
 
   const printProfile = () => window.print();
 
+  const handleImageClick = (imageUrl?: string | null) => {
+    if (imageUrl) {
+      setPreviewImage(imageUrl);
+    }
+  };
+
   const socialLinks = [
     {
       href: alumni.socialInformation.linkedInLink,
@@ -405,7 +408,20 @@ export default function AlumniDetailsPage() {
         }
       />
 
-      <Box>
+      <Box
+        onClick={() => handleImageClick(p.profilePhoto)}
+        sx={{
+          cursor: p.profilePhoto ? "pointer" : "default",
+          "& img": {
+            transition: "transform 0.2s ease-in-out",
+          },
+          "&:hover img": p.profilePhoto
+            ? {
+                transform: "scale(1.03)",
+              }
+            : {},
+        }}
+      >
         <AlumniProfileCard
           alumni={alumni}
           completion={completion}
@@ -656,7 +672,7 @@ export default function AlumniDetailsPage() {
 
         {canSeeFamily && alumni.familyInformation.length > 0 && (
           <Grid size={{ xs: 12 }}>
-            <Section title="Family Members" icon={<Users size={20} />}>
+            <Section title="Family Members" icon={<Award size={20} />}>
               <Grid container spacing={2}>
                 {alumni.familyInformation
                   .filter((member) => isOwner || isAdmin || member.isVisible)
@@ -743,6 +759,7 @@ export default function AlumniDetailsPage() {
         )}
       </Grid>
 
+      {/* ID Card Dialog */}
       <Dialog
         open={idCardOpen}
         onClose={() => setIdCardOpen(false)}
@@ -776,7 +793,23 @@ export default function AlumniDetailsPage() {
             >
               ALUMNI ID CARD
             </Typography>
-            <Box sx={{ my: 2, display: "flex", justifyContent: "center" }}>
+            <Box
+              onClick={() => handleImageClick(p.profilePhoto)}
+              sx={{
+                my: 2,
+                display: "flex",
+                justifyContent: "center",
+                cursor: p.profilePhoto ? "pointer" : "default",
+                "& img": {
+                  transition: "transform 0.2s ease-in-out",
+                },
+                "&:hover img": p.profilePhoto
+                  ? {
+                      transform: "scale(1.05)",
+                    }
+                  : {},
+              }}
+            >
               <CommonAvatar
                 src={p.profilePhoto ?? undefined}
                 name={p.fullName}
@@ -814,6 +847,73 @@ export default function AlumniDetailsPage() {
             Print ID Card
           </Button>
         </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Lightbox Modal */}
+      <Dialog
+        open={Boolean(previewImage)}
+        onClose={() => setPreviewImage(null)}
+        maxWidth="md"
+        disableScrollLock
+        slotProps={{
+          paper: {
+            sx: {
+              // backgroundColor: "rgba(0, 0, 0, 0.92)",
+              backgroundColor: "white",
+              backgroundImage: "none",
+              boxShadow: 24,
+              borderRadius: 3,
+              overflow: "visible", // Ensures button is never clipped
+              m: 2,
+              position: "relative",
+            },
+          },
+        }}
+      >
+        {/* Close Button anchored to top-right of the modal card */}
+        <IconButton
+          onClick={() => setPreviewImage(null)}
+          aria-label="Close image preview"
+          sx={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            color: "#ffffff",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.3)",
+              color: "red",
+            },
+            zIndex: 10,
+          }}
+        >
+          <X size={20} />
+        </IconButton>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            p: 3,
+            pt: 6, // Reserved top space so image doesn't overlap the close button
+          }}
+        >
+          {previewImage && (
+            <Box
+              component="img"
+              src={previewImage}
+              alt={p.fullName || "User Profile Picture"}
+              sx={{
+                maxWidth: "100%",
+                maxHeight: "75vh",
+                objectFit: "contain",
+                borderRadius: 2,
+              }}
+            />
+          )}
+        </Box>
       </Dialog>
 
       <CommonConfirmDialog

@@ -37,6 +37,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import { fromNow, formatDate } from "@/utils/dateUtils";
 import { appConfig } from "@/config/appConfig";
+import Footer from "../common/Footer";
 
 const cardSx = {
   borderRadius: 3,
@@ -519,6 +520,10 @@ export default function AdminDashboardPage() {
           </Card>
         </Grid>
       </Grid>
+
+      <Box>
+        <Footer></Footer>
+      </Box>
     </Box>
   );
 }

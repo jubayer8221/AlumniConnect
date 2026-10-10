@@ -40,6 +40,7 @@ import {
   getMissingProfileFields,
 } from "@/utils/profileCompletion";
 import { formatDate } from "@/utils/dateUtils";
+import Footer from "../common/Footer";
 
 const cardSx = {
   borderRadius: 3,
@@ -511,6 +512,9 @@ export default function AlumniDashboardPage() {
           </Card>
         </Grid>
       </Grid>
+      <Box>
+        <Footer />
+      </Box>
     </Box>
   );
 }
