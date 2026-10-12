@@ -8,7 +8,6 @@ import {
   Button,
   Chip,
   Divider,
-  LinearProgress,
   IconButton,
   Menu,
   MenuItem,
@@ -30,43 +29,38 @@ import {
   Facebook,
   Globe,
   Award,
-  BadgeCheck,
+  Github,
+  Instagram,
   Shield,
   Printer,
   IdCard,
   MoreVertical,
-  Lock,
-  Building2,
+  Twitter,
+  X,
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchAlumniByIdAsync,
-  verifyAlumniAsync,
-  updateAlumniStatusAsync,
-} from "@/Slice/alumniSlice";
-import { showToast } from "@/Slice/uiSlice";
+import { useAppDispatch } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { useAlumni } from "@/hooks/useAlumni";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
-  CommonLoading,
   CommonEmptyState,
-  CommonStatusBadge,
   CommonAvatar,
   CommonButton,
   CommonConfirmDialog,
 } from "@/components/common";
+import AlumniProfileSkeleton from "@/components/alumniProfile/AlumniProfileSkeleton";
 import {
   calculateProfileCompletion,
   getMissingProfileFields,
 } from "@/utils/profileCompletion";
 import { formatDate } from "@/utils/dateUtils";
+import { getApiErrorMessage } from "@/utils/apiError";
 import { appConfig } from "@/config/appConfig";
-import type { Alumni } from "@/types/alumni";
 import AlumniProfileCard from "@/components/alumniProfile/AlumniProfileCard";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
-// Joins whichever address fragments exist into one readable line instead of
-// listing village/union/thana/district/division/country as separate rows.
 const formatAddress = (...parts: (string | undefined | null)[]) => {
   const joined = parts.filter(Boolean).join(", ");
   return joined || undefined;
@@ -111,9 +105,6 @@ const InfoRow = ({
   </Box>
 );
 
-// Two-column layout for label/value rows so shorter sections (Personal,
-// Academic, Professional) read at roughly the same height instead of one
-// tall single column.
 const InfoGrid = ({ children }: { children: React.ReactNode }) => (
   <Box
     sx={{
@@ -150,52 +141,49 @@ const Section = ({
   </Card>
 );
 
-// Small icon + text pill used in the profile header's meta line.
-const MetaItem = ({
-  icon,
-  children,
-}: {
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) => (
-  <Box
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: 0.5,
-      color: "text.secondary",
-    }}
-  >
-    {icon}
-    <Typography variant="caption" sx={{ color: "text.secondary" }}>
-      {children}
-    </Typography>
-  </Box>
-);
-
 export default function AlumniDetailsPage() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
-  const { role, user } = useAppSelector((s) => s.auth);
-  const profileId = id || user?.alumniId;
+  const { authUser: user, role } = useAuth();
+  const { selectedAlumni, loading, fetchAlumniById, setAlumniActive } =
+    useAlumni();
+
+  const profileId = id ?? user?.alumniId;
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [idCardOpen, setIdCardOpen] = useState(false);
-  const [statusDialog, setStatusDialog] = useState<Alumni["status"] | null>(
-    null,
-  );
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [statusDialog, setStatusDialog] = useState<
+    "ACTIVE" | "INACTIVE" | null
+  >(null);
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
+  /* ============================================================
+     Fetch only if:
+       - nothing is currently loaded, OR
+       - the loaded profile belongs to a different alumni
+     Avoids refetching the same record when the component re-mounts.
+     ============================================================ */
   useEffect(() => {
-    if (profileId) dispatch(fetchAlumniByIdAsync(profileId));
-  }, [dispatch, profileId]);
+    if (!profileId) return;
+
+    const isStale =
+      !selectedAlumni || String(selectedAlumni.alumniID) !== String(profileId);
+
+    if (isStale) {
+      void fetchAlumniById(profileId).catch(() => undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
 
   useEffect(() => {
     if (!id) return;
     if (selectedAlumni)
-      setBreadcrumbLabel(location.pathname, selectedAlumni.fullName);
+      setBreadcrumbLabel(
+        location.pathname,
+        selectedAlumni.personalInformation.fullName,
+      );
     return () => clearBreadcrumbLabel(location.pathname);
   }, [
     clearBreadcrumbLabel,
@@ -205,65 +193,139 @@ export default function AlumniDetailsPage() {
     setBreadcrumbLabel,
   ]);
 
-  if (loading && !selectedAlumni) return <CommonLoading />;
+  if (loading && !selectedAlumni) return <AlumniProfileSkeleton />;
   if (!selectedAlumni)
     return (
       <CommonEmptyState
         title="Alumni not found"
-        message="The alumni record you're looking for doesn't exist."
+        message={
+          !id && !user?.alumniId
+            ? "Your login did not provide an alumni ID, so your profile cannot be loaded."
+            : "The alumni record you're looking for doesn't exist."
+        }
       />
     );
 
   const alumni = selectedAlumni;
+  const p = alumni.personalInformation;
+  const c = alumni.contactInformation;
+  const firstEdu = alumni.academicInformation[0];
+
   const completion = calculateProfileCompletion(alumni);
   const missing = getMissingProfileFields(alumni);
   const isAdmin = role === "ADMIN";
-  const isOwner = user?.alumniId === alumni.alumniId;
+  const isOwner = Boolean(
+    user &&
+    (user.id === String(alumni.userID) ||
+      user.alumniId === String(alumni.alumniID)),
+  );
   const canSeePrivate = isAdmin || isOwner;
-  const canSeeAddress = canSeePrivate || alumni.privacy?.showAddress;
+  const profileIsPublic = alumni.isProfilePublic;
 
-  const presentAddress = canSeeAddress
+  const canSeePersonal =
+    canSeePrivate ||
+    (profileIsPublic && alumni.privacy.isAcademicInformationVisible);
+  const canSeeAcademic =
+    canSeePrivate ||
+    (profileIsPublic && alumni.privacy.isAcademicInformationVisible);
+  const canSeeContact =
+    canSeePrivate ||
+    (profileIsPublic && alumni.privacy.isContactInformationVisible);
+  const canSeeJobs =
+    canSeePrivate || (profileIsPublic && alumni.privacy.isJobExperienceVisible);
+  const canSeeFamily =
+    canSeePrivate ||
+    (profileIsPublic && alumni.privacy.isFamilyInformationVisible);
+  const canSeeSocial =
+    canSeePrivate || (profileIsPublic && alumni.privacy.isSocialMediaVisible);
+  const canSeeBiography = canSeePrivate || profileIsPublic;
+
+  const presentAddress = canSeePrivate
     ? formatAddress(
-        alumni.presentAddress,
-        alumni.presentVillageArea,
-        alumni.presentUnion,
-        alumni.presentThana,
-        alumni.presentDistrict,
-        alumni.presentDivision,
-        alumni.presentCountry,
+        c.fullpresentAddress,
+        c.presentVillageArea,
+        c.presentUnion,
+        c.presentThana,
+        c.presentDistrict,
+        c.presentDivision,
+        c.presentCountry,
       )
     : "Hidden";
 
-  const permanentAddress = canSeeAddress
+  const permanentAddress = canSeePrivate
     ? formatAddress(
-        alumni.permanentAddress,
-        alumni.permanentVillageArea,
-        alumni.permanentUnion,
-        alumni.permanentThana,
-        alumni.permanentDistrict,
-        alumni.permanentDivision,
-        alumni.permanentCountry,
+        c.fullPermanentAddress,
+        c.permanentVillageArea,
+        c.permanentUnion,
+        c.permanentThana,
+        c.permanentDistrict,
+        c.permanentDivision,
+        c.permanentCountry,
       )
     : "Hidden";
 
-  const handleVerify = async () => {
-    const res = await dispatch(verifyAlumniAsync(alumni.id));
-    if (res.meta.requestStatus === "fulfilled")
-      dispatch(showToast({ message: "Alumni verified", severity: "success" }));
-    setMenuAnchor(null);
-  };
-
-  const handleStatusChange = async () => {
+  const handleSetActive = async () => {
     if (!statusDialog) return;
-    const res = await dispatch(
-      updateAlumniStatusAsync({ id: alumni.id, status: statusDialog }),
-    );
-    if (res.meta.requestStatus === "fulfilled")
-      dispatch(showToast({ message: "Status updated", severity: "success" }));
-    setStatusDialog(null);
+    try {
+      await setAlumniActive(alumni.alumniID, statusDialog === "ACTIVE");
+      dispatch(
+        showToast({
+          message:
+            statusDialog === "ACTIVE"
+              ? "Alumni activated"
+              : "Alumni deactivated",
+          severity: "success",
+        }),
+      );
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Unable to update status"),
+          severity: "error",
+        }),
+      );
+    } finally {
+      setStatusDialog(null);
+    }
   };
 
   const printProfile = () => window.print();
+
+  const handleImageClick = (imageUrl?: string | null) => {
+    if (imageUrl) {
+      setPreviewImage(imageUrl);
+    }
+  };
+
+  const socialLinks = [
+    {
+      href: alumni.socialInformation.linkedInLink,
+      label: "LinkedIn",
+      icon: <Linkedin size={18} />,
+    },
+    {
+      href: alumni.socialInformation.facebookLink,
+      label: "Facebook",
+      icon: <Facebook size={18} />,
+    },
+    {
+      href: alumni.socialInformation.instagramLink,
+      label: "Instagram",
+      icon: <Instagram size={18} />,
+    },
+    {
+      href: alumni.socialInformation.twitterLink,
+      label: "Twitter",
+      icon: <Twitter size={18} />,
+    },
+    {
+      href: alumni.socialInformation.gitHubLink,
+      label: "GitHub / Website",
+      icon: <Github size={18} />,
+    },
+  ].filter((item): item is typeof item & { href: string } =>
+    Boolean(item.href),
+  );
 
   return (
     <Box>
@@ -271,8 +333,8 @@ export default function AlumniDetailsPage() {
         title="Alumni Profile"
         breadcrumbs={[
           { label: "Home", path: isAdmin ? "/dashboard" : "/alumni/dashboard" },
-          { label: "Manage Alumni", path: "/alumni" },
-          { label: alumni.fullName },
+          { label: "Alumni", path: "/alumni" },
+          { label: p.fullName },
         ]}
         actions={
           <>
@@ -283,7 +345,13 @@ export default function AlumniDetailsPage() {
               <CommonButton
                 variant="outlined"
                 startIcon={<Pencil size={18} />}
-                onClick={() => navigate(`/alumni/${alumni.id}/edit`)}
+                onClick={() =>
+                  navigate(
+                    isOwner && !isAdmin
+                      ? "/alumni/profile-setup"
+                      : `/alumni/${alumni.alumniID}/edit`,
+                  )
+                }
               >
                 Edit Profile
               </CommonButton>
@@ -318,16 +386,9 @@ export default function AlumniDetailsPage() {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <IdCard size={16} /> View id Card
+                  <IdCard size={16} /> View ID Card
                 </Box>
               </MenuItem>
-              {isAdmin && !alumni.isVerified && (
-                <MenuItem onClick={handleVerify}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <BadgeCheck size={16} /> Verify Alumni
-                  </Box>
-                </MenuItem>
-              )}
               {isAdmin && alumni.status === "ACTIVE" && (
                 <MenuItem onClick={() => setStatusDialog("INACTIVE")}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -347,8 +408,20 @@ export default function AlumniDetailsPage() {
         }
       />
 
-      {/* Profile Header */}
-      <Box>
+      <Box
+        onClick={() => handleImageClick(p.profilePhoto)}
+        sx={{
+          cursor: p.profilePhoto ? "pointer" : "default",
+          "& img": {
+            transition: "transform 0.2s ease-in-out",
+          },
+          "&:hover img": p.profilePhoto
+            ? {
+                transform: "scale(1.03)",
+              }
+            : {},
+        }}
+      >
         <AlumniProfileCard
           alumni={alumni}
           completion={completion}
@@ -359,248 +432,334 @@ export default function AlumniDetailsPage() {
       </Box>
 
       <Grid container spacing={0}>
-        <Grid size={{ xs: 12 }}>
-          <Section
-            title="Personal Information"
-            icon={<GraduationCap size={20} />}
-          >
-            <InfoGrid>
-              <InfoRow label="Full Name" value={alumni.fullName} />
-              <InfoRow
-                label="Date of Birth"
-                value={formatDate(alumni.dateOfBirth)}
-                icon={<Calendar size={16} />}
-              />
-              <InfoRow label="Gender" value={alumni.gender} />
-              <InfoRow label="Blood Group" value={alumni.bloodGroup} />
-              <InfoRow label="Marital Status" value={alumni.maritalStatus} />
-            </InfoGrid>
-          </Section>
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <Section
-            title="Academic Information"
-            icon={<GraduationCap size={20} />}
-          >
-            <InfoGrid>
-              <InfoRow label="Student id" value={alumni.studentId} />
-              <InfoRow
-                label="Registration Number"
-                value={alumni.registrationNumber}
-              />
-              <InfoRow label="Program" value={alumni.programName} />
-              <InfoRow label="Department" value={alumni.departmentName} />
-              <InfoRow label="Faculty" value={alumni.facultyName} />
-              <InfoRow
-                label="Admission Year"
-                value={alumni.admissionYear?.toString()}
-              />
-              <InfoRow
-                label="Graduation Year"
-                value={alumni.graduationYear?.toString()}
-              />
-              <InfoRow
-                label="Graduation Semester"
-                value={alumni.graduationSemester}
-              />
-              <InfoRow label="Batch" value={alumni.batch} />
-              <InfoRow label="Roll Number" value={alumni.rollNumber} />
-            </InfoGrid>
-          </Section>
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <Section title="Contact & Address" icon={<Mail size={20} />}>
-            <InfoGrid>
-              <InfoRow
-                label="Email"
-                value={
-                  canSeePrivate || alumni.privacy?.showEmail
-                    ? alumni.email
-                    : "Hidden"
-                }
-                icon={<Mail size={16} />}
-              />
-              <InfoRow
-                label="Phone"
-                value={
-                  canSeePrivate || alumni.privacy?.showPhone
-                    ? alumni.phone
-                    : "Hidden"
-                }
-                icon={<Phone size={16} />}
-              />
-              {alumni.alternatePhone && (
+        {canSeePersonal && (
+          <Grid size={{ xs: 12 }}>
+            <Section
+              title="Personal Information"
+              icon={<GraduationCap size={20} />}
+            >
+              <InfoGrid>
+                <InfoRow label="Full Name" value={p.fullName} />
                 <InfoRow
-                  label="Alternate Phone"
-                  value={canSeePrivate ? alumni.alternatePhone : "Hidden"}
+                  label="Native Name"
+                  value={p.nativeName ?? undefined}
+                />
+                <InfoRow
+                  label="Date of Birth"
+                  value={formatDate(p.dateOfBirth ?? undefined)}
+                  icon={<Calendar size={16} />}
+                />
+                <InfoRow label="Gender" value={p.gender ?? undefined} />
+                <InfoRow
+                  label="Blood Group"
+                  value={p.bloodGroup ?? undefined}
+                />
+                <InfoRow
+                  label="Marital Status"
+                  value={p.maritalStatusID ?? undefined}
+                />
+                <InfoRow label="Hobby" value={p.hobby ?? undefined} />
+                <InfoRow
+                  label="T-Shirt Size"
+                  value={p.tShirtSize ?? undefined}
+                />
+              </InfoGrid>
+            </Section>
+          </Grid>
+        )}
+
+        {canSeeAcademic && (
+          <Grid size={{ xs: 12 }}>
+            <Section
+              title="Academic Information"
+              icon={<GraduationCap size={20} />}
+            >
+              {alumni.academicInformation.length ? (
+                [...alumni.academicInformation]
+                  .filter((edu) => isOwner || isAdmin || edu.isVisible)
+                  .sort(
+                    (l, r) => (r.graduationYear ?? 0) - (l.graduationYear ?? 0),
+                  )
+                  .map((edu) => (
+                    <Box
+                      key={edu.alumniEducationID}
+                      sx={{
+                        py: 1.5,
+                        borderBottom: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Typography sx={{ fontWeight: 700 }}>
+                        {edu.programName ?? "Education"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {[edu.departmentName, edu.facultyName]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {edu.secondarySchoolName ?? "Institution not provided"}
+                        {edu.graduationYear
+                          ? ` · Graduated ${edu.graduationYear}`
+                          : ""}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {[edu.studentID, edu.registrationNumber, edu.batch]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Typography>
+                    </Box>
+                  ))
+              ) : (
+                <InfoGrid>
+                  <InfoRow
+                    label="Student ID"
+                    value={firstEdu?.studentID ?? undefined}
+                  />
+                  <InfoRow
+                    label="Registration Number"
+                    value={firstEdu?.registrationNumber ?? undefined}
+                  />
+                  <InfoRow
+                    label="Program"
+                    value={firstEdu?.programName ?? undefined}
+                  />
+                  <InfoRow
+                    label="Department"
+                    value={firstEdu?.departmentName ?? undefined}
+                  />
+                  <InfoRow
+                    label="Faculty"
+                    value={firstEdu?.facultyName ?? undefined}
+                  />
+                  <InfoRow
+                    label="Admission Year"
+                    value={firstEdu?.admissionYear?.toString()}
+                  />
+                  <InfoRow
+                    label="Graduation Year"
+                    value={firstEdu?.graduationYear?.toString()}
+                  />
+                  <InfoRow
+                    label="Graduation Semester"
+                    value={firstEdu?.graduationSemester ?? undefined}
+                  />
+                  <InfoRow label="Batch" value={firstEdu?.batch ?? undefined} />
+                  <InfoRow
+                    label="Roll Number"
+                    value={firstEdu?.rollNumber ?? undefined}
+                  />
+                </InfoGrid>
+              )}
+            </Section>
+          </Grid>
+        )}
+
+        {canSeeContact && (
+          <Grid size={{ xs: 12 }}>
+            <Section title="Contact & Address" icon={<Mail size={20} />}>
+              <InfoGrid>
+                <InfoRow
+                  label="Email"
+                  value={c.email ?? undefined}
+                  icon={<Mail size={16} />}
+                />
+                <InfoRow
+                  label="Phone"
+                  value={c.phone ?? undefined}
                   icon={<Phone size={16} />}
                 />
-              )}
-              <InfoRow
-                label="Current Location"
-                value={
-                  alumni.city
-                    ? `${alumni.city}${alumni.country ? `, ${alumni.country}` : ""}`
-                    : undefined
-                }
-                icon={<MapPin size={16} />}
-              />
-            </InfoGrid>
+                {c.alternatePhone && (
+                  <InfoRow
+                    label="Alternate Phone"
+                    value={c.alternatePhone}
+                    icon={<Phone size={16} />}
+                  />
+                )}
+                <InfoRow
+                  label="Current Location"
+                  value={
+                    c.presentDistrict
+                      ? `${c.presentDistrict}${c.presentCountry ? `, ${c.presentCountry}` : ""}`
+                      : undefined
+                  }
+                  icon={<MapPin size={16} />}
+                />
+              </InfoGrid>
 
-            <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 2 }} />
 
-            <InfoGrid>
-              <InfoRow
-                label="Present Address"
-                value={presentAddress}
-                icon={<MapPin size={16} />}
-              />
-              <InfoRow
-                label="Permanent Address"
-                value={permanentAddress}
-                icon={<MapPin size={16} />}
-              />
-            </InfoGrid>
-          </Section>
-        </Grid>
+              <InfoGrid>
+                <InfoRow
+                  label="Present Address"
+                  value={presentAddress}
+                  icon={<MapPin size={16} />}
+                />
+                <InfoRow
+                  label="Permanent Address"
+                  value={permanentAddress}
+                  icon={<MapPin size={16} />}
+                />
+              </InfoGrid>
+            </Section>
+          </Grid>
+        )}
 
-        <Grid size={{ xs: 12 }}>
-          <Section
-            title="Professional Information"
-            icon={<Briefcase size={20} />}
-          >
-            <InfoGrid>
-              <InfoRow
-                label="Current Occupation"
-                value={alumni.currentOccupation}
-              />
-              <InfoRow label="Designation" value={alumni.designation} />
-              <InfoRow
-                label="Company"
-                value={
-                  canSeePrivate || alumni.privacy?.showCompany
-                    ? alumni.companyName
-                    : "Hidden"
-                }
-                icon={<Building2 size={16} />}
-              />
-              <InfoRow label="Industry" value={alumni.industry} />
-              <InfoRow label="Work Location" value={alumni.workLocation} />
-            </InfoGrid>
-            {alumni.skills && alumni.skills.length > 0 && (
-              <Box sx={{ mt: 2 }}>
-                <Typography
-                  variant="body2"
-                  sx={{ mb: 1, color: "text.secondary" }}
-                >
-                  Skills
+        {canSeeJobs && (
+          <Grid size={{ xs: 12 }}>
+            <Section
+              title="Professional Information"
+              icon={<Briefcase size={20} />}
+            >
+              {alumni.jobExperience.length ? (
+                [...alumni.jobExperience]
+                  .filter((job) => isOwner || isAdmin || job.isVisible)
+                  .sort((l, r) => Number(r.isCurrent) - Number(l.isCurrent))
+                  .map((job) => (
+                    <Box
+                      key={job.jobExperienceID}
+                      sx={{
+                        position: "relative",
+                        pl: 3,
+                        py: 1.5,
+                        borderLeft: "2px solid",
+                        borderColor: "primary.light",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          bgcolor: "primary.main",
+                          left: -6,
+                          top: 22,
+                        },
+                      }}
+                    >
+                      <Typography sx={{ fontWeight: 700 }}>
+                        {job.designation ?? "Position"}
+                        {job.isCurrent ? " · Current" : ""}
+                      </Typography>
+                      <Typography variant="body2">
+                        {job.companyname ?? "Company not provided"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {[job.location, job.city, job.country]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {[job.startDate, job.endDate]
+                          .filter((d): d is string => Boolean(d))
+                          .map((d) => formatDate(d))
+                          .join(" – ") || "Dates not provided"}
+                      </Typography>
+                      {job.description && (
+                        <Typography variant="body2" sx={{ mt: 0.5 }}>
+                          {job.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))
+              ) : (
+                <Typography color="text.secondary">
+                  No job experience recorded.
                 </Typography>
-                <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                  {alumni.skills.map((s) => (
-                    <Chip key={s} label={s} size="small" variant="outlined" />
+              )}
+            </Section>
+          </Grid>
+        )}
+
+        {canSeeFamily && alumni.familyInformation.length > 0 && (
+          <Grid size={{ xs: 12 }}>
+            <Section title="Family Members" icon={<Award size={20} />}>
+              <Grid container spacing={2}>
+                {alumni.familyInformation
+                  .filter((member) => isOwner || isAdmin || member.isVisible)
+                  .map((member) => (
+                    <Grid
+                      size={{ xs: 12, sm: 6, md: 4 }}
+                      key={member.familyMemberID}
+                    >
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography sx={{ fontWeight: 700 }}>
+                            {member.familyMemberName}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {member.relation}
+                          </Typography>
+                          {member.occupation && (
+                            <Typography variant="body2">
+                              {member.occupation}
+                            </Typography>
+                          )}
+                          {member.phone && (
+                            <Typography variant="body2">
+                              {member.phone}
+                            </Typography>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+              </Grid>
+            </Section>
+          </Grid>
+        )}
+
+        {canSeeSocial && (
+          <Grid size={{ xs: 12 }}>
+            <Section title="Social Links" icon={<Globe size={20} />}>
+              {socialLinks.length > 0 ? (
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  {socialLinks.map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      underline="none"
+                      aria-label={item.label}
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 1,
+                        p: 1.25,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 2,
+                      }}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </Link>
                   ))}
                 </Box>
-              </Box>
-            )}
-          </Section>
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <Section title="Social Links" icon={<Globe size={20} />}>
-            {canSeePrivate || alumni.privacy?.showSocialLinks ? (
-              <>
-                {alumni.linkedinUrl && (
-                  <Box
-                    sx={{
-                      py: 1.5,
-                      borderBottom: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Link
-                      href={alumni.linkedinUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      underline="hover"
-                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                    >
-                      <Linkedin size={16} /> LinkedIn Profile
-                    </Link>
-                  </Box>
-                )}
-                {alumni.facebookUrl && (
-                  <Box
-                    sx={{
-                      py: 1.5,
-                      borderBottom: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Link
-                      href={alumni.facebookUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      underline="hover"
-                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                    >
-                      <Facebook size={16} /> Facebook Profile
-                    </Link>
-                  </Box>
-                )}
-                {alumni.websiteUrl && (
-                  <Box sx={{ py: 1.5 }}>
-                    <Link
-                      href={alumni.websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      underline="hover"
-                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                    >
-                      <Globe size={16} /> Personal Website
-                    </Link>
-                  </Box>
-                )}
-                {!alumni.linkedinUrl &&
-                  !alumni.facebookUrl &&
-                  !alumni.websiteUrl && (
-                    <Typography sx={{ color: "text.secondary" }}>
-                      No social links provided
-                    </Typography>
-                  )}
-              </>
-            ) : (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.75,
-                  color: "text.secondary",
-                }}
-              >
-                <Lock size={14} />
+              ) : (
                 <Typography sx={{ color: "text.secondary" }}>
-                  Social links are private
+                  No social links provided
                 </Typography>
-              </Box>
-            )}
-          </Section>
-        </Grid>
+              )}
+            </Section>
+          </Grid>
+        )}
 
-        <Grid size={{ xs: 12 }}>
-          <Section title="Biography" icon={<Award size={20} />}>
-            <Typography
-              variant="body2"
-              sx={{ whiteSpace: "pre-wrap", color: "text.secondary" }}
-            >
-              {alumni.bio || "No biography added yet."}
-            </Typography>
-          </Section>
-        </Grid>
+        {canSeeBiography && (
+          <Grid size={{ xs: 12 }}>
+            <Section title="Biography" icon={<Award size={20} />}>
+              <Typography
+                variant="body2"
+                sx={{ whiteSpace: "pre-wrap", color: "text.secondary" }}
+              >
+                {p.bio || "No biography added yet."}
+              </Typography>
+            </Section>
+          </Grid>
+        )}
       </Grid>
 
-      {/* id Card Dialog */}
+      {/* ID Card Dialog */}
       <Dialog
         open={idCardOpen}
         onClose={() => setIdCardOpen(false)}
@@ -608,7 +767,7 @@ export default function AlumniDetailsPage() {
         fullWidth
         disableScrollLock
       >
-        <DialogTitle>Alumni id Card</DialogTitle>
+        <DialogTitle>Alumni ID Card</DialogTitle>
         <DialogContent>
           <Box
             sx={{
@@ -632,26 +791,42 @@ export default function AlumniDetailsPage() {
               variant="caption"
               sx={{ letterSpacing: 2, color: "text.secondary" }}
             >
-              ALUMNI id CARD
+              ALUMNI ID CARD
             </Typography>
-            <Box sx={{ my: 2, display: "flex", justifyContent: "center" }}>
+            <Box
+              onClick={() => handleImageClick(p.profilePhoto)}
+              sx={{
+                my: 2,
+                display: "flex",
+                justifyContent: "center",
+                cursor: p.profilePhoto ? "pointer" : "default",
+                "& img": {
+                  transition: "transform 0.2s ease-in-out",
+                },
+                "&:hover img": p.profilePhoto
+                  ? {
+                      transform: "scale(1.05)",
+                    }
+                  : {},
+              }}
+            >
               <CommonAvatar
-                src={alumni.profilePhoto}
-                name={alumni.fullName}
+                src={p.profilePhoto ?? undefined}
+                name={p.fullName}
                 size={100}
               />
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {alumni.fullName}
+              {p.fullName}
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {alumni.alumniId}
+              {alumni.alumniCode}
             </Typography>
             <Typography variant="body2" sx={{ mt: 1 }}>
-              {alumni.departmentName || "—"}
+              {firstEdu?.departmentName ?? "—"}
             </Typography>
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              Batch: {alumni.batch || alumni.graduationYear || "—"}
+              Batch: {firstEdu?.batch ?? firstEdu?.graduationYear ?? "—"}
             </Typography>
             <Divider sx={{ my: 2 }} />
             <Chip
@@ -669,18 +844,84 @@ export default function AlumniDetailsPage() {
             sx={{ mt: 2 }}
             startIcon={<Printer size={18} />}
           >
-            Print id Card
+            Print ID Card
           </Button>
         </DialogContent>
       </Dialog>
 
-      {/* Status Change Confirm */}
+      {/* Image Preview Lightbox Modal */}
+      <Dialog
+        open={Boolean(previewImage)}
+        onClose={() => setPreviewImage(null)}
+        maxWidth="md"
+        disableScrollLock
+        slotProps={{
+          paper: {
+            sx: {
+              // backgroundColor: "rgba(0, 0, 0, 0.92)",
+              backgroundColor: "white",
+              backgroundImage: "none",
+              boxShadow: 24,
+              borderRadius: 3,
+              overflow: "visible", // Ensures button is never clipped
+              m: 2,
+              position: "relative",
+            },
+          },
+        }}
+      >
+        {/* Close Button anchored to top-right of the modal card */}
+        <IconButton
+          onClick={() => setPreviewImage(null)}
+          aria-label="Close image preview"
+          sx={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            color: "#ffffff",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.3)",
+              color: "red",
+            },
+            zIndex: 10,
+          }}
+        >
+          <X size={20} />
+        </IconButton>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            p: 3,
+            pt: 6, // Reserved top space so image doesn't overlap the close button
+          }}
+        >
+          {previewImage && (
+            <Box
+              component="img"
+              src={previewImage}
+              alt={p.fullName || "User Profile Picture"}
+              sx={{
+                maxWidth: "100%",
+                maxHeight: "75vh",
+                objectFit: "contain",
+                borderRadius: 2,
+              }}
+            />
+          )}
+        </Box>
+      </Dialog>
+
       <CommonConfirmDialog
         open={!!statusDialog}
         title="Change Status"
         message={`Are you sure you want to ${statusDialog === "ACTIVE" ? "activate" : "deactivate"} this alumni?`}
         confirmLabel={statusDialog === "ACTIVE" ? "Activate" : "Deactivate"}
-        onConfirm={handleStatusChange}
+        onConfirm={handleSetActive}
         onCancel={() => setStatusDialog(null)}
         color={statusDialog === "ACTIVE" ? "primary" : "warning"}
       />

@@ -1,19 +1,37 @@
-import type { AuthService } from "@/services/interfaces/AuthService";
-import type { AlumniService } from "@/services/interfaces/AlumniService";
-import type { EventService } from "@/services/interfaces/EventService";
-import type { NoticeService } from "@/services/interfaces/NoticeService";
-import { mockAuthService } from "@/services/mock/mockAuthService";
-import { mockAlumniService } from "@/services/mock/mockAlumniService";
-import { mockEventService } from "@/services/mock/mockEventService";
-import { mockNoticeService } from "@/services/mock/mockNoticeService";
-import { restAuthService } from "@/services/api/authApi";
-import { restAlumniService } from "@/services/api/alumniApi";
-import { restEventService } from "@/services/api/eventApi";
+import axios from "axios";
 import { restNoticeService } from "@/services/api/noticeApi";
+import { mockNoticeService } from "@/services/mock/mockNoticeService";
+import type { NoticeService } from "@/services/interfaces/NoticeService";
 
-const useMock = import.meta.env.VITE_DATA_SOURCE !== "api";
+const useMock = import.meta.env.VITE_DATA_SOURCE === "mock";
 
-export const authService: AuthService = useMock ? mockAuthService : restAuthService;
-export const alumniService: AlumniService = useMock ? mockAlumniService : restAlumniService;
-export const eventService: EventService = useMock ? mockEventService : restEventService;
-export const noticeService: NoticeService = useMock ? mockNoticeService : restNoticeService;
+function shouldFallback(error: unknown): boolean {
+  if (axios.isAxiosError(error)) {
+    return !error.response || error.response.status >= 500;
+  }
+  return error instanceof Error && error.message.includes("not available from");
+}
+
+function withFallback<T extends object>(api: T, mock: T): T {
+  return new Proxy(api, {
+    get(target, property, receiver) {
+      const apiMethod = Reflect.get(target, property, receiver);
+      const mockMethod = Reflect.get(mock, property, mock);
+      if (typeof apiMethod !== "function" || typeof mockMethod !== "function") {
+        return apiMethod;
+      }
+      return async (...args: unknown[]) => {
+        try {
+          return await Reflect.apply(apiMethod, target, args);
+        } catch (error) {
+          if (!shouldFallback(error)) throw error;
+          return Reflect.apply(mockMethod, mock, args);
+        }
+      };
+    },
+  });
+}
+
+export const noticeService: NoticeService = useMock
+  ? mockNoticeService
+  : withFallback(restNoticeService, mockNoticeService);

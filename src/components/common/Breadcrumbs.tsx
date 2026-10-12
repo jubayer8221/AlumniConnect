@@ -1,12 +1,23 @@
+import React from "react";
 import {
+  Box,
   Breadcrumbs as MUIBreadcrumbs,
-  Link as MUILink,
   Typography,
+  useTheme,
+  alpha,
 } from "@mui/material";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 import { Link, useLocation } from "react-router-dom";
 import { useAppSelector } from "@/hooks";
-import { matchRoute, type RouteDescriptor } from "@/config/routeRegistry";
+import { labelForSegment, isDynamicSegment } from "@/config/navigation";
 import { useBreadcrumbLabels } from "./breadcrumbLabelContext";
+
+interface Crumb {
+  label: string;
+  path: string;
+  isLast: boolean;
+}
 
 function getPartialPaths(pathname: string): string[] {
   const segments = pathname.split("/").filter(Boolean);
@@ -15,16 +26,13 @@ function getPartialPaths(pathname: string): string[] {
   );
 }
 
-function getDescriptor(path: string): RouteDescriptor | undefined {
-  return matchRoute(path);
-}
-
 export default function Breadcrumbs() {
+  const theme = useTheme();
   const location = useLocation();
-  const role = useAppSelector((state) => state.auth.role);
+  const role = useAppSelector((state) => state.auth.authUser?.role ?? null);
   const { labels } = useBreadcrumbLabels();
-  const currentDescriptor = getDescriptor(location.pathname);
 
+  // Hide on the two dashboard roots.
   if (
     location.pathname === "/alumni/dashboard" ||
     location.pathname === "/dashboard"
@@ -34,49 +42,105 @@ export default function Breadcrumbs() {
 
   const rootPath = role === "ADMIN" ? "/dashboard" : "/alumni/dashboard";
   const paths = getPartialPaths(location.pathname);
-  const crumbs = paths
-    .map((path) => ({ path, descriptor: getDescriptor(path) }))
-    .filter(
-      (crumb): crumb is { path: string; descriptor: RouteDescriptor } =>
-        !!crumb.descriptor,
-    );
 
-  if (!currentDescriptor || crumbs.length === 0) return null;
+  if (paths.length === 0) return null;
+
+  const crumbs: Crumb[] = paths.map((path, index) => {
+    const segments = path.split("/").filter(Boolean);
+    const last = segments[segments.length - 1] ?? "";
+
+    const label = isDynamicSegment(last)
+      ? (labels[path] ?? "Details")
+      : labelForSegment(last);
+
+    return { label, path, isLast: index === paths.length - 1 };
+  });
 
   return (
-    <MUIBreadcrumbs
-      aria-label="breadcrumb"
-      sx={{
-        px: { xs: 2, sm: 3, md: 3.5 },
-        py: 1.5,
-        bgcolor: "background.default",
-      }}
-    >
-      <MUILink component={Link} to={rootPath} underline="hover" color="inherit">
-        Dashboard
-      </MUILink>
-      {crumbs.map(({ path, descriptor }, index) => {
-        const isLast = index === crumbs.length - 1;
-        const label = descriptor.dynamic
-          ? (labels[path] ?? descriptor.label)
-          : descriptor.label;
-
-        return isLast ? (
-          <Typography key={path} color="text.primary">
-            {label}
-          </Typography>
-        ) : (
-          <MUILink
-            key={path}
+    <Box sx={{ mt: 2, width: "100%" }}>
+      <Box
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          px: 2,
+          py: 1,
+          borderRadius: "16px",
+          backdropFilter: "blur(12px)",
+          border: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+        }}
+      >
+        <MUIBreadcrumbs
+          separator={
+            <NavigateNextRoundedIcon
+              sx={{
+                fontSize: "1.1rem",
+                color: alpha(theme.palette.text.secondary, 0.4),
+              }}
+            />
+          }
+          aria-label="breadcrumb"
+        >
+          {/* Home → role-appropriate dashboard */}
+          <Box
             component={Link}
-            to={path}
-            underline="hover"
-            color="inherit"
+            to={rootPath}
+            aria-label="Dashboard"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              color: "text.secondary",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                color: "primary.main",
+                transform: "translateY(-1px)",
+              },
+            }}
           >
-            {label}
-          </MUILink>
-        );
-      })}
-    </MUIBreadcrumbs>
+            <HomeRoundedIcon sx={{ fontSize: "1.25rem" }} />
+          </Box>
+
+          {/* Dynamic segments */}
+          {crumbs.map((crumb) => {
+            if (crumb.isLast) {
+              return (
+                <Typography
+                  key={crumb.path}
+                  variant="body2"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "16px",
+                    color: theme.palette.primary.main,
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: "6px",
+                  }}
+                >
+                  {crumb.label}
+                </Typography>
+              );
+            }
+
+            return (
+              <Box
+                key={crumb.path}
+                component={Link}
+                to={crumb.path}
+                sx={{
+                  typography: "body2",
+                  fontWeight: 600,
+                  fontSize: "16px",
+                  color: theme.palette.primary.main,
+                  textDecoration: "none",
+                  transition: "color 0.2s ease",
+                  "&:hover": { color: theme.palette.primary.dark },
+                }}
+              >
+                {crumb.label}
+              </Box>
+            );
+          })}
+        </MUIBreadcrumbs>
+      </Box>
+    </Box>
   );
 }

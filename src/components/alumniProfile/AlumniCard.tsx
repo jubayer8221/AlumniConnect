@@ -21,16 +21,16 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Alumni } from "@/types/alumni";
-import { CommonAvatar, CommonStatusBadge } from "@/components/common";
+import type { AlumniProfileFullModel } from "@/types/alumni";
+import { CommonAvatar } from "@/components/common";
 
 const NAVY = "#132038";
 const TEAL = "#2dd4bf";
 
 interface AlumniCardProps {
-  alumni: Alumni;
-  onEdit?: (alumni: Alumni) => void;
-  onDelete?: (alumni: Alumni) => void;
+  alumni: AlumniProfileFullModel;
+  onEdit?: (alumni: AlumniProfileFullModel) => void;
+  onDelete?: (alumni: AlumniProfileFullModel) => void;
 }
 
 export default function AlumniCard({
@@ -40,6 +40,11 @@ export default function AlumniCard({
 }: AlumniCardProps) {
   const navigate = useNavigate();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+
+  const p = alumni.personalInformation;
+  const c = alumni.contactInformation;
+  const firstEdu = alumni.academicInformation[0];
+  const firstJob = alumni.jobExperience[0];
 
   return (
     <Card
@@ -58,7 +63,6 @@ export default function AlumniCard({
         },
       }}
     >
-      {/* Header strip, matches the profile page's navy hero */}
       <Box
         sx={{
           height: 80,
@@ -100,7 +104,7 @@ export default function AlumniCard({
           <MenuItem
             onClick={() => {
               setAnchor(null);
-              navigate(`/alumni/${alumni.id}`);
+              navigate(`/alumni/${alumni.alumniID}`);
             }}
             sx={{
               py: 1.25,
@@ -151,12 +155,11 @@ export default function AlumniCard({
       </Box>
 
       <CardContent sx={{ p: 2.5, pt: 0, mt: -5 }}>
-        {/* Avatar overlapping the header, with a verified badge like the profile hero */}
         <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
           <Box sx={{ position: "relative" }}>
             <CommonAvatar
-              src={alumni.profilePhoto}
-              name={alumni.fullName}
+              src={p.profilePhoto ?? undefined}
+              name={p.fullName}
               size={72}
               sx={{
                 border: "3px solid white",
@@ -190,13 +193,13 @@ export default function AlumniCard({
             variant="subtitle1"
             sx={{ fontWeight: 700, fontSize: "0.95rem" }}
           >
-            {alumni.fullName}
+            {p.fullName}
           </Typography>
           <Typography
             variant="caption"
             sx={{ color: "text.secondary", display: "block", mb: 1 }}
           >
-            {alumni.alumniId}
+            {alumni.alumniCode}
           </Typography>
         </Box>
 
@@ -210,13 +213,13 @@ export default function AlumniCard({
           }}
         >
           <Chip
-            label={alumni.departmentName || "—"}
+            label={firstEdu?.departmentName || "—"}
             size="small"
             variant="outlined"
             sx={{ borderRadius: 1, fontSize: "0.7rem" }}
           />
           <Chip
-            label={`Batch ${alumni.batch || alumni.graduationYear || "—"}`}
+            label={`Batch ${firstEdu?.batch || firstEdu?.graduationYear || "—"}`}
             size="small"
             sx={{
               borderRadius: 1,
@@ -229,15 +232,15 @@ export default function AlumniCard({
           />
         </Box>
 
-        {alumni.designation && (
+        {firstJob?.designation && (
           <Typography
             variant="body2"
             sx={{ fontWeight: 600, textAlign: "center", fontSize: "0.85rem" }}
           >
-            {alumni.designation}
+            {firstJob.designation}
           </Typography>
         )}
-        {alumni.companyName && (
+        {firstJob?.companyname && (
           <Typography
             variant="caption"
             sx={{
@@ -249,10 +252,10 @@ export default function AlumniCard({
               color: "text.secondary",
             }}
           >
-            <Briefcase size={12} /> {alumni.companyName}
+            <Briefcase size={12} /> {firstJob.companyname}
           </Typography>
         )}
-        {alumni.city && (
+        {c.presentDistrict && (
           <Typography
             variant="caption"
             sx={{
@@ -264,28 +267,18 @@ export default function AlumniCard({
               color: "text.secondary",
             }}
           >
-            <MapPin size={12} /> {alumni.city}, {alumni.country}
+            <MapPin size={12} /> {c.presentDistrict}
+            {c.presentCountry ? `, ${c.presentCountry}` : ""}
           </Typography>
         )}
-
-        {/* <Box
-          sx={{
-            display: "flex",
-            gap: 0.5,
-            justifyContent: "center",
-            mt: 1.5,
-            mb: 2,
-          }}
-        >
-          <CommonStatusBadge status={alumni.status} />
-        </Box> */}
 
         <Button
           variant="outlined"
           size="small"
           fullWidth
-          onClick={() => navigate(`/alumni/${alumni.id}`)}
+          onClick={() => navigate(`/alumni/${alumni.alumniID}`)}
           sx={{
+            mt: 1.5,
             borderRadius: 2,
             textTransform: "none",
             fontWeight: 600,

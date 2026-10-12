@@ -1,45 +1,62 @@
-import { Box, Card, CardContent, Typography, Alert } from "@mui/material";
+import { Box, Card, CardContent, Typography } from "@mui/material";
 import { KeyRound } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { changePasswordAsync } from "@/Slice/authSlice";
-import { showToast } from "@/Slice/uiSlice";
-import { changePasswordSchema } from "@/validation/authValidation";
+import * as yup from "yup";
+// import { useAppDispatch } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
   CommonButton,
 } from "@/components/common";
-import type { ChangePasswordRequest } from "@/types/auth";
+import { useAppDispatch } from "@/hooks";
+import { ChangePasswordRequest } from "@/types/auth";
+// import type { ChangePasswordRequest } from "@/types/auth";
+
+/* ============================================================
+   Form validation — inline
+   ============================================================ */
+const changePasswordSchema = yup.object({
+  currentPassword: yup.string().required("Current password is required"),
+  newPassword: yup
+    .string()
+    .required("New password is required")
+    .min(8, "New password must be at least 8 characters"),
+  confirmNewPassword: yup
+    .string()
+    .required("Please confirm your new password")
+    .oneOf([yup.ref("newPassword")], "Passwords do not match"),
+});
+
+type ChangePasswordFormValues = yup.InferType<typeof changePasswordSchema>;
 
 export default function AlumniAccountPage() {
   const dispatch = useAppDispatch();
-  const { loading, error } = useAppSelector((s) => s.auth);
-  const { user } = useAppSelector((s) => s.auth);
+  const { loading, changePassword, authUser: user } = useAuth();
 
-  const { control, handleSubmit, reset } = useForm<ChangePasswordRequest>({
+  const { control, handleSubmit, reset } = useForm<ChangePasswordFormValues>({
     resolver: yupResolver(changePasswordSchema),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
-      confirmPassword: "",
+      confirmNewPassword: "",
     },
   });
 
-  const onSubmit = async (data: ChangePasswordRequest) => {
-    const res = await dispatch(changePasswordAsync(data));
-    if (res.meta.requestStatus === "fulfilled") {
+  const onSubmit = async (data: ChangePasswordFormValues) => {
+    try {
+      const message = await changePassword(data as ChangePasswordRequest);
+      dispatch(showToast({ message, severity: "success" }));
+      reset();
+    } catch (err) {
       dispatch(
         showToast({
-          message: "Password changed successfully",
-          severity: "success",
+          message:
+            err instanceof Error ? err.message : "Failed to change password",
+          severity: "error",
         }),
-      );
-      reset();
-    } else {
-      dispatch(
-        showToast({ message: "Failed to change password", severity: "error" }),
       );
     }
   };
@@ -54,7 +71,6 @@ export default function AlumniAccountPage() {
           { label: "My Account" },
         ]}
       />
-
       <Card
         sx={{
           borderRadius: 3,
@@ -70,11 +86,6 @@ export default function AlumniAccountPage() {
               Change Password
             </Typography>
           </Box>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
           <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
             Account: {user?.username}
           </Typography>
@@ -95,7 +106,7 @@ export default function AlumniAccountPage() {
                 required
               />
               <CommonInputField
-                name="confirmPassword"
+                name="confirmNewPassword"
                 label="Confirm New Password"
                 control={control}
                 type="password"

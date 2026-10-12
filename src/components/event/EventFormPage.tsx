@@ -1,20 +1,14 @@
-import { Box, Card, CardContent } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { Save, ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchEventByIdAsync,
-  createEventAsync,
-  updateEventAsync,
-} from "@/Slice/eventSlice";
-import { showToast } from "@/Slice/uiSlice";
-import {
-  eventSchema,
-  type EventFormValues,
-} from "@/validation/eventValidation";
+import { useEffect } from "react";
+import { useAppDispatch } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { useEvents } from "@/hooks/useEvents";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
@@ -24,8 +18,36 @@ import {
   CommonButton,
   CommonLoading,
   CommonCard,
+  CommonFileUpload,
 } from "@/components/common";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
+import type { CreateUpdateEventPayload } from "@/hooks/useEvents";
+import { getApiErrorMessage } from "@/utils/apiError";
+import { uploadImage } from "@/services/api/uploadService";
+
+const eventSchema = yup.object({
+  title: yup.string().trim().required("Title is required"),
+  description: yup.string().trim().required("Description is required"),
+  eventType: yup.string().required("Event type is required"),
+  date: yup.string().required("Event date is required"),
+  startTime: yup.string().required("Start time is required"),
+  endTime: yup.string().required("End time is required"),
+  location: yup.string().trim().required("Location is required"),
+  venue: yup.string().trim().required("Venue is required"),
+  organizer: yup.string().trim().required("Organizer is required"),
+  registrationDeadline: yup
+    .string()
+    .required("Registration deadline is required"),
+  capacity: yup
+    .number()
+    .typeError("Capacity must be a number")
+    .required("Capacity is required")
+    .min(1, "Capacity must be at least 1"),
+  status: yup.string().required("Status is required"),
+  image: yup.string().optional(),
+});
+
+type EventFormValues = yup.InferType<typeof eventSchema>;
 
 const eventTypeOptions = [
   "Reunion",
@@ -38,6 +60,7 @@ const eventTypeOptions = [
   "Webinar",
   "Other",
 ].map((v) => ({ label: v, value: v }));
+
 const statusOptions = [
   { label: "Upcoming", value: "UPCOMING" },
   { label: "Ongoing", value: "ONGOING" },
@@ -45,37 +68,80 @@ const statusOptions = [
   { label: "Cancelled", value: "CANCELLED" },
 ];
 
+const toIsoDateTime = (date: string, time: string) => {
+  const t = time.length === 5 ? `${time}:00` : time;
+  return `${date}T${t}`;
+};
+
+const formToPayload = (data: EventFormValues): CreateUpdateEventPayload => ({
+  eventTitle: data.title,
+  description: data.description,
+  startDate: toIsoDateTime(data.date, data.startTime),
+  endDate: toIsoDateTime(data.date, data.endTime),
+  location: data.location,
+  venue: data.venue,
+  organizer: data.organizer,
+  capacity: data.capacity,
+  regDeadline: data.registrationDeadline,
+  image: data.image || undefined,
+});
+
 export default function EventFormPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { id } = useParams();
   const location = useLocation();
   const isEdit = !!id;
-  const { selectedEvent, loading } = useAppSelector((s) => s.events);
+
+  const { authUser: user } = useAuth();
+  const canManage = user?.role === "ADMIN";
+
+  const { selectedEvent, loading, fetchEventById, createEvent, updateEvent } =
+    useEvents();
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
-  const { control, handleSubmit, reset, formState } = useForm<EventFormValues>({
-    resolver: yupResolver(eventSchema) as never,
-    defaultValues: {
-      title: "",
-      description: "",
-      eventType: "" as never,
-      date: "",
-      startTime: "",
-      endTime: "",
-      location: "",
-      venue: "",
-      organizer: "",
-      registrationDeadline: "",
-      capacity: undefined as never,
-      status: "UPCOMING" as never,
-    },
-  });
+
+  const { control, handleSubmit, reset, setValue, watch, formState } =
+    useForm<EventFormValues>({
+      resolver: yupResolver(eventSchema) as never,
+      defaultValues: {
+        title: "",
+        description: "",
+        eventType: "" as never,
+        date: "",
+        startTime: "",
+        endTime: "",
+        location: "",
+        venue: "",
+        organizer: "",
+        registrationDeadline: "",
+        capacity: undefined as never,
+        status: "UPCOMING" as never,
+        image: "",
+      },
+    });
+
+  // Non-admin → redirect away
+  useEffect(() => {
+    if (user && !canManage) {
+      dispatch(
+        showToast({
+          message: "Only admins can create or edit events",
+          severity: "error",
+        }),
+      );
+      navigate("/alumni/events", { replace: true });
+    }
+  }, [user, canManage, dispatch, navigate]);
 
   useEffect(() => {
-    if (isEdit && id) dispatch(fetchEventByIdAsync(id));
-  }, [dispatch, isEdit, id]);
+    if (isEdit && id && (!selectedEvent || selectedEvent.id !== id)) {
+      void fetchEventById(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, id]);
+
   useEffect(() => {
-    if (isEdit && selectedEvent) {
+    if (isEdit && selectedEvent && selectedEvent.id === id) {
       reset({
         title: selectedEvent.title,
         description: selectedEvent.description,
@@ -89,9 +155,10 @@ export default function EventFormPage() {
         registrationDeadline: selectedEvent.registrationDeadline,
         capacity: selectedEvent.capacity as never,
         status: selectedEvent.status as never,
+        image: selectedEvent.image ?? "",
       });
     }
-  }, [isEdit, selectedEvent, reset]);
+  }, [isEdit, id, selectedEvent, reset]);
 
   useEffect(() => {
     if (!isEdit || !selectedEvent) return;
@@ -106,34 +173,46 @@ export default function EventFormPage() {
   ]);
 
   const onSubmit = async (data: EventFormValues) => {
-    if (isEdit && id) {
-      const res = await dispatch(
-        updateEventAsync({ id, data: { ...data, id } }),
+    if (!canManage) {
+      dispatch(
+        showToast({
+          message: "Only admins can create or edit events",
+          severity: "error",
+        }),
       );
-      if (res.meta.requestStatus === "fulfilled") {
+      return;
+    }
+
+    try {
+      const payload = formToPayload(data);
+
+      if (isEdit && id) {
+        await updateEvent(id, payload);
         dispatch(
           showToast({
             message: "Event updated successfully",
             severity: "success",
           }),
         );
-        navigate(`/events/${id}`);
-      }
-    } else {
-      const res = await dispatch(createEventAsync(data as never));
-      if (res.meta.requestStatus === "fulfilled") {
+        navigate(`/alumni/events/${id}`);
+      } else {
+        await createEvent(payload);
         dispatch(
           showToast({
             message: "Event created successfully",
             severity: "success",
           }),
         );
-        navigate("/events");
+        navigate("/alumni/events");
       }
+    } catch {
+      dispatch(
+        showToast({ message: "Unable to save event", severity: "error" }),
+      );
     }
   };
 
-  if (loading && isEdit && !selectedEvent) return <CommonLoading />;
+  if (!canManage) return <CommonLoading />;
 
   return (
     <Box>
@@ -141,7 +220,7 @@ export default function EventFormPage() {
         title={isEdit ? "Edit Event" : "Create Event"}
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Events", path: "/events" },
+          { label: "Events", path: "/alumni/events" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={
@@ -156,28 +235,108 @@ export default function EventFormPage() {
       />
       <form onSubmit={handleSubmit(onSubmit)}>
         <CommonCard>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 2,
-            }}
-          >
-            <CommonInputField
-              name="title"
-              label="Event Title"
-              control={control}
-              required
-            />
-            <CommonSelectField
-              name="eventType"
-              label="Event Type"
-              control={control}
-              options={eventTypeOptions}
-              required
-              placeholder="Select"
-            />
-            <Box sx={{ gridColumn: { xs: "1", sm: "span 2" } }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonInputField
+                name="title"
+                label="Event Title"
+                control={control}
+                required
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonSelectField
+                name="eventType"
+                label="Event Type"
+                control={control}
+                options={eventTypeOptions}
+                required
+                placeholder="Select"
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonDatePicker
+                name="date"
+                label="Event Date"
+                control={control}
+                required
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonDatePicker
+                name="registrationDeadline"
+                label="Registration Deadline"
+                control={control}
+                required
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonInputField
+                name="startTime"
+                label="Start Time"
+                control={control}
+                required
+                placeholder="e.g. 18:00"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonInputField
+                name="endTime"
+                label="End Time"
+                control={control}
+                required
+                placeholder="e.g. 22:00"
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonInputField
+                name="location"
+                label="Location"
+                control={control}
+                required
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonInputField
+                name="venue"
+                label="Venue"
+                control={control}
+                required
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonInputField
+                name="organizer"
+                label="Organizer"
+                control={control}
+                required
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonInputField
+                name="capacity"
+                label="Capacity"
+                control={control}
+                type="number"
+                required
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonSelectField
+                name="status"
+                label="Status"
+                control={control}
+                options={statusOptions}
+                required
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
               <CommonTextArea
                 name="description"
                 label="Description"
@@ -185,86 +344,56 @@ export default function EventFormPage() {
                 required
                 rows={3}
               />
-            </Box>
-            <CommonDatePicker
-              name="date"
-              label="Event Date"
-              control={control}
-              required
-            />
-            <CommonDatePicker
-              name="registrationDeadline"
-              label="Registration Deadline"
-              control={control}
-              required
-            />
-            <CommonInputField
-              name="startTime"
-              label="Start Time"
-              control={control}
-              required
-              placeholder="e.g. 18:00"
-            />
-            <CommonInputField
-              name="endTime"
-              label="End Time"
-              control={control}
-              required
-              placeholder="e.g. 22:00"
-            />
-            <CommonInputField
-              name="location"
-              label="Location"
-              control={control}
-              required
-            />
-            <CommonInputField
-              name="venue"
-              label="Venue"
-              control={control}
-              required
-            />
-            <CommonInputField
-              name="organizer"
-              label="Organizer"
-              control={control}
-              required
-            />
-            <CommonInputField
-              name="capacity"
-              label="Capacity"
-              control={control}
-              type="number"
-              required
-            />
-            <CommonSelectField
-              name="status"
-              label="Status"
-              control={control}
-              options={statusOptions}
-              required
-            />
-            <Box
-              sx={{
-                gridColumn: { xs: "1", sm: "span 2" },
-                display: "flex",
-                gap: 2,
-                justifyContent: "flex-end",
-                mt: 1,
-              }}
-            >
-              <CommonButton variant="outlined" onClick={() => navigate(-1)}>
-                Cancel
-              </CommonButton>
-              <CommonButton
-                type="submit"
-                loading={formState.isSubmitting}
-                startIcon={<Save size={18} />}
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <CommonFileUpload
+                label="Upload Event Banner"
+                currentFile={watch("image") || undefined}
+                previewSize={320}
+                onFileSelect={async (preview, file) => {
+                  setValue("image", preview, { shouldDirty: true });
+                  try {
+                    const url = await uploadImage(file);
+                    setValue("image", url, { shouldDirty: true });
+                  } catch (err) {
+                    dispatch(
+                      showToast({
+                        message: getApiErrorMessage(
+                          err,
+                          "Failed to upload image",
+                        ),
+                        severity: "error",
+                      }),
+                    );
+                    setValue("image", "", { shouldDirty: true });
+                  }
+                }}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  justifyContent: "flex-end",
+                  mt: 1,
+                }}
               >
-                {isEdit ? "Update Event" : "Create Event"}
-              </CommonButton>
-            </Box>
-          </Box>
+                <CommonButton variant="outlined" onClick={() => navigate(-1)}>
+                  Cancel
+                </CommonButton>
+                <CommonButton
+                  type="submit"
+                  loading={formState.isSubmitting}
+                  startIcon={<Save size={18} />}
+                >
+                  {isEdit ? "Update Event" : "Create Event"}
+                </CommonButton>
+              </Box>
+            </Grid>
+          </Grid>
         </CommonCard>
       </form>
     </Box>

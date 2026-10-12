@@ -1,10 +1,24 @@
+import { useEffect } from "react";
 import { Snackbar, Alert } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "@/hooks";
-import { removeToast } from "@/Slice/uiSlice";
+import { removeToast, showToast } from "@/store/Slice/uiSlice";
 
 export default function ToastContainer() {
   const toasts = useAppSelector((s) => s.ui.toasts);
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const handleForbidden = () =>
+      dispatch(
+        showToast({
+          message: "You don't have permission.",
+          severity: "error",
+        }),
+      );
+    window.addEventListener("api-forbidden", handleForbidden);
+    return () => window.removeEventListener("api-forbidden", handleForbidden);
+  }, [dispatch]);
+
   return (
     <>
       {toasts.map((toast) => (

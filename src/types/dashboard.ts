@@ -31,16 +31,28 @@ export interface DashboardData {
   alumniByLocation: ChartDataItem[];
   alumniByIndustry: ChartDataItem[];
   alumniGrowth: AlumniGrowthItem[];
-  mentorAvailability: { mentors: number; willing: number; total: number };
+  mentorAvailability: {
+    mentors: number;
+    willing: number;
+    total: number;
+  };
   recentAlumni: Array<{
-    id: string;
+    id: number;
+    alumniCode: string;
     fullName: string;
-    alumniId: string;
     profilePhoto?: string;
     departmentName?: string;
-    createdAt: string;
+    createdAt?: string;
   }>;
-  upcomingEvents: Array<{
+  pendingVerification: Array<{
+    id: number;
+    alumniCode: string;
+    fullName: string;
+    profilePhoto?: string;
+    email?: string;
+  }>;
+  // Optional — filled by event/notice calls if needed
+  upcomingEvents?: Array<{
     id: string;
     eventId: string;
     title: string;
@@ -48,17 +60,10 @@ export interface DashboardData {
     location: string;
     eventType: string;
   }>;
-  recentNotices: Array<{
+  recentNotices?: Array<{
     id: string;
     title: string;
     category: string;
     publishDate: string;
-  }>;
-  pendingVerification: Array<{
-    id: string;
-    fullName: string;
-    alumniId: string;
-    profilePhoto?: string;
-    email: string;
   }>;
 }

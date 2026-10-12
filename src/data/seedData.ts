@@ -1,19 +1,19 @@
-import type { CredentialRecord } from "@/types/auth";
-import type { Alumni, AlumniPrivacy } from "@/types/alumni";
+// import type { CredentialRecord } from "@/types/auth";
+// import type { Alumni, AlumniPrivacy } from "@/types/alumni";
 import type { EventItem, EventRegistration } from "@/types/event";
 import type { Notice } from "@/types/notice";
-import { AlumniRows, userRole } from "@/data/AlumniData";
+// import { AlumniRows, userRole } from "@/data/AlumniData";
 
-export { userRole };
+// export { userRole };
 
-const defaultPrivacy: AlumniPrivacy = {
-  showEmail: true,
-  showPhone: true,
-  showAddress: false,
-  showCompany: true,
-  showSocialLinks: true,
-  profileVisibility: "PUBLIC",
-};
+// const defaultPrivacy: AlumniPrivacy = {
+//   showEmail: true,
+//   showPhone: true,
+//   showAddress: false,
+//   showCompany: true,
+//   showSocialLinks: true,
+//   profileVisibility: "PUBLIC",
+// };
 
 function isoDate(year: number, month: number, day: number): string {
   return new Date(year, month - 1, day).toISOString();
@@ -27,111 +27,111 @@ function isoDaysFromNow(days: number): string {
 
 // ────────────────────────────── Alumni ──────────────────────────────────────
 
-type AlumniSeed = Omit<
-  Alumni,
-  "fullName" | "createdAt" | "updatedAt" | "privacy" | "verificationStatus"
-> & {
-  role: (typeof AlumniRows)[number]["role"];
-  fullName: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
+// type AlumniSeed = Omit<
+//   Alumni,
+//   "fullName" | "createdAt" | "updatedAt" | "privacy" | "verificationStatus"
+// > & {
+//   role: (typeof AlumniRows)[number]["role"];
+//   fullName: string;
+//   createdAt?: string;
+//   updatedAt?: string;
+// };
 
-const importedAlumniSeeds: AlumniSeed[] = AlumniRows.map((row) => ({
-  id: row.id,
-  alumniId: row.alumniId || row.id,
-  userId: row.userId || `cred-alm-${row.id}`,
-  username: row.username || row.email || `alumni${row.id}`,
-  role: row.role,
-  fullName: row.fullName,
-  profilePhoto: row.profilePhoto || undefined,
-  gender:
-    row.gender === "Male" || row.gender === "Female" || row.gender === "Other"
-      ? row.gender
-      : undefined,
-  dateOfBirth: row.dateOfBirth || undefined,
-  bloodGroup: row.bloodGroup || undefined,
-  email: row.email || `alumni${row.id}@ssc98.local`,
-  phone: row.phone || "",
-  presentAddress: row.presentAddress || undefined,
-  permanentAddress: row.permanentAddress || undefined,
-  city: row.city || undefined,
-  country: row.country || "Bangladesh",
-  studentId: row.studentId || undefined,
-  registrationNumber: row.registrationNumber || undefined,
-  programId: row.programId || undefined,
-  programName: row.programName || "SSC",
-  departmentId: row.departmentId || undefined,
-  departmentName: row.departmentName || undefined,
-  facultyId: row.facultyId || undefined,
-  facultyName: row.facultyName || undefined,
-  admissionYear: row.admissionYear || undefined,
-  graduationYear: row.graduationYear || 1998,
-  graduationSemester: row.graduationSemester || undefined,
-  batch: row.batch || "1998",
-  rollNumber: row.rollNumber || undefined,
-  currentOccupation: row.currentOccupation || undefined,
-  designation: row.designation || row.currentOccupation || undefined,
-  companyName: row.companyName || undefined,
-  industry: row.industry || undefined,
-  workLocation: row.workLocation || undefined,
-  skills: row.skills || [],
-  linkedinUrl: row.linkedinUrl || undefined,
-  facebookUrl: row.facebookUrl || undefined,
-  websiteUrl: row.websiteUrl || undefined,
-  bio: row.bio || undefined,
-  isMentor: row.isMentor ?? false,
-  willingToMentor: row.willingToMentor,
-  isVerified: row.isVerified,
-  status:
-    row.status === "ACTIVE" ||
-    row.status === "INACTIVE" ||
-    row.status === "PENDING"
-      ? row.status
-      : "ACTIVE",
-  secondarySchoolName: row.secondarySchoolName || undefined,
-  hobby: row.hobby || undefined,
-  tShirtSize: row.tShirtSize || undefined,
-  SerialNumber: row.SerialNumber,
-}));
+// const importedAlumniSeeds: AlumniSeed[] = AlumniRows.map((row) => ({
+//   id: row.id,
+//   alumniId: row.alumniId || row.id,
+//   userId: row.userId || `cred-alm-${row.id}`,
+//   username: row.username || row.email || `alumni${row.id}`,
+//   role: row.role,
+//   fullName: row.fullName,
+//   profilePhoto: row.profilePhoto || undefined,
+//   gender:
+//     row.gender === "Male" || row.gender === "Female" || row.gender === "Other"
+//       ? row.gender
+//       : undefined,
+//   dateOfBirth: row.dateOfBirth || undefined,
+//   bloodGroup: row.bloodGroup || undefined,
+//   email: row.email || `alumni${row.id}@ssc98.local`,
+//   phone: row.phone || "",
+//   presentAddress: row.presentAddress || undefined,
+//   permanentAddress: row.permanentAddress || undefined,
+//   city: row.city || undefined,
+//   country: row.country || "Bangladesh",
+//   studentId: row.studentId || undefined,
+//   registrationNumber: row.registrationNumber || undefined,
+//   programId: row.programId || undefined,
+//   programName: row.programName || "SSC",
+//   departmentId: row.departmentId || undefined,
+//   departmentName: row.departmentName || undefined,
+//   facultyId: row.facultyId || undefined,
+//   facultyName: row.facultyName || undefined,
+//   admissionYear: row.admissionYear || undefined,
+//   graduationYear: row.graduationYear || 1998,
+//   graduationSemester: row.graduationSemester || undefined,
+//   batch: row.batch || "1998",
+//   rollNumber: row.rollNumber || undefined,
+//   currentOccupation: row.currentOccupation || undefined,
+//   designation: row.designation || row.currentOccupation || undefined,
+//   companyName: row.companyName || undefined,
+//   industry: row.industry || undefined,
+//   workLocation: row.workLocation || undefined,
+//   skills: row.skills || [],
+//   linkedinUrl: row.linkedinUrl || undefined,
+//   facebookUrl: row.facebookUrl || undefined,
+//   websiteUrl: row.websiteUrl || undefined,
+//   bio: row.bio || undefined,
+//   isMentor: row.isMentor ?? false,
+//   willingToMentor: row.willingToMentor,
+//   isVerified: row.isVerified,
+//   status:
+//     row.status === "ACTIVE" ||
+//     row.status === "INACTIVE" ||
+//     row.status === "PENDING"
+//       ? row.status
+//       : "ACTIVE",
+//   secondarySchoolName: row.secondarySchoolName || undefined,
+//   hobby: row.hobby || undefined,
+//   tShirtSize: row.tShirtSize || undefined,
+//   SerialNumber: row.SerialNumber,
+// }));
 
-export const seedAlumni = [...importedAlumniSeeds].map((a, i) => ({
-  ...a,
-  username: a.username,
-  privacy: { ...defaultPrivacy },
-  verificationStatus: a.isVerified ? "VERIFIED" : "PENDING",
-  createdAt: isoDaysFromNow(-(i + 1) * 3),
-  updatedAt: isoDaysFromNow(-(i + 1) * 2),
-}));
+// export const seedAlumni = [...importedAlumniSeeds].map((a, i) => ({
+//   ...a,
+//   username: a.username,
+//   privacy: { ...defaultPrivacy },
+//   verificationStatus: a.isVerified ? "VERIFIED" : "PENDING",
+//   createdAt: isoDaysFromNow(-(i + 1) * 3),
+//   updatedAt: isoDaysFromNow(-(i + 1) * 2),
+// }));
 
 // ─── Credentials ───────────────────────────────────────────────────────────
 
-const adminAlumni = seedAlumni.find((alumni) => alumni.role === "ADMIN");
+// const adminAlumni = seedAlumni.find((alumni) => alumni.role === "ADMIN");
 
-export const seedCredentials: CredentialRecord[] = [
-  {
-    id: "admin-user",
-    username: "admin",
-    password: "123456",
-    role: "ADMIN",
-    alumniId: adminAlumni?.alumniId,
-    email: adminAlumni?.email,
-    phone: adminAlumni?.phone,
-    displayName: adminAlumni?.fullName ?? "System Admin",
-  },
-  ...seedAlumni
-    .filter((alumni) => alumni.role !== "ADMIN")
-    .map((alumni) => ({
-      id: alumni.userId,
-      username: alumni.username,
-      password: "123456",
-      role: alumni.role,
-      alumniId: alumni.alumniId,
-      email: alumni.email,
-      phone: alumni.phone,
-      displayName: alumni.fullName,
-    })),
-];
+// export const seedCredentials: CredentialRecord[] = [
+//   {
+//     id: "admin-user",
+//     username: "admin",
+//     password: "123456",
+//     role: "ADMIN",
+//     alumniId: adminAlumni?.alumniId,
+//     email: adminAlumni?.email,
+//     phone: adminAlumni?.phone,
+//     displayName: adminAlumni?.fullName ?? "System Admin",
+//   },
+//   ...seedAlumni
+//     .filter((alumni) => alumni.role !== "ADMIN")
+//     .map((alumni) => ({
+//       id: alumni.userId,
+//       username: alumni.username,
+//       password: "123456",
+//       role: alumni.role,
+//       alumniId: alumni.alumniId,
+//       email: alumni.email,
+//       phone: alumni.phone,
+//       displayName: alumni.fullName,
+//     })),
+// ];
 
 // ─── Events ─────────────────────────────────────────────────────────────────
 

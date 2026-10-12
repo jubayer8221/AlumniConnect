@@ -15,25 +15,13 @@ import {
   Building2,
 } from "lucide-react";
 import { CommonAvatar, CommonStatusBadge } from "../common";
+import type { AlumniProfileFullModel } from "@/types/alumni";
 
 const NAVY = "#132038";
 const TEAL = "#2dd4bf";
 
 interface AlumniProfileCardProps {
-  alumni: {
-    profilePhoto?: string;
-    fullName: string;
-    isVerified?: boolean;
-    status?: string;
-    designation?: string;
-    companyName?: string;
-    alumniId: string;
-    departmentName?: string;
-    batch?: string;
-    graduationYear?: string | number;
-    city?: string;
-    country?: string;
-  };
+  alumni: AlumniProfileFullModel;
   completion: number;
   missing?: string[];
   isOwner?: boolean;
@@ -45,9 +33,13 @@ export default function AlumniProfileCard({
   completion,
 }: AlumniProfileCardProps) {
   const theme = useTheme();
+  const p = alumni.personalInformation;
+  const c = alumni.contactInformation;
+  const firstEdu = alumni.academicInformation[0];
+  const firstJob = alumni.jobExperience[0];
 
-  const location = alumni.city
-    ? `${alumni.city}${alumni.country ? `, ${alumni.country}` : ""}`
+  const location = c.presentDistrict
+    ? `${c.presentDistrict}${c.presentCountry ? `, ${c.presentCountry}` : ""}`
     : undefined;
 
   const completionColor =
@@ -69,41 +61,27 @@ export default function AlumniProfileCard({
         bgcolor: "background.paper",
       }}
     >
-      {/* =========================
-          TOP PROFILE HEADER
-      ========================== */}
       <Box
         sx={{
           position: "relative",
           px: { xs: 2.5, md: 3.5 },
           py: { xs: 2.5, md: 3 },
-          background: `linear-gradient(
-            135deg,
-            ${NAVY} 0%,
-            #1b2d4a 65%,
-            #203b56 100%
-          )`,
+          background: `linear-gradient(135deg, ${NAVY} 0%, #1b2d4a 65%, #203b56 100%)`,
           color: "#fff",
         }}
       >
-        {/* subtle decorative glow */}
         <Box
           sx={{
             position: "absolute",
             width: 220,
             height: 220,
             borderRadius: "50%",
-            background: `radial-gradient(
-              circle,
-              ${alpha(TEAL, 0.12)} 0%,
-              transparent 70%
-            )`,
+            background: `radial-gradient(circle, ${alpha(TEAL, 0.12)} 0%, transparent 70%)`,
             right: -80,
             top: -100,
             pointerEvents: "none",
           }}
         />
-
         <Box
           sx={{
             position: "relative",
@@ -112,9 +90,6 @@ export default function AlumniProfileCard({
             gap: { xs: 2, md: 2.5 },
           }}
         >
-          {/* =========================
-              AVATAR
-          ========================== */}
           <Box
             sx={{
               flexShrink: 0,
@@ -127,8 +102,8 @@ export default function AlumniProfileCard({
             }}
           >
             <CommonAvatar
-              src={alumni.profilePhoto}
-              name={alumni.fullName}
+              src={p.profilePhoto ?? undefined}
+              name={p.fullName}
               size={104}
               sx={{
                 width: "100%",
@@ -139,17 +114,8 @@ export default function AlumniProfileCard({
             />
           </Box>
 
-          {/* =========================
-              PROFILE INFORMATION
-          ========================== */}
-          <Box
-            sx={{
-              minWidth: 0,
-              flex: 1,
-            }}
-          >
-            {/* Department */}
-            {alumni.departmentName && (
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            {firstEdu?.departmentName && (
               <Typography
                 sx={{
                   fontSize: "0.75rem",
@@ -160,11 +126,10 @@ export default function AlumniProfileCard({
                   mb: 0.35,
                 }}
               >
-                {alumni.departmentName}
+                {firstEdu.departmentName}
               </Typography>
             )}
 
-            {/* Name + verification */}
             <Box
               sx={{
                 display: "flex",
@@ -181,16 +146,25 @@ export default function AlumniProfileCard({
                   letterSpacing: "-0.02em",
                 }}
               >
-                {alumni.fullName}
+                {p.fullName}
               </Typography>
-
               {alumni.isVerified && (
                 <BadgeCheck size={20} color={TEAL} strokeWidth={2.5} />
               )}
             </Box>
+            {p.nativeName && (
+              <Typography
+                sx={{
+                  mt: 0.35,
+                  fontSize: "0.9rem",
+                  color: alpha("#fff", 0.72),
+                }}
+              >
+                {p.nativeName}
+              </Typography>
+            )}
 
-            {/* Designation */}
-            {(alumni.designation || alumni.companyName) && (
+            {(firstJob?.designation || firstJob?.companyname) && (
               <Typography
                 sx={{
                   mt: 0.55,
@@ -199,26 +173,21 @@ export default function AlumniProfileCard({
                   lineHeight: 1.4,
                 }}
               >
-                {alumni.designation}
-
-                {alumni.companyName && (
+                {firstJob?.designation}
+                {firstJob?.companyname && (
                   <>
                     {" "}
                     <Box
                       component="span"
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 600,
-                      }}
+                      sx={{ color: "#fff", fontWeight: 600 }}
                     >
-                      at {alumni.companyName}
+                      at {firstJob.companyname}
                     </Box>
                   </>
                 )}
               </Typography>
             )}
 
-            {/* Status */}
             {alumni.status && (
               <Box sx={{ mt: 1 }}>
                 <CommonStatusBadge status={alumni.status} />
@@ -226,9 +195,6 @@ export default function AlumniProfileCard({
             )}
           </Box>
 
-          {/* =========================
-              COMPLETION
-          ========================== */}
           <Box
             sx={{
               display: { xs: "none", sm: "block" },
@@ -253,7 +219,6 @@ export default function AlumniProfileCard({
               >
                 Profile completion
               </Typography>
-
               <Typography
                 sx={{
                   fontSize: "0.8rem",
@@ -264,7 +229,6 @@ export default function AlumniProfileCard({
                 {completion}%
               </Typography>
             </Box>
-
             <LinearProgress
               variant="determinate"
               value={completion}
@@ -282,9 +246,6 @@ export default function AlumniProfileCard({
         </Box>
       </Box>
 
-      {/* =========================
-          PROFILE META
-      ========================== */}
       <Box
         sx={{
           px: { xs: 2.5, md: 3.5 },
@@ -296,41 +257,27 @@ export default function AlumniProfileCard({
           bgcolor: "background.paper",
         }}
       >
-        {/* Alumni id */}
-        {/* <MetaItem
-          icon={<GraduationCap size={16} />}
-          label="Alumni id"
-          value={alumni.alumniId}
-        /> */}
-
-        {/* Batch */}
-        {alumni.batch && (
+        {firstEdu?.batch && (
           <MetaItem
             icon={<GraduationCap size={16} />}
             label="Batch"
-            value={alumni.batch}
+            value={firstEdu.batch}
           />
         )}
-
-        {/* Graduation */}
-        {alumni.graduationYear && (
+        {firstEdu?.graduationYear != null && (
           <MetaItem
             icon={<Calendar size={16} />}
             label="Graduated"
-            value={String(alumni.graduationYear)}
+            value={String(firstEdu.graduationYear)}
           />
         )}
-
-        {/* Company */}
-        {alumni.companyName && (
+        {firstJob?.companyname && (
           <MetaItem
             icon={<Building2 size={16} />}
             label="Organization"
-            value={alumni.companyName}
+            value={firstJob.companyname}
           />
         )}
-
-        {/* Location */}
         {location && (
           <MetaItem
             icon={<MapPin size={16} />}
@@ -340,16 +287,7 @@ export default function AlumniProfileCard({
         )}
       </Box>
 
-      {/* =========================
-          MOBILE COMPLETION
-      ========================== */}
-      <Box
-        sx={{
-          display: { xs: "block", sm: "none" },
-          px: 2.5,
-          pb: 2.5,
-        }}
-      >
+      <Box sx={{ display: { xs: "block", sm: "none" }, px: 2.5, pb: 2.5 }}>
         <Box
           sx={{
             p: 1.5,
@@ -360,21 +298,11 @@ export default function AlumniProfileCard({
           }}
         >
           <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              mb: 0.8,
-            }}
+            sx={{ display: "flex", justifyContent: "space-between", mb: 0.8 }}
           >
-            <Typography
-              sx={{
-                fontSize: "0.75rem",
-                fontWeight: 600,
-              }}
-            >
+            <Typography sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
               Profile completion
             </Typography>
-
             <Typography
               sx={{
                 fontSize: "0.75rem",
@@ -385,7 +313,6 @@ export default function AlumniProfileCard({
               {completion}%
             </Typography>
           </Box>
-
           <LinearProgress
             variant="determinate"
             value={completion}
@@ -405,10 +332,6 @@ export default function AlumniProfileCard({
   );
 }
 
-/* =====================================
-   META ITEM
-===================================== */
-
 interface MetaItemProps {
   icon: React.ReactNode;
   label: string;
@@ -426,16 +349,9 @@ function MetaItem({ icon, label, value }: MetaItemProps) {
         pr: { xs: 1.5, md: 3 },
         mr: { xs: 1.5, md: 3 },
         mb: { xs: 1.5, md: 0 },
-        borderRight: {
-          xs: "none",
-          md: "1px solid",
-        },
+        borderRight: { xs: "none", md: "1px solid" },
         borderColor: "divider",
-        "&:last-child": {
-          borderRight: "none",
-          mr: 0,
-          pr: 0,
-        },
+        "&:last-child": { borderRight: "none", mr: 0, pr: 0 },
       }}
     >
       <Box
@@ -453,7 +369,6 @@ function MetaItem({ icon, label, value }: MetaItemProps) {
       >
         {icon}
       </Box>
-
       <Box sx={{ minWidth: 0 }}>
         <Typography
           sx={{
@@ -465,7 +380,6 @@ function MetaItem({ icon, label, value }: MetaItemProps) {
         >
           {label}
         </Typography>
-
         <Typography
           sx={{
             fontSize: "0.8rem",

@@ -12,158 +12,23 @@ import {
   Collapse,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Users,
-  CalendarDays,
-  Bell,
-  BarChart3,
-  Settings,
-  UserCircle,
-  Briefcase,
-  ChevronDown,
-  Shield,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks";
-import { logoutAsync } from "@/Slice/authSlice";
-import { closeMobileSidebar } from "@/Slice/uiSlice";
+import { closeMobileSidebar } from "@/store/Slice/uiSlice";
+import { useAuth } from "@/hooks/useAuth";
 import { appConfig } from "@/config/appConfig";
-import { getRouteLabel } from "@/config/routeRegistry";
+import { getNavForRole, type NavItem } from "@/config/navigation";
 import HeaderProfileDialog from "../alumniProfile/HeaderProfileDialog";
-
-interface NavItem {
-  label: string;
-  path: string;
-  icon: React.ReactNode;
-  children?: {
-    label: string;
-    path: string;
-    icon?: React.ReactNode;
-  }[];
-}
-
-const adminNav: NavItem[] = [
-  {
-    label: getRouteLabel("/dashboard"),
-    path: "/dashboard",
-    icon: <LayoutDashboard size={22} />,
-  },
-  {
-    label: getRouteLabel("/alumni/profile"),
-    path: "/alumni/profile",
-    icon: <Users size={22} />,
-    children: [
-      {
-        label: getRouteLabel("/alumni/profile"),
-        path: "/alumni/profile",
-        icon: <UserCircle size={16} />,
-      },
-      // {
-      //   label: "Profile Setup",
-      //   path: "/alumni/profile-setup",
-      //   icon: <FileText size={16} />,
-      // },
-      {
-        label: getRouteLabel("/alumni/settings-privacy"),
-        path: "/alumni/settings-privacy",
-        icon: <Shield size={16} />,
-      },
-    ],
-  },
-  {
-    label: getRouteLabel("/alumni/directory"),
-    path: "/alumni/directory",
-    icon: <Users size={16} />,
-  },
-  // {
-  //   label: "All Alumni",
-  //   path: "/alumni",
-  //   icon: <Users size={16} />,
-  // },
-  {
-    label: getRouteLabel("/events"),
-    path: "/events",
-    icon: <CalendarDays size={22} />,
-  },
-  {
-    label: getRouteLabel("/notices"),
-    path: "/notices",
-    icon: <Bell size={22} />,
-  },
-  {
-    label: getRouteLabel("/reports"),
-    path: "/reports",
-    icon: <BarChart3 size={22} />,
-  },
-  {
-    label: getRouteLabel("/settings"),
-    path: "/settings",
-    icon: <Settings size={22} />,
-  },
-];
-
-const alumniNav: NavItem[] = [
-  {
-    label: getRouteLabel("/alumni/dashboard"),
-    path: "/alumni/dashboard",
-    icon: <LayoutDashboard size={22} />,
-  },
-  {
-    label: getRouteLabel("/alumni/profile"),
-    path: "/alumni/profile",
-    icon: <UserCircle size={22} />,
-    children: [
-      {
-        label: getRouteLabel("/alumni/profile"),
-        path: "/alumni/profile",
-        icon: <UserCircle size={16} />,
-      },
-      {
-        label: getRouteLabel("/alumni/settings-privacy"),
-        path: "/alumni/settings-privacy",
-        icon: <Shield size={16} />,
-      },
-      // {
-      //   label: "All Alumni",
-      //   path: "/alumni/directory",
-      //   icon: <Users size={16} />,
-      // },
-    ],
-  },
-  {
-    label: getRouteLabel("/alumni/directory"),
-    path: "/alumni/directory",
-    icon: <Users size={16} />,
-  },
-  {
-    label: getRouteLabel("/alumni/events"),
-    path: "/alumni/events",
-    icon: <CalendarDays size={22} />,
-  },
-  {
-    label: getRouteLabel("/alumni/notices"),
-    path: "/alumni/notices",
-    icon: <Bell size={22} />,
-  },
-  // {
-  //   label: getRouteLabel("/alumni/account"),
-  //   path: "/alumni/account",
-  //   icon: <Briefcase size={22} />,
-  // },
-];
 
 export default function MobileSidebar() {
   const location = useLocation();
   const dispatch = useAppDispatch();
-
-  const { role, user } = useAppSelector((s) => s.auth);
+  const { authUser: user, role } = useAuth();
   const mobileOpen = useAppSelector((s) => s.ui.mobileSidebarOpen);
-
-  // Controls the HeaderProfileDialog
   const [openDialog, setopenDialog] = useState<HTMLElement | null>(null);
 
-  const navItems = role === "ADMIN" ? adminNav : alumniNav;
+  const navItems = getNavForRole(role);
 
   const isActive = (path: string) =>
     location.pathname === path ||
@@ -185,6 +50,174 @@ export default function MobileSidebar() {
     );
   };
 
+  const renderNavItem = (item: NavItem) => {
+    const active = isActive(item.path);
+    const hasChildren = !!item.children;
+    const isExpanded = expanded.includes(item.path);
+
+    // --- External link (Public Site) ---
+    if (item.external) {
+      return (
+        <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            component="a"
+            href={item.path}
+            rel="noopener noreferrer"
+            onClick={() => dispatch(closeMobileSidebar())}
+            sx={{
+              borderRadius: 10,
+              py: 1.25,
+              px: 1.5,
+              minHeight: 48,
+              color: "text.secondary",
+              textDecoration: "none",
+              "&:hover": {
+                bgcolor: "action.hover",
+                color: "primary.main",
+              },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText
+              primary={item.label}
+              slotProps={{
+                primary: { sx: { fontSize: "0.9rem", fontWeight: 600 } },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      );
+    }
+
+    // --- Item with children (collapsible) ---
+    if (hasChildren) {
+      return (
+        <Box key={item.path}>
+          <ListItem disablePadding sx={{ mb: 0.5 }}>
+            <ListItemButton
+              onClick={() => toggleExpand(item.path)}
+              sx={{
+                borderRadius: 10,
+                py: 1.25,
+                px: 1.5,
+                minHeight: 48,
+                color: active ? "primary.main" : "text.secondary",
+                bgcolor: active ? "action.selected" : "transparent",
+                boxShadow: "none",
+                "&:hover": {
+                  bgcolor: active ? "action.selected" : "action.hover",
+                  color: "primary.main",
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.label}
+                slotProps={{
+                  primary: { sx: { fontSize: "0.9rem", fontWeight: 600 } },
+                }}
+              />
+              <ChevronDown
+                size={16}
+                style={{
+                  transform: isExpanded ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <List disablePadding sx={{ pl: 3, mb: 0.5 }}>
+              {item.children!.map((child) => {
+                const childActive = location.pathname === child.path;
+                return (
+                  <ListItem key={child.path} disablePadding>
+                    <ListItemButton
+                      component={Link}
+                      to={child.path}
+                      selected={childActive}
+                      onClick={() => dispatch(closeMobileSidebar())}
+                      sx={{
+                        borderRadius: 8,
+                        py: 0.75,
+                        px: 2,
+                        minHeight: 40,
+                        color: childActive ? "primary.main" : "text.secondary",
+                        "&.Mui-selected": {
+                          bgcolor: "action.selected",
+                        },
+                        "&:hover": {
+                          bgcolor: "action.hover",
+                          color: "primary.main",
+                        },
+                      }}
+                    >
+                      {child.icon && (
+                        <ListItemIcon sx={{ minWidth: 28, color: "inherit" }}>
+                          {child.icon}
+                        </ListItemIcon>
+                      )}
+                      <ListItemText
+                        primary={child.label}
+                        slotProps={{
+                          primary: {
+                            sx: {
+                              fontSize: "0.85rem",
+                              fontWeight: 500,
+                            },
+                          },
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Collapse>
+        </Box>
+      );
+    }
+
+    // --- Leaf item ---
+    return (
+      <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
+        <ListItemButton
+          component={Link}
+          to={item.path}
+          selected={active}
+          onClick={() => dispatch(closeMobileSidebar())}
+          sx={{
+            borderRadius: 10,
+            py: 1.25,
+            px: 1.5,
+            minHeight: 48,
+            color: active ? "primary.main" : "text.secondary",
+            bgcolor: active ? "action.selected" : "transparent",
+            boxShadow: "none",
+            "&:hover": {
+              bgcolor: active ? "action.selected" : "action.hover",
+              color: "primary.main",
+            },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
+            {item.icon}
+          </ListItemIcon>
+          <ListItemText
+            primary={item.label}
+            slotProps={{
+              primary: { sx: { fontSize: "0.9rem", fontWeight: 600 } },
+            }}
+          />
+        </ListItemButton>
+      </ListItem>
+    );
+  };
+
   return (
     <Drawer
       open={mobileOpen}
@@ -202,21 +235,21 @@ export default function MobileSidebar() {
         },
       }}
     >
-      <Box
-        sx={{
-          minHeight: "100%",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Logo / Application Header */}
+      <Box sx={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+        {/* Logo → "/" */}
         <Box
+          component={Link}
+          to="/"
+          onClick={() => dispatch(closeMobileSidebar())}
+          aria-label={`${appConfig.appName} home`}
           sx={{
             display: "flex",
             alignItems: "center",
             gap: 1.5,
             p: 2.5,
             minHeight: 72,
+            textDecoration: "none",
+            color: "inherit",
           }}
         >
           <Box
@@ -238,7 +271,6 @@ export default function MobileSidebar() {
               sx={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
           </Box>
-
           <Box>
             <Typography
               sx={{
@@ -250,13 +282,7 @@ export default function MobileSidebar() {
             >
               {appConfig.appName}
             </Typography>
-
-            <Typography
-              sx={{
-                fontSize: "0.7rem",
-                color: "text.secondary",
-              }}
-            >
+            <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
               {appConfig.institutionName}
             </Typography>
           </Box>
@@ -264,232 +290,13 @@ export default function MobileSidebar() {
 
         <Divider sx={{ borderColor: "divider" }} />
 
-        {/* Navigation */}
-        <List
-          sx={{
-            flex: 1,
-            py: 1.5,
-            px: 1.5,
-            overflowY: "auto",
-          }}
-        >
-          {navItems.map((item) => {
-            const active = isActive(item.path);
-            const hasChildren = !!item.children;
-            const isExpanded = expanded.includes(item.path);
-
-            if (hasChildren) {
-              return (
-                <Box key={item.path}>
-                  <ListItem disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton
-                      onClick={() => toggleExpand(item.path)}
-                      sx={{
-                        borderRadius: 10,
-                        py: 1.25,
-                        px: 1.5,
-                        minHeight: 48,
-                        color: active ? "primary.main" : "text.secondary",
-                        bgcolor: active ? "action.selected" : "transparent",
-                        boxShadow: "none",
-                        "&:hover": {
-                          bgcolor: active ? "action.selected" : "action.hover",
-                          color: "primary.main",
-                        },
-                      }}
-                    >
-                      <ListItemIcon
-                        sx={{
-                          minWidth: 36,
-                          color: "inherit",
-                        }}
-                      >
-                        {item.icon}
-                      </ListItemIcon>
-
-                      <ListItemText
-                        primary={item.label}
-                        slotProps={{
-                          primary: {
-                            sx: {
-                              fontSize: "0.9rem",
-                              fontWeight: 600,
-                            },
-                          },
-                        }}
-                      />
-
-                      <ChevronDown
-                        size={16}
-                        style={{
-                          transform: isExpanded ? "rotate(180deg)" : "none",
-                          transition: "transform 0.2s",
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-
-                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                    <List
-                      disablePadding
-                      sx={{
-                        pl: 3,
-                        mb: 0.5,
-                      }}
-                    >
-                      {item.children!.map((child) => {
-                        const childActive = location.pathname === child.path;
-
-                        return (
-                          <ListItem key={child.path} disablePadding>
-                            <ListItemButton
-                              component={Link}
-                              to={child.path}
-                              selected={childActive}
-                              onClick={() => dispatch(closeMobileSidebar())}
-                              sx={{
-                                borderRadius: 8,
-                                py: 0.75,
-                                px: 2,
-                                minHeight: 40,
-                                color: childActive
-                                  ? "primary.main"
-                                  : "text.secondary",
-                                "&.Mui-selected": {
-                                  bgcolor: "action.selected",
-                                },
-                                "&:hover": {
-                                  bgcolor: "action.hover",
-                                  color: "primary.main",
-                                },
-                              }}
-                            >
-                              {child.icon && (
-                                <ListItemIcon
-                                  sx={{
-                                    minWidth: 28,
-                                    color: "inherit",
-                                  }}
-                                >
-                                  {child.icon}
-                                </ListItemIcon>
-                              )}
-
-                              <ListItemText
-                                primary={child.label}
-                                slotProps={{
-                                  primary: {
-                                    sx: {
-                                      fontSize: "0.85rem",
-                                      fontWeight: 500,
-                                    },
-                                  },
-                                }}
-                              />
-                            </ListItemButton>
-                          </ListItem>
-                        );
-                      })}
-                    </List>
-                  </Collapse>
-                </Box>
-              );
-            }
-
-            return (
-              <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
-                <ListItemButton
-                  component={Link}
-                  to={item.path}
-                  selected={active}
-                  onClick={() => dispatch(closeMobileSidebar())}
-                  sx={{
-                    borderRadius: 10,
-                    py: 1.25,
-                    px: 1.5,
-                    minHeight: 48,
-                    color: active ? "primary.main" : "text.secondary",
-                    bgcolor: active ? "action.selected" : "transparent",
-                    boxShadow: "none",
-                    "&:hover": {
-                      bgcolor: active ? "action.selected" : "action.hover",
-                      color: "primary.main",
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 36,
-                      color: "inherit",
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-
-                  <ListItemText
-                    primary={item.label}
-                    slotProps={{
-                      primary: {
-                        sx: {
-                          fontSize: "0.9rem",
-                          fontWeight: 600,
-                        },
-                      },
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
+        <List sx={{ flex: 1, py: 1.5, px: 1.5, overflowY: "auto" }}>
+          {navItems.map(renderNavItem)}
         </List>
 
-        <Divider
-          sx={{
-            borderColor: "divider",
-          }}
-        />
+        <Divider sx={{ borderColor: "divider" }} />
 
-        {/* Bottom Section */}
         <Box sx={{ p: 2 }}>
-          {/* Logout */}
-          {/* <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => dispatch(logoutAsync())}
-              sx={{
-                borderRadius: 10,
-                py: 1.25,
-                px: 1.5,
-                    color: "text.secondary",
-                "&:hover": {
-                  bgcolor: "rgba(239,68,68,0.15)",
-                  color: "#fca5a5",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 36,
-                  color: "inherit",
-                }}
-              >
-                <LogOut size={22} />
-              </ListItemIcon>
-
-              <ListItemText
-                primary="Logout"
-                slotProps={{
-                  primary: {
-                    sx: {
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
-                    },
-                  },
-                }}
-              />
-            </ListItemButton>
-          </ListItem> */}
-
-          {/* User Profile */}
           {user && (
             <Box
               sx={{
@@ -502,9 +309,7 @@ export default function MobileSidebar() {
                 cursor: "pointer",
                 borderRadius: 2,
                 transition: "background-color 0.2s",
-                "&:hover": {
-                  bgcolor: "action.hover",
-                },
+                "&:hover": { bgcolor: "action.hover" },
               }}
               onClick={(e) => setopenDialog(e.currentTarget)}
             >
@@ -523,7 +328,6 @@ export default function MobileSidebar() {
                 {!user.profilePhoto &&
                   (user.username?.[0]?.toUpperCase() || "U")}
               </Avatar>
-
               <Box sx={{ minWidth: 0 }}>
                 <Typography
                   sx={{
@@ -538,7 +342,6 @@ export default function MobileSidebar() {
                 >
                   {user.displayName || user.username}
                 </Typography>
-
                 <Typography
                   sx={{
                     fontSize: "0.65rem",
@@ -554,7 +357,6 @@ export default function MobileSidebar() {
         </Box>
       </Box>
 
-      {/* Profile Dialog */}
       <HeaderProfileDialog
         anchorEl={openDialog}
         onClose={() => setopenDialog(null)}

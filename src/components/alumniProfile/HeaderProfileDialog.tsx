@@ -7,14 +7,12 @@ import {
   Divider,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { logoutAsync } from "@/Slice/authSlice";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AccountDialogProps {
   anchorEl: HTMLElement | null;
   onClose: () => void;
   username?: string;
-  //   role?: UserRole | null;
 }
 
 export default function HeaderProfileDialog({
@@ -22,9 +20,8 @@ export default function HeaderProfileDialog({
   onClose,
   username,
 }: AccountDialogProps) {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { role, user } = useAppSelector((s) => s.auth);
+  const { authUser: user, role, logout } = useAuth();
 
   const go = (path: string) => {
     onClose();
@@ -38,9 +35,7 @@ export default function HeaderProfileDialog({
       onClose={onClose}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       transformOrigin={{ vertical: "top", horizontal: "right" }}
-      slotProps={{
-        paper: { sx: { borderRadius: 2, mt: 1, minWidth: 220 } },
-      }}
+      slotProps={{ paper: { sx: { borderRadius: 2, mt: 1, minWidth: 220 } } }}
     >
       <Typography
         sx={{ px: 2, pt: 1.5, pb: 0.25, fontSize: "0.9rem", fontWeight: 700 }}
@@ -61,18 +56,20 @@ export default function HeaderProfileDialog({
           <ListItemText primary="My Profile" />
         </ListItemButton>
         <ListItemButton
-          onClick={() => go(role === "ADMIN" ? "/settings" : "/alumni/account")}
+          onClick={() =>
+            go(role === "ADMIN" ? "/settings" : "/alumni/settings-privacy")
+          }
           sx={{ py: 1.25, fontSize: "0.875rem" }}
         >
           <ListItemText
-            primary={role === "ADMIN" ? "Admin Settings" : "My Account"}
+            primary={role === "ADMIN" ? "Admin Settings" : "Settings & Privacy"}
           />
         </ListItemButton>
         <Divider />
         <ListItemButton
           onClick={() => {
             onClose();
-            dispatch(logoutAsync());
+            void logout();
           }}
           sx={{ py: 1.25, fontSize: "0.875rem", color: "error.main" }}
         >

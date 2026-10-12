@@ -12,7 +12,7 @@ import {
 import { Settings as SettingsIcon, RotateCcw, Save } from "lucide-react";
 import { useState } from "react";
 import { useAppDispatch } from "@/hooks";
-import { showToast } from "@/Slice/uiSlice";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonButton,

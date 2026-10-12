@@ -2,6 +2,7 @@ import { Box } from "@mui/material";
 import { Save, ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -9,12 +10,8 @@ import {
   fetchNoticeByIdAsync,
   createNoticeAsync,
   updateNoticeAsync,
-} from "@/Slice/noticeSlice";
-import { showToast } from "@/Slice/uiSlice";
-import {
-  noticeSchema,
-  type NoticeFormValues,
-} from "@/validation/noticeValidation";
+} from "@/store/Slice/noticeSlice";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
@@ -27,6 +24,20 @@ import {
 } from "@/components/common";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
+/* ============================================================
+   Form validation — inline Yup
+   ============================================================ */
+const noticeSchema = yup.object({
+  title: yup.string().trim().required("Title is required"),
+  content: yup.string().trim().required("Content is required"),
+  category: yup.string().required("Category is required"),
+  status: yup.string().required("Status is required"),
+  publishDate: yup.string().required("Publish date is required"),
+  image: yup.string().optional(),
+});
+
+type NoticeFormValues = yup.InferType<typeof noticeSchema>;
+
 const categoryOptions = [
   "Announcement",
   "News",
@@ -35,6 +46,7 @@ const categoryOptions = [
   "Career",
   "General",
 ].map((v) => ({ label: v, value: v }));
+
 const statusOptions = [
   { label: "Draft", value: "DRAFT" },
   { label: "Published", value: "PUBLISHED" },
@@ -49,6 +61,7 @@ export default function NoticeFormPage() {
   const isEdit = !!id;
   const { selectedNotice, loading } = useAppSelector((s) => s.notices);
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
+
   const { control, handleSubmit, reset, formState } = useForm<NoticeFormValues>(
     {
       resolver: yupResolver(noticeSchema) as never,
@@ -62,9 +75,14 @@ export default function NoticeFormPage() {
     },
   );
 
+  // ★ Fetch existing only if empty / different record
   useEffect(() => {
-    if (isEdit && id) dispatch(fetchNoticeByIdAsync(id));
-  }, [dispatch, isEdit, id]);
+    if (isEdit && id && (!selectedNotice || selectedNotice.id !== id)) {
+      void dispatch(fetchNoticeByIdAsync(id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, id]);
+
   useEffect(() => {
     if (isEdit && selectedNotice) {
       reset({
@@ -92,9 +110,10 @@ export default function NoticeFormPage() {
   const onSubmit = async (data: NoticeFormValues) => {
     if (isEdit && id) {
       const res = await dispatch(
-        updateNoticeAsync({ id, data: { ...data, id } }),
+        updateNoticeAsync({ id, data: { ...data, id } as never }),
       );
-      if (res.meta.requestStatus === "fulfilled") {
+      if (updateNoticeAsync.fulfilled.match(res)) {
+        // refetch list to reflect the update
         dispatch(
           showToast({
             message: "Notice updated successfully",
@@ -105,7 +124,7 @@ export default function NoticeFormPage() {
       }
     } else {
       const res = await dispatch(createNoticeAsync(data as never));
-      if (res.meta.requestStatus === "fulfilled") {
+      if (createNoticeAsync.fulfilled.match(res)) {
         dispatch(
           showToast({
             message: "Notice created successfully",

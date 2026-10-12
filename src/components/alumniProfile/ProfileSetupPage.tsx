@@ -8,10 +8,6 @@ import {
   Divider,
   Button,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
 } from "@mui/material";
 import {
   Save,
@@ -23,20 +19,17 @@ import {
   Briefcase,
   User,
   Phone,
-  MapPin,
   Globe,
   FileText,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchAlumniByIdAsync, updateAlumniAsync } from "@/Slice/alumniSlice";
-import { showToast } from "@/Slice/uiSlice";
-import {
-  alumniSchema,
-  type AlumniFormValues,
-} from "@/validation/alumniValidation";
+import { useAppDispatch } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { useAlumni } from "@/hooks/useAlumni";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
@@ -45,17 +38,95 @@ import {
   CommonTextArea,
   CommonCheckbox,
   CommonButton,
-  CommonLoading,
   CommonEmptyState,
   CommonAvatar,
+  CommonFileUpload,
 } from "@/components/common";
+import AlumniProfileSkeleton from "@/components/alumniProfile/AlumniProfileSkeleton";
 import type {
+  CreateUpdateAlumniRequest,
   FamilyMember,
   EducationEntry,
   JobExperience,
 } from "@/types/alumni";
 import { generateUUID } from "@/utils/generateId";
+import { getApiErrorMessage } from "@/utils/apiError";
+import { uploadImage } from "@/services/api/uploadService";
 
+/* ============================================================
+   Form validation — inline Yup
+   ============================================================ */
+const familyMemberSchema = yup.object({
+  id: yup.string().optional(),
+  name: yup.string().default(""),
+  relation: yup.string().default(""),
+  occupation: yup.string().default(""),
+  phone: yup.string().default(""),
+});
+
+const alumniProfileEditSchema = yup.object({
+  fullName: yup.string().trim().required("Full name is required"),
+  nativeName: yup.string().default(""),
+  gender: yup.string().default(""),
+  dateOfBirth: yup.string().default(""),
+  bloodGroup: yup.string().default(""),
+  maritalStatus: yup.string().default(""),
+  email: yup
+    .string()
+    .trim()
+    .email("Invalid email address")
+    .required("Email is required"),
+  phone: yup.string().default(""),
+  alternatePhone: yup.string().default(""),
+  presentAddress: yup.string().default(""),
+  presentVillageArea: yup.string().default(""),
+  presentCountry: yup.string().default(""),
+  presentDivision: yup.string().default(""),
+  presentDistrict: yup.string().default(""),
+  presentThana: yup.string().default(""),
+  presentUnion: yup.string().default(""),
+  permanentAddress: yup.string().default(""),
+  permanentVillageArea: yup.string().default(""),
+  permanentCountry: yup.string().default(""),
+  permanentDivision: yup.string().default(""),
+  permanentDistrict: yup.string().default(""),
+  permanentThana: yup.string().default(""),
+  permanentUnion: yup.string().default(""),
+  sameAsPresentAddress: yup.boolean().default(false),
+  city: yup.string().default(""),
+  country: yup.string().default(""),
+  studentId: yup.string().default(""),
+  registrationNumber: yup.string().default(""),
+  programName: yup.string().default(""),
+  departmentName: yup.string().default(""),
+  facultyId: yup.string().default(""),
+  facultyName: yup.string().default(""),
+  profilePhoto: yup.string().default(""),
+  admissionYear: yup.mixed<string | number>().optional().nullable(),
+  graduationYear: yup.mixed<string | number>().optional().nullable(),
+  graduationSemester: yup.string().default(""),
+  batch: yup.string().default(""),
+  rollNumber: yup.string().default(""),
+  currentOccupation: yup.string().default(""),
+  designation: yup.string().default(""),
+  companyName: yup.string().default(""),
+  industry: yup.string().default(""),
+  workLocation: yup.string().default(""),
+  skills: yup.array().of(yup.string().defined()).default([]),
+  linkedinUrl: yup.string().default(""),
+  facebookUrl: yup.string().default(""),
+  websiteUrl: yup.string().default(""),
+  bio: yup.string().default(""),
+  isMentor: yup.boolean().default(false),
+  willingToMentor: yup.boolean().default(false),
+  familyMembers: yup.array().of(familyMemberSchema).default([]),
+});
+
+type AlumniFormValues = yup.InferType<typeof alumniProfileEditSchema>;
+
+/* ============================================================
+   Constants
+   ============================================================ */
 const genderOptions = [
   { label: "Male", value: "Male" },
   { label: "Female", value: "Female" },
@@ -102,22 +173,10 @@ const thanaOptions = [
   "Uttara",
   "Panchlaish",
 ].map((v) => ({ label: v, value: v }));
-const unionOptions = [
-  "Select union",
-  "Ward 1",
-  "Ward 2",
-  "Ward 3",
-  "Other",
-].map((v) => ({ label: v, value: v === "Select union" ? "" : v }));
-const addressFieldMap = {
-  address: "presentAddress",
-  villageArea: "presentVillageArea",
-  country: "presentCountry",
-  division: "presentDivision",
-  district: "presentDistrict",
-  thana: "presentThana",
-  union: "presentUnion",
-} as const;
+const unionOptions = ["", "Ward 1", "Ward 2", "Ward 3", "Other"].map((v) => ({
+  label: v || "Select union",
+  value: v,
+}));
 const bloodOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
   (v) => ({ label: v, value: v }),
 );
@@ -172,23 +231,6 @@ const facultyOptions = [
   { label: "Faculty of Architecture", value: "fac-arch" },
   { label: "Faculty of Law", value: "fac-law" },
 ];
-const industryOptions = [
-  "Information Technology",
-  "Finance",
-  "Healthcare",
-  "Construction",
-  "Education",
-  "Media",
-  "Legal",
-  "Telecommunications",
-  "Manufacturing",
-  "Energy",
-  "Consulting",
-  "Environmental",
-  "Agriculture",
-  "Human Resources",
-  "FMCG",
-].map((i) => ({ label: i, value: i }));
 const relationOptions = [
   "Spouse",
   "Father",
@@ -199,7 +241,17 @@ const relationOptions = [
   "Sister",
   "Guardian",
   "Other",
-].map((r) => ({ label: r, value: r }));
+].map((v) => ({ label: v, value: v }));
+
+const addressFieldMap = {
+  address: "presentAddress",
+  villageArea: "presentVillageArea",
+  country: "presentCountry",
+  division: "presentDivision",
+  district: "presentDistrict",
+  thana: "presentThana",
+  union: "presentUnion",
+} as const;
 
 const createFamilyMember = (): FamilyMember => ({
   id: generateUUID(),
@@ -257,11 +309,170 @@ function SectionHeader({
   );
 }
 
+/* ============================================================
+   Payload builder
+   ============================================================ */
+function buildPayload(
+  data: AlumniFormValues,
+  current: CreateUpdateAlumniRequest,
+  family: FamilyMember[],
+  education: EducationEntry[],
+  jobs: JobExperience[],
+): CreateUpdateAlumniRequest {
+  return {
+    ...current,
+    isMentor: Boolean(data.isMentor),
+    willingToMentor: Boolean(data.willingToMentor),
+    personalInformation: {
+      ...current.personalInformation,
+      fullName: data.fullName,
+      nativeName: data.nativeName || null,
+      gender: data.gender || null,
+      dateOfBirth: data.dateOfBirth || null,
+      bloodGroup: data.bloodGroup || null,
+      profilePhoto: data.profilePhoto || null,
+      bio: data.bio || null,
+    },
+    contactInformation: {
+      ...current.contactInformation,
+      email: data.email,
+      phone: data.phone,
+      alternatePhone: data.alternatePhone || null,
+      presentCountry: data.presentCountry || null,
+      presentDivision: data.presentDivision || null,
+      presentDistrict: data.presentDistrict || null,
+      presentThana: data.presentThana || null,
+      presentUnion: data.presentUnion || null,
+      presentVillageArea: data.presentVillageArea || null,
+      fullpresentAddress: data.presentAddress || null,
+      isSameAsPresentAddress: Boolean(data.sameAsPresentAddress),
+      permanentCountry: data.permanentCountry || null,
+      permanentDivision: data.permanentDivision || null,
+      permanentDistrict: data.permanentDistrict || null,
+      permanentThana: data.permanentThana || null,
+      permanentUnion: data.permanentUnion || null,
+      permanentVillageArea: data.permanentVillageArea || null,
+      fullPermanentAddress: data.permanentAddress || null,
+    },
+    familyInformation: family
+      .filter((m) => m.name.trim() && m.relation.trim())
+      .map((m, i) => ({
+        familyMemberID: current.familyInformation[i]?.familyMemberID ?? 0,
+        familyMemberName: m.name,
+        relation: m.relation,
+        occupation: m.occupation || null,
+        phone: m.phone || null,
+        isVisible: current.familyInformation[i]?.isVisible ?? true,
+      })),
+    academicInformation: education.length
+      ? education.map((e, i) => ({
+          alumniEducationID:
+            current.academicInformation[i]?.alumniEducationID ?? 0,
+          studentID: i === 0 ? data.studentId || null : null,
+          registrationNumber: i === 0 ? data.registrationNumber || null : null,
+          rollNumber: i === 0 ? data.rollNumber || null : null,
+          programID: current.academicInformation[i]?.programID ?? null,
+          programName: e.degree || (i === 0 ? data.programName : "") || null,
+          departmentID: current.academicInformation[i]?.departmentID ?? null,
+          departmentName:
+            e.fieldOfStudy || (i === 0 ? data.departmentName : "") || null,
+          facultyID: current.academicInformation[i]?.facultyID ?? null,
+          facultyName: i === 0 ? data.facultyName || null : null,
+          admissionYear:
+            e.startYear ??
+            (i === 0 ? Number(data.admissionYear) || null : null),
+          graduationYear:
+            e.endYear ?? (i === 0 ? Number(data.graduationYear) || null : null),
+          graduationSemester: i === 0 ? data.graduationSemester || null : null,
+          batch: e.result || (i === 0 ? data.batch : "") || null,
+          secondarySchoolName: e.institution || null,
+          isVisible: true,
+        }))
+      : current.academicInformation.length
+        ? current.academicInformation.map((existing, i) => ({
+            ...existing,
+            studentID: i === 0 ? data.studentId || null : existing.studentID,
+            registrationNumber:
+              i === 0
+                ? data.registrationNumber || null
+                : existing.registrationNumber,
+            programName:
+              i === 0
+                ? data.programName || existing.programName
+                : existing.programName,
+            departmentName:
+              i === 0
+                ? data.departmentName || existing.departmentName
+                : existing.departmentName,
+            admissionYear:
+              i === 0
+                ? Number(data.admissionYear) || existing.admissionYear
+                : existing.admissionYear,
+            graduationYear:
+              i === 0
+                ? Number(data.graduationYear) || existing.graduationYear
+                : existing.graduationYear,
+            batch: i === 0 ? data.batch || existing.batch : existing.batch,
+          }))
+        : [
+            {
+              alumniEducationID: 0,
+              studentID: data.studentId || null,
+              registrationNumber: data.registrationNumber || null,
+              rollNumber: null,
+              programID: null,
+              programName: data.programName || null,
+              departmentID: null,
+              departmentName: data.departmentName || null,
+              facultyID: null,
+              facultyName: data.facultyName || null,
+              admissionYear: Number(data.admissionYear) || null,
+              graduationYear: Number(data.graduationYear) || null,
+              graduationSemester: data.graduationSemester || null,
+              batch: data.batch || null,
+              secondarySchoolName: null,
+              isVisible: true,
+            },
+          ],
+    jobExperience: jobs
+      .filter(
+        (j) =>
+          j.company ||
+          j.position ||
+          j.startDate ||
+          j.endDate ||
+          j.location ||
+          j.description,
+      )
+      .map((j, i) => ({
+        jobExperienceID: current.jobExperience[i]?.jobExperienceID ?? 0,
+        companyID: current.jobExperience[i]?.companyID ?? null,
+        companyname: j.company || null,
+        designation: j.position || null,
+        startDate: j.startDate || null,
+        endDate: j.endDate || null,
+        location: j.location || null,
+        city: current.jobExperience[i]?.city ?? null,
+        country: current.jobExperience[i]?.country ?? null,
+        description: j.description || null,
+        isCurrent: Boolean(j.isCurrent),
+        isVisible: current.jobExperience[i]?.isVisible ?? true,
+      })),
+    socialInformation: {
+      ...current.socialInformation,
+      linkedInLink: data.linkedinUrl || null,
+      facebookLink: data.facebookUrl || null,
+      gitHubLink: data.websiteUrl || null,
+    },
+  };
+}
+
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((s) => s.auth);
-  const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
+  const { authUser: user } = useAuth();
+  const { selectedAlumni, loading, fetchAlumniById, createUpdateAlumni } =
+    useAlumni();
 
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
     createFamilyMember(),
@@ -272,7 +483,7 @@ export default function ProfileSetupPage() {
   const [jobExperiences, setJobExperiences] = useState<JobExperience[]>([
     createJobExperience(),
   ]);
-  const [skillsInput, setSkillsInput] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const {
     control,
@@ -283,12 +494,21 @@ export default function ProfileSetupPage() {
     getValues,
     formState,
   } = useForm<AlumniFormValues>({
-    resolver: yupResolver(alumniSchema) as never,
-    context: { isEdit: true },
+    resolver: yupResolver(alumniProfileEditSchema) as never,
     defaultValues: {} as never,
   });
 
   const sameAsPresentAddress = watch("sameAsPresentAddress");
+  const profilePhoto = watch("profilePhoto");
+
+  // Fetch profile only if not already loaded
+  useEffect(() => {
+    if (!user?.alumniId) return;
+    if (!selectedAlumni || String(selectedAlumni.alumniID) !== user.alumniId) {
+      void fetchAlumniById(user.alumniId).catch(() => undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.alumniId]);
 
   useEffect(() => {
     if (sameAsPresentAddress) {
@@ -305,92 +525,104 @@ export default function ProfileSetupPage() {
   }, [sameAsPresentAddress, getValues, setValue]);
 
   useEffect(() => {
-    if (user?.alumniId) dispatch(fetchAlumniByIdAsync(user.alumniId));
-  }, [dispatch, user]);
+    if (!selectedAlumni) return;
+    const p = selectedAlumni.personalInformation;
+    const c = selectedAlumni.contactInformation;
+    const e = selectedAlumni.academicInformation[0];
 
-  useEffect(() => {
-    if (selectedAlumni) {
-      reset({
-        fullName: selectedAlumni.fullName || "",
-        nativeName: selectedAlumni.nativeName || "",
-        gender: selectedAlumni.gender || "",
-        dateOfBirth: selectedAlumni.dateOfBirth || "",
-        bloodGroup: selectedAlumni.bloodGroup || "",
-        maritalStatus: selectedAlumni.maritalStatus || "",
-        email: selectedAlumni.email,
-        phone: selectedAlumni.phone,
-        alternatePhone: selectedAlumni.alternatePhone || "",
-        presentAddress: selectedAlumni.presentAddress || "",
-        presentVillageArea: selectedAlumni.presentVillageArea || "",
-        presentCountry: selectedAlumni.presentCountry || "",
-        presentDivision: selectedAlumni.presentDivision || "",
-        presentDistrict: selectedAlumni.presentDistrict || "",
-        presentThana: selectedAlumni.presentThana || "",
-        presentUnion: selectedAlumni.presentUnion || "",
-        permanentAddress: selectedAlumni.permanentAddress || "",
-        permanentVillageArea: selectedAlumni.permanentVillageArea || "",
-        permanentCountry: selectedAlumni.permanentCountry || "",
-        permanentDivision: selectedAlumni.permanentDivision || "",
-        permanentDistrict: selectedAlumni.permanentDistrict || "",
-        permanentThana: selectedAlumni.permanentThana || "",
-        permanentUnion: selectedAlumni.permanentUnion || "",
-        city: selectedAlumni.city || "",
-        country: selectedAlumni.country || "",
-        studentId: selectedAlumni.studentId || "",
-        registrationNumber: selectedAlumni.registrationNumber || "",
-        programName: selectedAlumni.programName || "",
-        departmentName: selectedAlumni.departmentName || "",
-        facultyId: selectedAlumni.facultyId || "",
-        facultyName: selectedAlumni.facultyName || "",
-        profilePhoto: selectedAlumni.profilePhoto || "",
-        admissionYear: selectedAlumni.admissionYear as never,
-        graduationYear: selectedAlumni.graduationYear as never,
-        graduationSemester: selectedAlumni.graduationSemester || "",
-        batch: selectedAlumni.batch || "",
-        rollNumber: selectedAlumni.rollNumber || "",
-        currentOccupation: selectedAlumni.currentOccupation || "",
-        designation: selectedAlumni.designation || "",
-        companyName: selectedAlumni.companyName || "",
-        industry: selectedAlumni.industry || "",
-        workLocation: selectedAlumni.workLocation || "",
-        skills: selectedAlumni.skills || [],
-        linkedinUrl: selectedAlumni.linkedinUrl || "",
-        facebookUrl: selectedAlumni.facebookUrl || "",
-        websiteUrl: selectedAlumni.websiteUrl || "",
-        bio: selectedAlumni.bio || "",
-        isMentor: selectedAlumni.isMentor || false,
-        willingToMentor: selectedAlumni.willingToMentor || false,
-        username: selectedAlumni.username,
-        password: "",
-        status: selectedAlumni.status,
-        isVerified: selectedAlumni.isVerified || false,
-      } as never);
-      setSkillsInput((selectedAlumni.skills || []).join(", "));
-      setFamilyMembers(
-        selectedAlumni.familyMembers?.length
-          ? selectedAlumni.familyMembers
-          : [createFamilyMember()],
-      );
-      setEducationEntries(selectedAlumni.educationEntries || []);
-      setJobExperiences(
-        selectedAlumni.jobExperiences?.length
-          ? selectedAlumni.jobExperiences
-          : [createJobExperience()],
-      );
-    }
+    reset({
+      fullName: p.fullName,
+      nativeName: p.nativeName ?? "",
+      gender: p.gender ?? "",
+      dateOfBirth: p.dateOfBirth ?? "",
+      bloodGroup: p.bloodGroup ?? "",
+      maritalStatus: (p.maritalStatusID ?? "") as never,
+      email: c.email ?? "",
+      phone: c.phone ?? "",
+      alternatePhone: c.alternatePhone ?? "",
+      presentAddress: c.fullpresentAddress ?? "",
+      presentVillageArea: c.presentVillageArea ?? "",
+      presentCountry: c.presentCountry ?? "",
+      presentDivision: c.presentDivision ?? "",
+      presentDistrict: c.presentDistrict ?? "",
+      presentThana: c.presentThana ?? "",
+      presentUnion: c.presentUnion ?? "",
+      permanentAddress: c.fullPermanentAddress ?? "",
+      permanentVillageArea: c.permanentVillageArea ?? "",
+      permanentCountry: c.permanentCountry ?? "",
+      permanentDivision: c.permanentDivision ?? "",
+      permanentDistrict: c.permanentDistrict ?? "",
+      permanentThana: c.permanentThana ?? "",
+      permanentUnion: c.permanentUnion ?? "",
+      sameAsPresentAddress: c.isSameAsPresentAddress,
+      city: c.presentDistrict ?? "",
+      country: c.presentCountry ?? "",
+      studentId: e?.studentID ?? "",
+      registrationNumber: e?.registrationNumber ?? "",
+      programName: e?.programName ?? "",
+      departmentName: e?.departmentName ?? "",
+      facultyId: e?.facultyID ? String(e.facultyID) : "",
+      facultyName: e?.facultyName ?? "",
+      profilePhoto: p.profilePhoto ?? "",
+      admissionYear: e?.admissionYear as never,
+      graduationYear: e?.graduationYear as never,
+      graduationSemester: e?.graduationSemester ?? "",
+      batch: e?.batch ?? "",
+      rollNumber: e?.rollNumber ?? "",
+      currentOccupation: "",
+      designation: "",
+      companyName: "",
+      industry: "",
+      workLocation: "",
+      skills: [],
+      linkedinUrl: selectedAlumni.socialInformation.linkedInLink ?? "",
+      facebookUrl: selectedAlumni.socialInformation.facebookLink ?? "",
+      websiteUrl: selectedAlumni.socialInformation.gitHubLink ?? "",
+      bio: p.bio ?? "",
+      isMentor: selectedAlumni.isMentor,
+      willingToMentor: selectedAlumni.willingToMentor,
+      familyMembers: [],
+    } as never);
+
+    setFamilyMembers(
+      selectedAlumni.familyInformation.length
+        ? selectedAlumni.familyInformation.map((m) => ({
+            id: String(m.familyMemberID),
+            name: m.familyMemberName,
+            relation: m.relation,
+            occupation: m.occupation ?? "",
+            phone: m.phone ?? "",
+          }))
+        : [createFamilyMember()],
+    );
+    setEducationEntries([]);
+    setJobExperiences(
+      selectedAlumni.jobExperience.length
+        ? selectedAlumni.jobExperience.map((j) => ({
+            id: String(j.jobExperienceID),
+            company: j.companyname ?? "",
+            position: j.designation ?? "",
+            startDate: j.startDate ?? "",
+            endDate: j.endDate ?? "",
+            location: j.location ?? "",
+            description: j.description ?? "",
+            isCurrent: j.isCurrent,
+          }))
+        : [createJobExperience()],
+    );
   }, [selectedAlumni, reset]);
 
   const addFamilyMember = () =>
     setFamilyMembers((p) => [...p, createFamilyMember()]);
-  const removeFamilyMember = (id: string) =>
-    setFamilyMembers((p) => p.filter((m) => m.id !== id));
+  const removeFamilyMember = (fid: string) =>
+    setFamilyMembers((p) => p.filter((m) => m.id !== fid));
   const updateFamilyMember = (
-    id: string,
+    fid: string,
     field: keyof FamilyMember,
     value: string,
   ) =>
     setFamilyMembers((p) =>
-      p.map((m) => (m.id === id ? { ...m, [field]: value } : m)),
+      p.map((m) => (m.id === fid ? { ...m, [field]: value } : m)),
     );
 
   const addEducation = () =>
@@ -406,63 +638,106 @@ export default function ProfileSetupPage() {
         result: "",
       },
     ]);
-  const removeEducation = (id: string) =>
-    setEducationEntries((p) => p.filter((e) => e.id !== id));
+  const removeEducation = (eid: string) =>
+    setEducationEntries((p) => p.filter((e) => e.id !== eid));
   const updateEducation = (
-    id: string,
+    eid: string,
     field: keyof EducationEntry,
     value: string | number,
   ) =>
     setEducationEntries((p) =>
-      p.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
+      p.map((e) => (e.id === eid ? { ...e, [field]: value } : e)),
     );
 
   const addJob = () => setJobExperiences((p) => [...p, createJobExperience()]);
-  const removeJob = (id: string) =>
-    setJobExperiences((p) => p.filter((j) => j.id !== id));
+  const removeJob = (jid: string) =>
+    setJobExperiences((p) => p.filter((j) => j.id !== jid));
   const updateJob = (
-    id: string,
+    jid: string,
     field: keyof JobExperience,
     value: string | boolean,
   ) =>
     setJobExperiences((p) =>
-      p.map((j) => (j.id === id ? { ...j, [field]: value } : j)),
+      p.map((j) => (j.id === jid ? { ...j, [field]: value } : j)),
     );
+
+  // ============================================================
+  // Photo upload handler
+  // ============================================================
+  const handlePhotoSelect = async (preview: string, file: File) => {
+    // Show the base64 preview immediately
+    setValue("profilePhoto" as never, preview as never);
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setValue("profilePhoto" as never, url as never);
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Failed to upload image"),
+          severity: "error",
+        }),
+      );
+      // Roll back to the previous value on failure
+      setValue(
+        "profilePhoto" as never,
+        (selectedAlumni?.personalInformation.profilePhoto ?? "") as never,
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const onSubmit = async (data: AlumniFormValues) => {
     if (!selectedAlumni) return;
-    const skills = skillsInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const payload = {
-      ...data,
-      skills,
-      admissionYear: Number(data.admissionYear) || undefined,
-      graduationYear: Number(data.graduationYear) || undefined,
-      familyMembers,
-      educationEntries,
-      jobExperiences,
-      id: selectedAlumni.id,
-    } as never;
-    const res = await dispatch(
-      updateAlumniAsync({ id: selectedAlumni.id, data: payload }),
-    );
-    if (res.meta.requestStatus === "fulfilled") {
+    if (uploading) {
+      dispatch(
+        showToast({
+          message: "Please wait for the photo upload to finish.",
+          severity: "warning",
+        }),
+      );
+      return;
+    }
+    try {
+      const base: CreateUpdateAlumniRequest = {
+        alumniID: selectedAlumni.alumniID,
+        isMentor: selectedAlumni.isMentor,
+        willingToMentor: selectedAlumni.willingToMentor,
+        isProfilePublic: selectedAlumni.isProfilePublic,
+        personalInformation: selectedAlumni.personalInformation,
+        contactInformation: selectedAlumni.contactInformation,
+        familyInformation: selectedAlumni.familyInformation,
+        academicInformation: selectedAlumni.academicInformation,
+        jobExperience: selectedAlumni.jobExperience,
+        socialInformation: selectedAlumni.socialInformation,
+        privacy: selectedAlumni.privacy,
+      };
+      const payload = buildPayload(
+        data,
+        base,
+        familyMembers,
+        educationEntries,
+        jobExperiences,
+      );
+      await createUpdateAlumni(payload);
       dispatch(
         showToast({
           message: "Profile updated successfully",
           severity: "success",
         }),
       );
-    } else {
+    } catch (err) {
       dispatch(
-        showToast({ message: "Unable to save profile", severity: "error" }),
+        showToast({
+          message: getApiErrorMessage(err, "Unable to save profile"),
+          severity: "error",
+        }),
       );
     }
   };
 
-  if (loading && !selectedAlumni) return <CommonLoading />;
+  if (loading && !selectedAlumni) return <AlumniProfileSkeleton />;
   if (!selectedAlumni) return <CommonEmptyState title="Profile not found" />;
 
   const a = selectedAlumni;
@@ -488,7 +763,7 @@ export default function ProfileSetupPage() {
         }
       />
 
-      {/* Profile banner */}
+      {/* Banner */}
       <Card
         sx={{
           borderRadius: 3,
@@ -515,25 +790,27 @@ export default function ProfileSetupPage() {
             }}
           >
             <CommonAvatar
-              src={a.profilePhoto}
-              name={a.fullName}
+              src={
+                profilePhoto || a.personalInformation.profilePhoto || undefined
+              }
+              name={a.personalInformation.fullName}
               size={72}
               sx={{ border: "3px solid white" }}
             />
             <Box sx={{ flex: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {a.fullName}
+                {a.personalInformation.fullName}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {a.alumniId}
+                {a.alumniCode}
               </Typography>
             </Box>
           </Box>
         </CardContent>
       </Card>
 
-      <form onSubmit={handleSubmit(onSubmit) as never}>
-        {/* Personal Information */}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        {/* ============ Personal Information ============ */}
         <Card sx={sectionCardSx}>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <SectionHeader
@@ -591,11 +868,18 @@ export default function ProfileSetupPage() {
                   placeholder="Select"
                 />
               </Grid>
+              <Grid size={{ xs: 12 }}>
+                <CommonFileUpload
+                  label={uploading ? "Uploading..." : "Profile Photo"}
+                  currentFile={profilePhoto || undefined}
+                  onFileSelect={handlePhotoSelect}
+                />
+              </Grid>
             </Grid>
           </CardContent>
         </Card>
 
-        {/* Contact Information */}
+        {/* ============ Contact Information ============ */}
         <Card sx={sectionCardSx}>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <SectionHeader
@@ -627,7 +911,7 @@ export default function ProfileSetupPage() {
                   control={control}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <CommonInputField name="city" label="City" control={control} />
               </Grid>
               <Grid size={{ xs: 12 }}>
@@ -635,7 +919,6 @@ export default function ProfileSetupPage() {
                   Present Address
                 </Typography>
               </Grid>
-
               <Grid size={{ xs: 12, md: 6 }}>
                 <CommonInputField
                   name="presentVillageArea"
@@ -712,7 +995,6 @@ export default function ProfileSetupPage() {
                   control={control}
                 />
               </Grid>
-
               <Grid size={{ xs: 12, sm: 6 }}>
                 <CommonInputField
                   name="permanentVillageArea"
@@ -779,7 +1061,7 @@ export default function ProfileSetupPage() {
           </CardContent>
         </Card>
 
-        {/* Family Members */}
+        {/* ============ Family Information ============ */}
         <Card sx={sectionCardSx}>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <Box
@@ -886,7 +1168,7 @@ export default function ProfileSetupPage() {
           </CardContent>
         </Card>
 
-        {/* Academic Information / Education Entries */}
+        {/* ============ Academic Information ============ */}
         <Card sx={sectionCardSx}>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <Box
@@ -927,7 +1209,7 @@ export default function ProfileSetupPage() {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <CommonInputField
                   name="studentId"
-                  label="Student id"
+                  label="Student ID"
                   control={control}
                 />
               </Grid>
@@ -1000,13 +1282,6 @@ export default function ProfileSetupPage() {
                   placeholder="e.g. 2018"
                 />
               </Grid>
-              {/* <Grid size={{ xs: 12, sm: 6 }}>
-                <CommonInputField
-                  name="rollNumber"
-                  label="Roll Number"
-                  control={control}
-                />
-              </Grid> */}
             </Grid>
             {educationEntries.length > 0 && <Divider sx={{ mb: 2 }} />}
             {educationEntries.map((e) => (
@@ -1102,7 +1377,7 @@ export default function ProfileSetupPage() {
           </CardContent>
         </Card>
 
-        {/* Job Experience */}
+        {/* ============ Job Experience ============ */}
         <Card sx={sectionCardSx}>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <Box
@@ -1169,6 +1444,7 @@ export default function ProfileSetupPage() {
                     <CommonInputField
                       name={`jobStart_${j.id}` as never}
                       label="Start Date"
+                      type="month"
                       control={control}
                       placeholder="YYYY-MM"
                       onChange={(ev) =>
@@ -1186,15 +1462,6 @@ export default function ProfileSetupPage() {
                         updateJob(j.id, "endDate", ev.target.value)
                       }
                     />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 1 }}>
-                    <IconButton
-                      onClick={() => removeJob(j.id)}
-                      color="error"
-                      size="small"
-                    >
-                      <Trash2 size={16} />
-                    </IconButton>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <CommonInputField
@@ -1219,12 +1486,24 @@ export default function ProfileSetupPage() {
                     />
                   </Grid>
                 </Grid>
+                <Grid
+                  size={{ xs: 12, sm: 12 }}
+                  sx={{ mt: 1, textAlign: "right" }}
+                >
+                  <IconButton
+                    onClick={() => removeJob(j.id)}
+                    color="error"
+                    size="small"
+                  >
+                    <Trash2 size={16} />
+                  </IconButton>
+                </Grid>
               </Box>
             ))}
           </CardContent>
         </Card>
 
-        {/* Social Information */}
+        {/* ============ Social Information ============ */}
         <Card sx={sectionCardSx}>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <SectionHeader
@@ -1257,7 +1536,7 @@ export default function ProfileSetupPage() {
           </CardContent>
         </Card>
 
-        {/* Biography */}
+        {/* ============ Biography ============ */}
         <Card sx={sectionCardSx}>
           <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <SectionHeader icon={<FileText size={18} />} title="Biography" />
@@ -1283,7 +1562,7 @@ export default function ProfileSetupPage() {
           </Button>
           <CommonButton
             type="submit"
-            loading={formState.isSubmitting}
+            loading={formState.isSubmitting || uploading}
             startIcon={<Save size={18} />}
           >
             Save Profile

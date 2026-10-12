@@ -1,344 +1,217 @@
-import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { useEffect, useState } from "react";
 import {
   Box,
   Card,
   CardContent,
-  Typography,
-  Switch,
-  FormControl,
-  Select,
-  MenuItem,
-  Button,
+  Chip,
   Divider,
+  FormControl,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Chip,
-  ToggleButton,
-  ToggleButtonGroup,
-  Grid,
-  Alert,
+  MenuItem,
+  Skeleton,
+  Select,
+  Switch,
+  Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import {
+  Briefcase,
+  FileText,
+  Globe,
+  GraduationCap,
+  Lock,
+  Phone,
+  Save,
   Shield,
   User,
-  Phone,
-  GraduationCap,
-  Briefcase,
-  Globe,
   Users,
-  FileText,
-  Save,
-  Lock,
-  RotateCcw,
-  Eye,
-  EyeOff,
-  KeyRound,
 } from "lucide-react";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchAlumniByIdAsync,
-  updateAlumniPrivacyAsync,
-} from "@/Slice/alumniSlice";
-import { changePasswordAsync } from "@/Slice/authSlice";
-import { showToast } from "@/Slice/uiSlice";
-import {
-  CommonPageHeader,
-  CommonLoading,
-  CommonEmptyState,
-  CommonInputField,
-  CommonSelectField,
-  CommonCheckbox,
-  CommonButton,
-} from "@/components/common";
-import type {
-  SectionPrivacy,
-  PrivacyLevel,
-  AlumniPrivacy,
-} from "@/types/alumni";
-import { ChangePasswordRequest } from "@/types/auth";
-import { changePasswordSchema } from "@/validation/authValidation";
+import { CommonButton, CommonPageHeader } from "@/components/common";
+// import { useAppDispatch } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { useAlumni } from "@/hooks/useAlumni";
+import { showToast } from "@/store/Slice/uiSlice";
+import type { AlumniPrivacySettings, PrivacyLevel } from "@/types/alumni";
+import { getApiErrorMessage } from "@/utils/apiError";
+import { useAppDispatch } from "@/hooks";
 
-const defaultSectionPrivacy: SectionPrivacy = {
-  personalInfo: "ALUMNI_ONLY",
-  contactInfo: "ALUMNI_ONLY",
-  academicInfo: "PUBLIC",
-  jobExperience: "PUBLIC",
-  socialInfo: "PUBLIC",
-  familyInfo: "PRIVATE",
-  biography: "PUBLIC",
-};
-
-const defaultLegacyPrivacy: AlumniPrivacy = {
-  profileVisibility: "PUBLIC",
-  showEmail: true,
-  showPhone: false,
-  showAddress: false,
-  showCompany: true,
-  showSocialLinks: true,
-};
-
-const privacyLabels: Record<PrivacyLevel, string> = {
-  PUBLIC: "Everyone",
-  ALUMNI_ONLY: "Alumni Only",
-  PRIVATE: "Only Me",
-};
-
-// Consistent color coding so a person can scan visibility at a glance.
-const privacyColors: Record<PrivacyLevel, string> = {
-  PUBLIC: "#10b981",
-  ALUMNI_ONLY: "#0ea5e9",
-  PRIVATE: "#94a3b8",
-};
-
-const sections: {
-  key: keyof SectionPrivacy;
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-}[] = [
+const visibilityFields = [
   {
-    key: "personalInfo",
+    key: "personalInfoVisibility",
     label: "Personal Information",
-    description: "Date of birth, gender, and other identity details.",
+    description: "Personal identity and date of birth.",
     icon: <User size={18} />,
   },
   {
-    key: "contactInfo",
+    key: "contactInfoVisibility",
     label: "Contact Information",
-    description: "Email, phone number, and physical address.",
+    description: "Email, phone number, and address.",
     icon: <Phone size={18} />,
   },
   {
-    key: "academicInfo",
+    key: "academicInfoVisibility",
     label: "Academic Information",
-    description: "Degrees, graduation years, majors, and institutions.",
+    description: "Education, batch, and graduation details.",
     icon: <GraduationCap size={18} />,
   },
   {
-    key: "jobExperience",
+    key: "jobExperienceVisibility",
     label: "Job Experience",
-    description: "Current workplace, titles, and professional history.",
+    description: "Employers, roles, and work history.",
     icon: <Briefcase size={18} />,
   },
   {
-    key: "socialInfo",
+    key: "socialInfoVisibility",
     label: "Social Information",
-    description: "LinkedIn, GitHub, Twitter, and portfolio links.",
+    description: "Social media and other profile links.",
     icon: <Globe size={18} />,
   },
   {
-    key: "familyInfo",
+    key: "familyInfoVisibility",
     label: "Family Information",
-    description: "Spouse, children, or emergency relations data.",
+    description: "Family members shown on your profile.",
     icon: <Users size={18} />,
   },
   {
-    key: "biography",
-    label: "Biography & Summary",
-    description: "Your professional bio and personal statement.",
+    key: "biographyVisibility",
+    label: "Biography",
+    description: "Your bio and personal summary.",
     icon: <FileText size={18} />,
   },
-];
+] as const;
 
-const toggles: {
-  key: keyof AlumniPrivacy;
-  label: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    key: "showEmail",
-    label: "Display primary email address",
-    icon: <Phone size={16} />,
-  },
-  {
-    key: "showPhone",
-    label: "Display phone number",
-    icon: <Phone size={16} />,
-  },
-  {
-    key: "showAddress",
-    label: "Display residential address",
-    icon: <Globe size={16} />,
-  },
-  {
-    key: "showCompany",
-    label: "Display current company / employer",
-    icon: <Briefcase size={16} />,
-  },
-  {
-    key: "showSocialLinks",
-    label: "Display social media handles",
-    icon: <Globe size={16} />,
-  },
-];
+const contactFields = [
+  { key: "displayEmail", label: "Display email address" },
+  { key: "displayPhone", label: "Display phone number" },
+  { key: "displayAddress", label: "Display address" },
+  { key: "displayCompany", label: "Display company name" },
+  { key: "displaySocialMedia", label: "Display social media links" },
+] as const;
+
+const levels: PrivacyLevel[] = ["PUBLIC", "ALUMNI_ONLY", "PRIVATE"];
 
 export default function SettingsPrivacyPage() {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((s) => s.auth);
-  const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
+  const { authUser: user } = useAuth();
+  const { fetchPrivacy, savePrivacy } = useAlumni();
+  const alumniId = user?.alumniId;
 
-  const [sectionPrivacy, setSectionPrivacy] = useState<SectionPrivacy>(
-    defaultSectionPrivacy,
-  );
-  const [legacyPrivacy, setLegacyPrivacy] =
-    useState<AlumniPrivacy>(defaultLegacyPrivacy);
-  const [initialSnapshot, setInitialSnapshot] = useState<{
-    sectionPrivacy: SectionPrivacy;
-    legacyPrivacy: AlumniPrivacy;
-  } | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [settings, setSettings] = useState<AlumniPrivacySettings | null>(null);
+  const [initialSettings, setInitialSettings] =
+    useState<AlumniPrivacySettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { error } = useAppSelector((s) => s.auth);
+  const isDirty =
+    settings !== null &&
+    initialSettings !== null &&
+    JSON.stringify(settings) !== JSON.stringify(initialSettings);
 
-  const { control, handleSubmit, reset } = useForm<ChangePasswordRequest>({
-    resolver: yupResolver(changePasswordSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
+  useEffect(() => {
+    if (!alumniId) {
+      setLoading(false);
+      setError("Your account does not have an alumni ID.");
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    fetchPrivacy(alumniId)
+      .then((data) => {
+        if (!active) return;
+        setSettings(data);
+        setInitialSettings(data);
+        setError(null);
+      })
+      .catch((err) => {
+        if (active)
+          setError(getApiErrorMessage(err, "Unable to load privacy settings"));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alumniId]);
 
-  const onSubmit = async (data: ChangePasswordRequest) => {
-    const res = await dispatch(changePasswordAsync(data));
-    if (res.meta.requestStatus === "fulfilled") {
+  const updateSetting = <K extends keyof AlumniPrivacySettings>(
+    key: K,
+    value: AlumniPrivacySettings[K],
+  ) => {
+    setSettings((current) =>
+      current ? { ...current, [key]: value } : current,
+    );
+  };
+
+  const save = async () => {
+    if (!alumniId || !settings) return;
+    setSaving(true);
+    try {
+      await savePrivacy(settings);
+      setInitialSettings(settings);
       dispatch(
         showToast({
-          message: "Password changed successfully",
+          message: "Privacy settings saved successfully",
           severity: "success",
         }),
       );
-      reset();
-    } else {
-      dispatch(
-        showToast({ message: "Failed to change password", severity: "error" }),
-      );
-    }
-  };
-
-  const alumniInfoForm = useForm({
-    defaultValues: {
-      username: selectedAlumni?.username ?? "",
-      password: "",
-      status: selectedAlumni?.status ?? "ACTIVE",
-      isVerified: !!selectedAlumni?.isVerified,
-      isMentor: !!selectedAlumni?.isMentor,
-      willingToMentor: !!selectedAlumni?.willingToMentor,
-    },
-  });
-
-  useEffect(() => {
-    if (user?.alumniId) {
-      dispatch(fetchAlumniByIdAsync(user.alumniId));
-    }
-  }, [dispatch, user]);
-
-  useEffect(() => {
-    if (selectedAlumni) {
-      const nextSection =
-        selectedAlumni.sectionPrivacy || defaultSectionPrivacy;
-      const nextLegacy = selectedAlumni.privacy || defaultLegacyPrivacy;
-      setSectionPrivacy(nextSection);
-      setLegacyPrivacy(nextLegacy);
-      alumniInfoForm.reset({
-        username: selectedAlumni.username,
-        password: "",
-        status: selectedAlumni.status,
-        isVerified: !!selectedAlumni.isVerified,
-        isMentor: !!selectedAlumni.isMentor,
-        willingToMentor: !!selectedAlumni.willingToMentor,
-      });
-      setInitialSnapshot({
-        sectionPrivacy: nextSection,
-        legacyPrivacy: nextLegacy,
-      });
-    }
-  }, [selectedAlumni, alumniInfoForm]);
-
-  const isDirty = useMemo(() => {
-    if (!initialSnapshot) return false;
-    return (
-      JSON.stringify(sectionPrivacy) !==
-        JSON.stringify(initialSnapshot.sectionPrivacy) ||
-      JSON.stringify(legacyPrivacy) !==
-        JSON.stringify(initialSnapshot.legacyPrivacy)
-    );
-  }, [sectionPrivacy, legacyPrivacy, initialSnapshot]);
-
-  if (loading && !selectedAlumni) return <CommonLoading />;
-  if (!selectedAlumni) return <CommonEmptyState title="Profile not found" />;
-
-  const isGlobalPrivate = legacyPrivacy.profileVisibility === "PRIVATE";
-
-  const handleSectionChange = (
-    key: keyof SectionPrivacy,
-    value: PrivacyLevel,
-  ) => {
-    setSectionPrivacy((current) => ({ ...current, [key]: value }));
-  };
-
-  const handleLegacyChange = (
-    key: keyof AlumniPrivacy,
-    value: boolean | "PUBLIC" | "PRIVATE",
-  ) => {
-    setLegacyPrivacy((current) => ({ ...current, [key]: value }));
-  };
-
-  const handleDiscard = () => {
-    if (!initialSnapshot) return;
-    setSectionPrivacy(initialSnapshot.sectionPrivacy);
-    setLegacyPrivacy(initialSnapshot.legacyPrivacy);
-  };
-
-  const handleSaveAll = async () => {
-    setIsSubmitting(true);
-    try {
-      const result = await dispatch(
-        updateAlumniPrivacyAsync({
-          id: selectedAlumni.id,
-          privacy: legacyPrivacy,
-          sectionPrivacy,
-        }),
-      );
-
-      if (result.meta.requestStatus === "fulfilled") {
-        setInitialSnapshot({ sectionPrivacy, legacyPrivacy });
-        dispatch(
-          showToast({
-            message: "Privacy settings updated successfully",
-            severity: "success",
-          }),
-        );
-      } else {
-        dispatch(
-          showToast({
-            message: "Failed to update privacy settings",
-            severity: "error",
-          }),
-        );
-      }
-    } catch {
+    } catch (err) {
       dispatch(
         showToast({
-          message: "An unexpected error occurred",
+          message: getApiErrorMessage(err, "Unable to save privacy settings"),
           severity: "error",
         }),
       );
     } finally {
-      setIsSubmitting(false);
+      setSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <Box>
+        <Skeleton variant="text" width={240} height={44} sx={{ mb: 2 }} />
+        {[0, 1, 2].map((card) => (
+          <Card key={card} sx={{ mb: 3, borderRadius: 3 }}>
+            <CardContent>
+              <Skeleton variant="text" width="35%" height={32} />
+              <Skeleton variant="rounded" height={54} sx={{ my: 1 }} />
+              <Skeleton variant="rounded" height={54} />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    );
+  }
+
+  if (error || !settings) {
+    return (
+      <Box>
+        <CommonPageHeader
+          title="Settings & Privacy"
+          breadcrumbs={[
+            { label: "Home", path: "/alumni/dashboard" },
+            { label: "Settings & Privacy" },
+          ]}
+        />
+        <Typography color="error">
+          {error || "Privacy settings unavailable."}
+        </Typography>
+      </Box>
+    );
+  }
+
+  const isProfilePublic = settings.isProfilePublic;
+
   return (
-    <Box sx={{ pb: isDirty ? 12 : 6 }}>
+    <Box sx={{ pb: isDirty ? 10 : 4 }}>
       <CommonPageHeader
         title="Settings & Privacy"
-        subtitle="Manage your profile security, directory visibility, and section-level privacy rules."
+        subtitle="Manage your profile visibility and contact field preferences."
         breadcrumbs={[
           { label: "Home", path: "/alumni/dashboard" },
           { label: "Profile", path: "/alumni/profile" },
@@ -346,268 +219,86 @@ export default function SettingsPrivacyPage() {
         ]}
       />
 
-      {/* Master Profile Status */}
-      <Card
-        sx={{
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: isGlobalPrivate ? alpha("#f59e0b", 0.4) : "divider",
-          mb: 3,
-          boxShadow: "none",
-          overflow: "hidden",
-          transition: "border-color 0.15s ease",
-        }}
-      >
-        <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: 2.5,
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 2,
-                minWidth: 0,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 44,
-                  height: 44,
-                  borderRadius: 2.5,
-                  bgcolor: alpha(isGlobalPrivate ? "#94a3b8" : "#10b981", 0.12),
-                  color: isGlobalPrivate ? "#64748b" : "#10b981",
-                  flexShrink: 0,
-                }}
-              >
-                <Shield size={22} />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 0.25,
-                  }}
-                >
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                    Master Profile Status
-                  </Typography>
-                  <Chip
-                    label={isGlobalPrivate ? "Hidden" : "Visible"}
-                    size="small"
-                    sx={{
-                      height: 20,
-                      fontSize: "0.7rem",
-                      fontWeight: 700,
-                      bgcolor: alpha(
-                        isGlobalPrivate ? "#94a3b8" : "#10b981",
-                        0.12,
-                      ),
-                      color: isGlobalPrivate ? "#64748b" : "#10b981",
-                    }}
-                  />
-                </Box>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  {isGlobalPrivate
-                    ? "Your profile is hidden from the entire alumni network."
-                    : "Your profile is visible across the alumni network."}
-                </Typography>
-              </Box>
+      <Card sx={{ mb: 3, border: "1px solid", borderColor: "divider" }}>
+        <CardContent
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Shield size={22} />
+            <Box>
+              <Typography sx={{ fontWeight: 700 }}>
+                Master Profile Status
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {isProfilePublic
+                  ? "Your profile is visible to the alumni network."
+                  : "Your profile is hidden from the alumni network."}
+              </Typography>
             </Box>
-
-            <ToggleButtonGroup
-              exclusive
-              value={legacyPrivacy.profileVisibility}
-              onChange={(_, value) =>
-                value && handleLegacyChange("profileVisibility", value)
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Chip label={isProfilePublic ? "Visible" : "Hidden"} size="small" />
+            <Switch
+              checked={isProfilePublic}
+              onChange={(e) =>
+                updateSetting("isProfilePublic", e.target.checked)
               }
-              sx={{
-                flexShrink: 0,
-                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
-                borderRadius: 2.5,
-                p: 0.5,
-                gap: 0.5,
-                "& .MuiToggleButton-root": {
-                  textTransform: "none",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  px: 2.5,
-                  py: 0.9,
-                  gap: 1,
-                  border: "none",
-                  borderRadius: 2,
-                  color: "text.secondary",
-                  "&.Mui-selected": {
-                    bgcolor: "background.paper",
-                    color: "text.primary",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-                    "&:hover": { bgcolor: "background.paper" },
-                  },
-                },
-              }}
-            >
-              <ToggleButton value="PUBLIC" disableRipple>
-                <Eye size={16} /> Public
-              </ToggleButton>
-              <ToggleButton value="PRIVATE" disableRipple>
-                <EyeOff size={16} /> Private
-              </ToggleButton>
-            </ToggleButtonGroup>
+              aria-label="Profile visible"
+            />
           </Box>
         </CardContent>
-
-        {isGlobalPrivate && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              px: { xs: 2.5, md: 3.5 },
-              py: 1.25,
-              bgcolor: alpha("#f59e0b", 0.1),
-              borderTop: "1px solid",
-              borderColor: alpha("#f59e0b", 0.25),
-            }}
-          >
-            <EyeOff size={15} color="#b45309" />
-            <Typography
-              variant="body2"
-              sx={{ color: "#92400e", fontWeight: 500 }}
-            >
-              Section-level settings below are overridden and disabled while
-              your profile is private.
-            </Typography>
-          </Box>
-        )}
       </Card>
 
-      {/* Granular Section Visibility */}
-      <Card
-        sx={{
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          boxShadow: "none",
-          opacity: isGlobalPrivate ? 0.55 : 1,
-          transition: "opacity 0.15s ease",
-        }}
-      >
-        <CardContent sx={{ p: { xs: 1, md: 1.5 } }}>
-          <Box sx={{ px: { xs: 1.5, md: 2 }, pt: 1.5, pb: 0.5 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Section Visibility
-            </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Choose who can see each part of your profile.
-            </Typography>
-          </Box>
-
-          <List disablePadding sx={{ mt: 1 }}>
-            {sections.map((section, index) => (
-              <Box key={section.key}>
-                {index > 0 && (
-                  <Divider component="li" sx={{ mx: { xs: 1.5, md: 2 } }} />
-                )}
+      <Card sx={{ mb: 3, border: "1px solid", borderColor: "divider" }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Section Visibility
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Choose who can see each part of your profile.
+          </Typography>
+          <List disablePadding>
+            {visibilityFields.map((field, index) => (
+              <Box key={field.key}>
+                {index > 0 && <Divider />}
                 <ListItem
                   sx={{
-                    py: 1.75,
-                    px: { xs: 1.5, md: 2 },
-                    flexDirection: { xs: "column", sm: "row" },
-                    alignItems: { xs: "flex-start", sm: "center" },
-                    gap: { xs: 1.5, sm: 0 },
+                    px: 0,
+                    gap: 1,
+                    flexWrap: { xs: "wrap", sm: "nowrap" },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: 44 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: 36,
-                        height: 36,
-                        borderRadius: 2,
-                        bgcolor: alpha(
-                          privacyColors[sectionPrivacy[section.key]],
-                          0.12,
-                        ),
-                        color: privacyColors[sectionPrivacy[section.key]],
-                      }}
-                    >
-                      {section.icon}
-                    </Box>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {field.icon}
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                        {section.label}
+                      <Typography sx={{ fontWeight: 600 }}>
+                        {field.label}
                       </Typography>
                     }
-                    secondary={
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary", fontSize: "0.8rem" }}
-                      >
-                        {section.description}
-                      </Typography>
-                    }
+                    secondary={field.description}
                   />
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1.5,
-                      width: { xs: "100%", sm: "auto" },
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Chip
-                      label={privacyLabels[sectionPrivacy[section.key]]}
-                      size="small"
-                      sx={{
-                        display: { xs: "none", md: "flex" },
-                        bgcolor: alpha(
-                          privacyColors[sectionPrivacy[section.key]],
-                          0.12,
-                        ),
-                        color: privacyColors[sectionPrivacy[section.key]],
-                        fontWeight: 600,
-                      }}
-                    />
-                    <FormControl
-                      size="small"
-                      sx={{ minWidth: { xs: "100%", sm: 170 } }}
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <Select
+                      value={settings[field.key]}
+                      onChange={(e) =>
+                        updateSetting(field.key, e.target.value as PrivacyLevel)
+                      }
+                      aria-label={`${field.label} visibility`}
                     >
-                      <Select
-                        value={sectionPrivacy[section.key]}
-                        disabled={isGlobalPrivate}
-                        onChange={(e) =>
-                          handleSectionChange(
-                            section.key,
-                            e.target.value as PrivacyLevel,
-                          )
-                        }
-                      >
-                        {(Object.keys(privacyLabels) as PrivacyLevel[]).map(
-                          (level) => (
-                            <MenuItem key={level} value={level}>
-                              {privacyLabels[level]}
-                            </MenuItem>
-                          ),
-                        )}
-                      </Select>
-                    </FormControl>
-                  </Box>
+                      {levels.map((level) => (
+                        <MenuItem value={level} key={level}>
+                          {level.replace("_", " ")}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </ListItem>
               </Box>
             ))}
@@ -615,159 +306,27 @@ export default function SettingsPrivacyPage() {
         </CardContent>
       </Card>
 
-      {/* Alumni Information */}
-      <Card
-        sx={{
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          mt: 3,
-          boxShadow: "none",
-          opacity: isGlobalPrivate ? 0.55 : 1,
-          transition: "opacity 0.15s ease",
-        }}
-      >
-        <CardContent sx={{ p: { xs: 1, md: 1.5 } }}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              px: { xs: 1.5, md: 2 },
-              pt: 1.5,
-            }}
-          >
-            <Shield size={18} color="#6366f1" />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Alumni Information
-            </Typography>
-          </Box>
-
-          <Box sx={{ px: { xs: 1.5, md: 2 }, pt: 2, pb: 1 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CommonInputField
-                  name="username"
-                  label="Username"
-                  control={alumniInfoForm.control}
-                  disabled
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CommonInputField
-                  name="password"
-                  label="New Password (leave blank to keep)"
-                  control={alumniInfoForm.control}
-                  type="password"
-                  placeholder="Leave blank to keep current password"
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CommonSelectField
-                  name="status"
-                  label="Status"
-                  control={alumniInfoForm.control}
-                  options={[
-                    { label: "Active", value: "ACTIVE" },
-                    { label: "Inactive", value: "INACTIVE" },
-                    { label: "Pending", value: "PENDING" },
-                  ]}
-                  required
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <Box sx={{ mt: 2 }}>
-                  <CommonCheckbox
-                    name="isVerified"
-                    label="Verified Alumni"
-                    control={alumniInfoForm.control}
-                  />
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <Box sx={{ mt: 1 }}>
-                  <CommonCheckbox
-                    name="isMentor"
-                    label="Is Mentor"
-                    control={alumniInfoForm.control}
-                  />
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <Box sx={{ mt: 1 }}>
-                  <CommonCheckbox
-                    name="willingToMentor"
-                    label="Willing to Mentor"
-                    control={alumniInfoForm.control}
-                  />
-                </Box>
-              </Grid>
-            </Grid>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Contact Field Filters */}
-      <Card
-        sx={{
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          mt: 3,
-          boxShadow: "none",
-          opacity: isGlobalPrivate ? 0.55 : 1,
-          transition: "opacity 0.15s ease",
-        }}
-      >
-        <CardContent sx={{ p: { xs: 1, md: 1.5 } }}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              px: { xs: 1.5, md: 2 },
-              pt: 1.5,
-            }}
-          >
-            <Lock size={18} color="#6366f1" />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+      <Card sx={{ border: "1px solid", borderColor: "divider" }}>
+        <CardContent>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Lock size={18} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
               Contact Field Filters
             </Typography>
           </Box>
-          <Typography
-            variant="body2"
-            sx={{ color: "text.secondary", px: { xs: 1.5, md: 2 }, pb: 0.5 }}
-          >
-            Fine-tune which contact details appear on your card and directory
-            listing.
+          <Typography variant="body2" color="text.secondary">
+            Choose which details may appear on your profile.
           </Typography>
-
           <List disablePadding sx={{ mt: 1 }}>
-            {toggles.map((toggle, index) => (
-              <Box key={toggle.key}>
-                {index > 0 && (
-                  <Divider component="li" sx={{ mx: { xs: 1.5, md: 2 } }} />
-                )}
-                <ListItem sx={{ py: 1.25, px: { xs: 1.5, md: 2 } }}>
-                  <ListItemIcon sx={{ minWidth: 36, color: "text.secondary" }}>
-                    {toggle.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Typography
-                        sx={{ fontSize: "0.875rem", fontWeight: 500 }}
-                      >
-                        {toggle.label}
-                      </Typography>
-                    }
-                  />
+            {contactFields.map((field, index) => (
+              <Box key={field.key}>
+                {index > 0 && <Divider />}
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemText primary={field.label} />
                   <Switch
-                    checked={legacyPrivacy[toggle.key] as boolean}
-                    disabled={isGlobalPrivate}
-                    onChange={(e) =>
-                      handleLegacyChange(toggle.key, e.target.checked)
-                    }
-                    size="small"
+                    checked={settings[field.key]}
+                    onChange={(e) => updateSetting(field.key, e.target.checked)}
+                    aria-label={field.label}
                   />
                 </ListItem>
               </Box>
@@ -776,113 +335,25 @@ export default function SettingsPrivacyPage() {
         </CardContent>
       </Card>
 
-      {/* Sticky save bar — only appears once there are unsaved changes */}
       {isDirty && (
         <Box
           sx={{
             position: "sticky",
             bottom: 16,
-            mt: 4,
+            mt: 3,
             display: "flex",
             justifyContent: "flex-end",
-            alignItems: "center",
-            gap: 1.5,
-            p: 1.5,
-            borderRadius: 3,
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
           }}
         >
-          <Typography
-            variant="body2"
-            sx={{ color: "text.secondary", mr: "auto", pl: 1 }}
-          >
-            You have unsaved changes
-          </Typography>
-          <Button
-            variant="text"
-            startIcon={<RotateCcw size={16} />}
-            onClick={handleDiscard}
-            disabled={isSubmitting}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            Discard
-          </Button>
-          <Button
-            variant="contained"
+          <CommonButton
+            onClick={() => void save()}
+            loading={saving}
             startIcon={<Save size={18} />}
-            onClick={handleSaveAll}
-            disabled={isSubmitting}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              px: 3,
-              borderRadius: 2,
-              boxShadow: "none",
-              ":hover": { boxShadow: "none" },
-            }}
           >
-            {isSubmitting ? "Saving..." : "Save"}
-          </Button>
+            Save Settings
+          </CommonButton>
         </Box>
       )}
-
-      <Card
-        sx={{
-          mt: 3,
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          maxWidth: "100%",
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <KeyRound size={20} className="text-blue-600" />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Change Password
-            </Typography>
-          </Box>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-            Account: {user?.username}
-          </Typography>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <CommonInputField
-                name="currentPassword"
-                label="Current Password"
-                control={control}
-                type="password"
-                required
-              />
-              <CommonInputField
-                name="newPassword"
-                label="New Password"
-                control={control}
-                type="password"
-                required
-              />
-              <CommonInputField
-                name="confirmPassword"
-                label="Confirm New Password"
-                control={control}
-                type="password"
-                required
-              />
-              <CommonButton type="submit" loading={loading}>
-                Change Password
-              </CommonButton>
-            </Box>
-          </form>
-        </CardContent>
-      </Card>
     </Box>
   );
 }

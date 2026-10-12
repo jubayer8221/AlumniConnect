@@ -1,10 +1,12 @@
-import type { LoginRequest, LoginResponse, User, AuthSession, ChangePasswordRequest } from "@/types/auth";
-import type { ApiResponse } from "@/types/common";
+import type {
+  ChangePasswordRequest,
+  LoginApiResponse,
+  LoginRequest,
+} from "@/types/auth";
+import type { MutationResult } from "@/types/api";
 
 export interface AuthService {
-  login(credentials: LoginRequest): Promise<LoginResponse>;
-  logout(): Promise<ApiResponse<null>>;
-  getCurrentUser(): Promise<ApiResponse<User | null>>;
-  getSession(): AuthSession | null;
-  changePassword(data: ChangePasswordRequest): Promise<ApiResponse<null>>;
+  login(payload: LoginRequest): Promise<LoginApiResponse>;
+  changePassword(payload: ChangePasswordRequest): Promise<MutationResult>;
+  logout(): Promise<MutationResult>;
 }

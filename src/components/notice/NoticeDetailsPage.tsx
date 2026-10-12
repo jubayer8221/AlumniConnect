@@ -11,7 +11,7 @@ import {
 import { ArrowLeft, Bell } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchNoticeByIdAsync } from "@/Slice/noticeSlice";
+import { fetchNoticeByIdAsync } from "@/store/Slice/noticeSlice";
 import {
   CommonPageHeader,
   CommonLoading,
@@ -34,9 +34,13 @@ export default function NoticeDetailsPage({
   const basePath = isAdmin ? "/notices" : "/alumni/notices";
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
+  // ★ Fetch only if it's not the one already loaded
   useEffect(() => {
-    if (id) dispatch(fetchNoticeByIdAsync(id));
-  }, [dispatch, id]);
+    if (id && (!selectedNotice || selectedNotice.id !== id)) {
+      void dispatch(fetchNoticeByIdAsync(id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;

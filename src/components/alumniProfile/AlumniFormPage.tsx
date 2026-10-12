@@ -14,18 +14,17 @@ import {
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
+import * as yup from "yup";
 import {
-  fetchAlumniByIdAsync,
-  createAlumniAsync,
-  updateAlumniAsync,
-} from "@/Slice/alumniSlice";
-import { showToast } from "@/Slice/uiSlice";
-import {
-  alumniSchema,
-  type AlumniFormValues,
-} from "@/validation/alumniValidation";
+  Navigate,
+  useNavigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
+import { useAppDispatch } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { useAlumni } from "@/hooks/useAlumni";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
@@ -37,11 +36,102 @@ import {
   CommonButton,
   CommonLoading,
 } from "@/components/common";
-import type { CreateAlumniRequest, EducationEntry } from "@/types/alumni";
+import type { CreateUpdateAlumniRequest, EducationEntry } from "@/types/alumni";
 import { generateUUID } from "@/utils/generateId";
-import { theme } from "@/store/theme";
+import { getApiErrorMessage } from "@/utils/apiError";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
+import { uploadImage } from "@/services/api/uploadService";
 
+/* ============================================================
+   Form validation — inline Yup schemas
+   ============================================================ */
+const familyMemberSchema = yup.object({
+  id: yup.string().optional(),
+  name: yup.string().default(""),
+  relation: yup.string().default(""),
+  occupation: yup.string().default(""),
+  phone: yup.string().default(""),
+});
+
+const alumniSchema = yup.object({
+  fullName: yup.string().trim().required("Full name is required"),
+  nativeName: yup.string().default(""),
+  gender: yup.string().default(""),
+  dateOfBirth: yup.string().default(""),
+  bloodGroup: yup.string().default(""),
+  maritalStatus: yup.string().default(""),
+  email: yup
+    .string()
+    .trim()
+    .email("Invalid email address")
+    .required("Email is required"),
+  phone: yup.string().default(""),
+  alternatePhone: yup.string().default(""),
+  presentAddress: yup.string().default(""),
+  presentVillageArea: yup.string().default(""),
+  presentCountry: yup.string().default(""),
+  presentDivision: yup.string().default(""),
+  presentDistrict: yup.string().default(""),
+  presentThana: yup.string().default(""),
+  presentUnion: yup.string().default(""),
+  permanentAddress: yup.string().default(""),
+  permanentVillageArea: yup.string().default(""),
+  permanentCountry: yup.string().default(""),
+  permanentDivision: yup.string().default(""),
+  permanentDistrict: yup.string().default(""),
+  permanentThana: yup.string().default(""),
+  permanentUnion: yup.string().default(""),
+  sameAsPresentAddress: yup.boolean().default(false),
+  city: yup.string().default(""),
+  country: yup.string().default(""),
+  studentId: yup.string().default(""),
+  registrationNumber: yup.string().default(""),
+  programName: yup.string().default(""),
+  departmentName: yup.string().default(""),
+  facultyId: yup.string().default(""),
+  facultyName: yup.string().default(""),
+  profilePhoto: yup.string().default(""),
+  admissionYear: yup.mixed<string | number>().optional().nullable(),
+  graduationYear: yup.mixed<string | number>().optional().nullable(),
+  graduationSemester: yup.string().default(""),
+  batch: yup.string().default(""),
+  rollNumber: yup.string().default(""),
+  currentOccupation: yup.string().default(""),
+  designation: yup.string().default(""),
+  companyName: yup.string().default(""),
+  industry: yup.string().default(""),
+  workLocation: yup.string().default(""),
+  skills: yup.array().of(yup.string().defined()).default([]),
+  linkedinUrl: yup.string().default(""),
+  facebookUrl: yup.string().default(""),
+  websiteUrl: yup.string().default(""),
+  bio: yup.string().default(""),
+  isMentor: yup.boolean().default(false),
+  willingToMentor: yup.boolean().default(false),
+  username: yup.string().default(""),
+  password: yup.string().default(""),
+  status: yup.string().default("ACTIVE"),
+  isVerified: yup.boolean().default(false),
+  familyMembers: yup.array().of(familyMemberSchema).default([]),
+});
+
+const alumniCreateSchema = alumniSchema.shape({
+  username: yup
+    .string()
+    .trim()
+    .required("Username is required")
+    .min(3, "Username must be at least 3 characters"),
+  password: yup
+    .string()
+    .required("Password is required")
+    .min(8, "Password must be at least 8 characters"),
+});
+
+type AlumniFormValues = yup.InferType<typeof alumniSchema>;
+
+/* ============================================================
+   Constants
+   ============================================================ */
 const genderOptions = [
   { label: "Male", value: "Male" },
   { label: "Female", value: "Female" },
@@ -88,22 +178,10 @@ const thanaOptions = [
   "Uttara",
   "Panchlaish",
 ].map((v) => ({ label: v, value: v }));
-const unionOptions = [
-  "Select union",
-  "Ward 1",
-  "Ward 2",
-  "Ward 3",
-  "Other",
-].map((v) => ({ label: v, value: v === "Select union" ? "" : v }));
-const addressFieldMap = {
-  address: "presentAddress",
-  villageArea: "presentVillageArea",
-  country: "presentCountry",
-  division: "presentDivision",
-  district: "presentDistrict",
-  thana: "presentThana",
-  union: "presentUnion",
-} as const;
+const unionOptions = ["", "Ward 1", "Ward 2", "Ward 3", "Other"].map((v) => ({
+  label: v || "Select union",
+  value: v,
+}));
 const bloodOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
   (v) => ({ label: v, value: v }),
 );
@@ -181,6 +259,16 @@ const industryOptions = [
   "FMCG",
 ].map((i) => ({ label: i, value: i }));
 
+const addressFieldMap = {
+  address: "presentAddress",
+  villageArea: "presentVillageArea",
+  country: "presentCountry",
+  division: "presentDivision",
+  district: "presentDistrict",
+  thana: "presentThana",
+  union: "presentUnion",
+} as const;
+
 const Section = ({
   title,
   children,
@@ -200,14 +288,153 @@ const Section = ({
   </Card>
 );
 
+/* ============================================================
+   Payload builder
+   ============================================================ */
+function buildPayload(
+  data: AlumniFormValues,
+  educationEntries: EducationEntry[],
+  alumniId?: number,
+): CreateUpdateAlumniRequest {
+  return {
+    alumniID: alumniId ?? null,
+    username: data.username || null,
+    password: data.password || null,
+    status: data.status,
+    isVerified: Boolean(data.isVerified),
+    isMentor: Boolean(data.isMentor),
+    willingToMentor: Boolean(data.willingToMentor),
+    isProfilePublic: true,
+    personalInformation: {
+      fullName: data.fullName,
+      nativeName: data.nativeName || null,
+      gender: data.gender || null,
+      dateOfBirth: data.dateOfBirth || null,
+      bloodGroup: data.bloodGroup || null,
+      maritalStatusID: (data.maritalStatus as string) || null,
+      profilePhoto: data.profilePhoto || null,
+      bio: data.bio || null,
+      hobby: null,
+      tShirtSize: null,
+    },
+    contactInformation: {
+      email: data.email || null,
+      phone: data.phone || null,
+      alternatePhone: data.alternatePhone || null,
+      presentCountry: data.presentCountry || null,
+      presentDivision: data.presentDivision || null,
+      presentDistrict: data.presentDistrict || null,
+      presentThana: data.presentThana || null,
+      presentUnion: data.presentUnion || null,
+      presentVillageArea: data.presentVillageArea || null,
+      fullpresentAddress: data.presentAddress || null,
+      isSameAsPresentAddress: Boolean(data.sameAsPresentAddress),
+      permanentCountry: data.permanentCountry || null,
+      permanentDivision: data.permanentDivision || null,
+      permanentDistrict: data.permanentDistrict || null,
+      permanentThana: data.permanentThana || null,
+      permanentUnion: data.permanentUnion || null,
+      permanentVillageArea: data.permanentVillageArea || null,
+      fullPermanentAddress: data.permanentAddress || null,
+    },
+    familyInformation: (data.familyMembers ?? []).map((m) => ({
+      familyMemberID: 0,
+      familyMemberName: m.name,
+      relation: m.relation,
+      occupation: m.occupation || null,
+      phone: m.phone || null,
+      isVisible: true,
+    })),
+    academicInformation: educationEntries.length
+      ? educationEntries.map((e, i) => ({
+          alumniEducationID: 0,
+          studentID: i === 0 ? data.studentId || null : null,
+          registrationNumber: i === 0 ? data.registrationNumber || null : null,
+          rollNumber: i === 0 ? data.rollNumber || null : null,
+          programID: null,
+          programName: e.degree || (i === 0 ? data.programName : "") || null,
+          departmentID: null,
+          departmentName:
+            e.fieldOfStudy || (i === 0 ? data.departmentName : "") || null,
+          facultyID: null,
+          facultyName: i === 0 ? data.facultyName || null : null,
+          admissionYear:
+            e.startYear ??
+            (i === 0 ? Number(data.admissionYear) || null : null),
+          graduationYear:
+            e.endYear ?? (i === 0 ? Number(data.graduationYear) || null : null),
+          graduationSemester: i === 0 ? data.graduationSemester || null : null,
+          batch: e.result || (i === 0 ? data.batch : "") || null,
+          secondarySchoolName: e.institution || null,
+          isVisible: true,
+        }))
+      : [
+          {
+            alumniEducationID: 0,
+            studentID: data.studentId || null,
+            registrationNumber: data.registrationNumber || null,
+            rollNumber: data.rollNumber || null,
+            programID: null,
+            programName: data.programName || null,
+            departmentID: null,
+            departmentName: data.departmentName || null,
+            facultyID: null,
+            facultyName: data.facultyName || null,
+            admissionYear: Number(data.admissionYear) || null,
+            graduationYear: Number(data.graduationYear) || null,
+            graduationSemester: data.graduationSemester || null,
+            batch: data.batch || null,
+            secondarySchoolName: null,
+            isVisible: true,
+          },
+        ],
+    jobExperience:
+      data.currentOccupation || data.designation || data.companyName
+        ? [
+            {
+              jobExperienceID: 0,
+              companyID: null,
+              companyname: data.companyName || null,
+              designation: data.designation || data.currentOccupation || null,
+              startDate: null,
+              endDate: null,
+              location: data.workLocation || null,
+              city: data.city || null,
+              country: data.country || null,
+              description: null,
+              isCurrent: true,
+              isVisible: true,
+            },
+          ]
+        : [],
+    socialInformation: {
+      facebookLink: data.facebookUrl || null,
+      instagramLink: null,
+      twitterLink: null,
+      linkedInLink: data.linkedinUrl || null,
+      gitHubLink: data.websiteUrl || null,
+    },
+    privacy: {
+      isSocialMediaVisible: true,
+      isFamilyInformationVisible: true,
+      isJobExperienceVisible: true,
+      isContactInformationVisible: true,
+      isAcademicInformationVisible: true,
+    },
+  };
+}
+
 export default function AlumniFormPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { id } = useParams();
   const location = useLocation();
   const isEdit = !!id;
-  const { selectedAlumni, loading } = useAppSelector((s) => s.alumni);
+  const { role } = useAuth();
+  const { selectedAlumni, loading, fetchAlumniById, createUpdateAlumni } =
+    useAlumni();
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
+
   const [skillsInput, setSkillsInput] = useState("");
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(
     [],
@@ -222,8 +449,7 @@ export default function AlumniFormPage() {
     getValues,
     formState,
   } = useForm<AlumniFormValues>({
-    resolver: yupResolver(alumniSchema) as never,
-    context: { isEdit },
+    resolver: yupResolver(isEdit ? alumniSchema : alumniCreateSchema) as never,
     defaultValues: {
       fullName: "",
       nativeName: "",
@@ -309,86 +535,90 @@ export default function AlumniFormPage() {
   } as never);
 
   useEffect(() => {
-    if (isEdit && id) dispatch(fetchAlumniByIdAsync(id));
-  }, [dispatch, isEdit, id]);
+    if (!isEdit || !id) return;
+    void fetchAlumniById(id).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, id]);
 
   useEffect(() => {
-    if (isEdit && selectedAlumni) {
-      reset({
-        fullName: selectedAlumni.fullName || "",
-        nativeName: selectedAlumni.nativeName || "",
-        gender: selectedAlumni.gender || "",
-        dateOfBirth: selectedAlumni.dateOfBirth || "",
-        bloodGroup: selectedAlumni.bloodGroup || "",
-        maritalStatus: selectedAlumni.maritalStatus || "",
-        email: selectedAlumni.email,
-        phone: selectedAlumni.phone,
-        alternatePhone: selectedAlumni.alternatePhone || "",
-        presentAddress: selectedAlumni.presentAddress || "",
-        presentVillageArea: selectedAlumni.presentVillageArea || "",
-        presentCountry: selectedAlumni.presentCountry || "",
-        presentDivision: selectedAlumni.presentDivision || "",
-        presentDistrict: selectedAlumni.presentDistrict || "",
-        presentThana: selectedAlumni.presentThana || "",
-        presentUnion: selectedAlumni.presentUnion || "",
-        permanentAddress: selectedAlumni.permanentAddress || "",
-        permanentVillageArea: selectedAlumni.permanentVillageArea || "",
-        permanentCountry: selectedAlumni.permanentCountry || "",
-        permanentDivision: selectedAlumni.permanentDivision || "",
-        permanentDistrict: selectedAlumni.permanentDistrict || "",
-        permanentThana: selectedAlumni.permanentThana || "",
-        permanentUnion: selectedAlumni.permanentUnion || "",
-        city: selectedAlumni.city || "",
-        country: selectedAlumni.country || "",
-        studentId: selectedAlumni.studentId || "",
-        registrationNumber: selectedAlumni.registrationNumber || "",
-        programName: selectedAlumni.programName || "",
-        departmentName: selectedAlumni.departmentName || "",
-        facultyId: selectedAlumni.facultyId || "",
-        facultyName: selectedAlumni.facultyName || "",
-        profilePhoto: selectedAlumni.profilePhoto || "",
-        admissionYear: selectedAlumni.admissionYear as never,
-        graduationYear: selectedAlumni.graduationYear as never,
-        graduationSemester: selectedAlumni.graduationSemester || "",
-        batch: selectedAlumni.batch || "",
-        rollNumber: selectedAlumni.rollNumber || "",
-        currentOccupation: selectedAlumni.currentOccupation || "",
-        designation: selectedAlumni.designation || "",
-        companyName: selectedAlumni.companyName || "",
-        industry: selectedAlumni.industry || "",
-        workLocation: selectedAlumni.workLocation || "",
-        skills: selectedAlumni.skills || [],
-        linkedinUrl: selectedAlumni.linkedinUrl || "",
-        facebookUrl: selectedAlumni.facebookUrl || "",
-        websiteUrl: selectedAlumni.websiteUrl || "",
-        bio: selectedAlumni.bio || "",
-        isMentor: selectedAlumni.isMentor || false,
-        willingToMentor: selectedAlumni.willingToMentor || false,
-        username: selectedAlumni.username,
-        password: "",
-        status: selectedAlumni.status,
-        isVerified: selectedAlumni.isVerified || false,
-        educationEntries: selectedAlumni.educationEntries || [],
-        familyMembers: selectedAlumni.familyMembers || [],
-        ...Object.fromEntries(
-          (selectedAlumni.educationEntries || []).flatMap((entry) => [
-            [`educationDegree_${entry.id}`, entry.degree],
-            [`educationInstitution_${entry.id}`, entry.institution],
-            [`educationField_${entry.id}`, entry.fieldOfStudy || ""],
-            [`educationStart_${entry.id}`, entry.startYear || ""],
-            [`educationEnd_${entry.id}`, entry.endYear || ""],
-            [`educationResult_${entry.id}`, entry.result || ""],
-          ]),
-        ),
-      } as never);
-      setSkillsInput((selectedAlumni.skills || []).join(", "));
-      setEducationEntries(selectedAlumni.educationEntries || []);
-    }
+    if (!isEdit || !selectedAlumni) return;
+    const p = selectedAlumni.personalInformation;
+    const c = selectedAlumni.contactInformation;
+    const e = selectedAlumni.academicInformation[0];
+    const j = selectedAlumni.jobExperience[0];
+
+    reset({
+      fullName: p.fullName,
+      nativeName: p.nativeName ?? "",
+      gender: p.gender ?? "",
+      dateOfBirth: p.dateOfBirth ?? "",
+      bloodGroup: p.bloodGroup ?? "",
+      maritalStatus: (p.maritalStatusID ?? "") as never,
+      email: c.email ?? "",
+      phone: c.phone ?? "",
+      alternatePhone: c.alternatePhone ?? "",
+      presentAddress: c.fullpresentAddress ?? "",
+      presentVillageArea: c.presentVillageArea ?? "",
+      presentCountry: c.presentCountry ?? "",
+      presentDivision: c.presentDivision ?? "",
+      presentDistrict: c.presentDistrict ?? "",
+      presentThana: c.presentThana ?? "",
+      presentUnion: c.presentUnion ?? "",
+      permanentAddress: c.fullPermanentAddress ?? "",
+      permanentVillageArea: c.permanentVillageArea ?? "",
+      permanentCountry: c.permanentCountry ?? "",
+      permanentDivision: c.permanentDivision ?? "",
+      permanentDistrict: c.permanentDistrict ?? "",
+      permanentThana: c.permanentThana ?? "",
+      permanentUnion: c.permanentUnion ?? "",
+      sameAsPresentAddress: c.isSameAsPresentAddress,
+      city: c.presentDistrict ?? "",
+      country: c.presentCountry ?? "",
+      studentId: e?.studentID ?? "",
+      registrationNumber: e?.registrationNumber ?? "",
+      programName: e?.programName ?? "",
+      departmentName: e?.departmentName ?? "",
+      facultyId: e?.facultyID ? String(e.facultyID) : "",
+      facultyName: e?.facultyName ?? "",
+      profilePhoto: p.profilePhoto ?? "",
+      admissionYear: e?.admissionYear as never,
+      graduationYear: e?.graduationYear as never,
+      graduationSemester: e?.graduationSemester ?? "",
+      batch: e?.batch ?? "",
+      rollNumber: e?.rollNumber ?? "",
+      currentOccupation: j?.designation ?? "",
+      designation: j?.designation ?? "",
+      companyName: j?.companyname ?? "",
+      industry: "",
+      workLocation: j?.location ?? "",
+      skills: [],
+      linkedinUrl: selectedAlumni.socialInformation.linkedInLink ?? "",
+      facebookUrl: selectedAlumni.socialInformation.facebookLink ?? "",
+      websiteUrl: selectedAlumni.socialInformation.gitHubLink ?? "",
+      bio: p.bio ?? "",
+      isMentor: selectedAlumni.isMentor,
+      willingToMentor: selectedAlumni.willingToMentor,
+      username: selectedAlumni.username,
+      password: "",
+      status: selectedAlumni.status,
+      isVerified: selectedAlumni.isVerified,
+      familyMembers: selectedAlumni.familyInformation.map((m) => ({
+        id: String(m.familyMemberID),
+        name: m.familyMemberName,
+        relation: m.relation,
+        occupation: m.occupation ?? "",
+        phone: m.phone ?? "",
+      })),
+    } as never);
+    setEducationEntries([]);
   }, [isEdit, selectedAlumni, reset]);
 
   useEffect(() => {
     if (!isEdit || !selectedAlumni) return;
-    setBreadcrumbLabel(location.pathname, selectedAlumni.fullName);
+    setBreadcrumbLabel(
+      location.pathname,
+      selectedAlumni.personalInformation.fullName,
+    );
     return () => clearBreadcrumbLabel(location.pathname);
   }, [
     clearBreadcrumbLabel,
@@ -399,62 +629,35 @@ export default function AlumniFormPage() {
   ]);
 
   const onSubmit = async (data: AlumniFormValues) => {
-    const skills = skillsInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const payload: CreateAlumniRequest = {
-      ...data,
-      skills,
-      admissionYear: Number(data.admissionYear) || undefined,
-      graduationYear: Number(data.graduationYear) || undefined,
-      educationEntries,
-    } as CreateAlumniRequest;
-
-    if (isEdit && id) {
-      const res = await dispatch(
-        updateAlumniAsync({ id, data: { ...payload, id } }),
+    try {
+      const payload = buildPayload(
+        data,
+        educationEntries,
+        isEdit && selectedAlumni ? selectedAlumni.alumniID : undefined,
       );
-      if (res.meta.requestStatus === "fulfilled") {
-        dispatch(
-          showToast({
-            message: "Alumni information updated successfully",
-            severity: "success",
-          }),
-        );
-        navigate(`/alumni/${id}`);
-      } else {
-        dispatch(
-          showToast({
-            message: "Unable to save alumni information",
-            severity: "error",
-          }),
-        );
-      }
-    } else {
-      const res = await dispatch(createAlumniAsync(payload));
-      if (res.meta.requestStatus === "fulfilled") {
-        dispatch(
-          showToast({
-            message: "Alumni created successfully",
-            severity: "success",
-          }),
-        );
-        navigate("/alumni");
-      } else {
-        dispatch(
-          showToast({
-            message: "Unable to save alumni information",
-            severity: "error",
-          }),
-        );
-      }
+      const result = await createUpdateAlumni(payload);
+      dispatch(
+        showToast({
+          message: result?.message ?? "Saved successfully",
+          severity: "success",
+        }),
+      );
+      if (isEdit && id) navigate(`/alumni/${id}`);
+      else if (result?.alumniID) navigate(`/alumni/${result.alumniID}`);
+      else navigate("/alumni");
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Unable to save alumni information"),
+          severity: "error",
+        }),
+      );
     }
   };
 
   const addEducation = () =>
-    setEducationEntries((previous) => [
-      ...previous,
+    setEducationEntries((prev) => [
+      ...prev,
       {
         id: generateUUID(),
         degree: "",
@@ -465,24 +668,20 @@ export default function AlumniFormPage() {
         result: "",
       },
     ]);
-
-  const removeEducation = (id: string) =>
-    setEducationEntries((previous) =>
-      previous.filter((entry) => entry.id !== id),
-    );
-
+  const removeEducation = (eduId: string) =>
+    setEducationEntries((prev) => prev.filter((e) => e.id !== eduId));
   const updateEducation = (
-    id: string,
+    eduId: string,
     field: keyof EducationEntry,
     value: string | number,
   ) =>
-    setEducationEntries((previous) =>
-      previous.map((entry) =>
-        entry.id === id ? { ...entry, [field]: value } : entry,
-      ),
+    setEducationEntries((prev) =>
+      prev.map((e) => (e.id === eduId ? { ...e, [field]: value } : e)),
     );
 
   if (loading && isEdit && !selectedAlumni) return <CommonLoading />;
+  if (isEdit && role !== "ADMIN" && !selectedAlumni)
+    return <Navigate to="/unauthorized" replace />;
 
   return (
     <Box>
@@ -493,7 +692,7 @@ export default function AlumniFormPage() {
         }
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Manage Alumni", path: "/alumni" },
+          { label: "Alumni", path: "/alumni" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={
@@ -507,7 +706,7 @@ export default function AlumniFormPage() {
         }
       />
 
-      <form onSubmit={handleSubmit(onSubmit) as never}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Section title="Personal Information">
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -563,9 +762,29 @@ export default function AlumniFormPage() {
             <Grid size={{ xs: 12 }}>
               <CommonFileUpload
                 label="Profile Photo"
-                onFileSelect={(url) =>
-                  setValue("profilePhoto" as never, url as never)
-                }
+                currentFile={watch("profilePhoto") || undefined}
+                onFileSelect={async (preview, file) => {
+                  // Show the preview immediately
+                  setValue("profilePhoto" as never, preview as never);
+
+                  // Upload in the background and swap in the real URL
+                  try {
+                    const url = await uploadImage(file);
+                    setValue("profilePhoto" as never, url as never);
+                  } catch (err) {
+                    dispatch(
+                      showToast({
+                        message: getApiErrorMessage(
+                          err,
+                          "Failed to upload image",
+                        ),
+                        severity: "error",
+                      }),
+                    );
+                    // Roll back the preview on failure
+                    setValue("profilePhoto" as never, "" as never);
+                  }
+                }}
               />
             </Grid>
           </Grid>
@@ -603,7 +822,6 @@ export default function AlumniFormPage() {
             <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle2">Present Address</Typography>
             </Grid>
-
             <Grid size={{ xs: 12, sm: 6 }}>
               <CommonInputField
                 name="presentVillageArea"
@@ -659,7 +877,7 @@ export default function AlumniFormPage() {
                 placeholder="Select union"
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 12 }}>
+            <Grid size={{ xs: 12 }}>
               <CommonTextArea
                 name="presentAddress"
                 label="Address"
@@ -680,7 +898,6 @@ export default function AlumniFormPage() {
                 control={control}
               />
             </Grid>
-
             <Grid size={{ xs: 12, sm: 6 }}>
               <CommonInputField
                 name="permanentVillageArea"
@@ -734,7 +951,7 @@ export default function AlumniFormPage() {
                 placeholder="Select union"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 12 }}>
+            <Grid size={{ xs: 12 }}>
               <CommonTextArea
                 name="permanentAddress"
                 label="Address"
@@ -751,7 +968,7 @@ export default function AlumniFormPage() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <CommonInputField
                 name="studentId"
-                label="Student id"
+                label="Student ID"
                 control={control}
               />
             </Grid>
@@ -824,13 +1041,6 @@ export default function AlumniFormPage() {
                 placeholder="e.g. 2018"
               />
             </Grid>
-            {/* <Grid size={{ xs: 12, md: 6 }}>
-              <CommonInputField
-                name="rollNumber"
-                label="Roll Number"
-                control={control}
-              />
-            </Grid> */}
           </Grid>
           <Divider sx={{ my: 2 }} />
           <Box
@@ -882,9 +1092,7 @@ export default function AlumniFormPage() {
                   color="error"
                   startIcon={<Trash2 size={16} />}
                   onClick={() => removeEducation(entry.id)}
-                >
-                  {/* Remove */}
-                </Button>
+                />
               </Box>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -892,8 +1100,8 @@ export default function AlumniFormPage() {
                     name={`educationDegree_${entry.id}` as never}
                     label="Degree"
                     control={control}
-                    onChange={(event) =>
-                      updateEducation(entry.id, "degree", event.target.value)
+                    onChange={(e) =>
+                      updateEducation(entry.id, "degree", e.target.value)
                     }
                   />
                 </Grid>
@@ -902,12 +1110,8 @@ export default function AlumniFormPage() {
                     name={`educationInstitution_${entry.id}` as never}
                     label="Institution"
                     control={control}
-                    onChange={(event) =>
-                      updateEducation(
-                        entry.id,
-                        "institution",
-                        event.target.value,
-                      )
+                    onChange={(e) =>
+                      updateEducation(entry.id, "institution", e.target.value)
                     }
                   />
                 </Grid>
@@ -916,12 +1120,8 @@ export default function AlumniFormPage() {
                     name={`educationField_${entry.id}` as never}
                     label="Field of Study"
                     control={control}
-                    onChange={(event) =>
-                      updateEducation(
-                        entry.id,
-                        "fieldOfStudy",
-                        event.target.value,
-                      )
+                    onChange={(e) =>
+                      updateEducation(entry.id, "fieldOfStudy", e.target.value)
                     }
                   />
                 </Grid>
@@ -931,11 +1131,11 @@ export default function AlumniFormPage() {
                     label="Start Year"
                     control={control}
                     type="number"
-                    onChange={(event) =>
+                    onChange={(e) =>
                       updateEducation(
                         entry.id,
                         "startYear",
-                        Number(event.target.value) || 0,
+                        Number(e.target.value) || 0,
                       )
                     }
                   />
@@ -946,11 +1146,11 @@ export default function AlumniFormPage() {
                     label="End Year"
                     control={control}
                     type="number"
-                    onChange={(event) =>
+                    onChange={(e) =>
                       updateEducation(
                         entry.id,
                         "endYear",
-                        Number(event.target.value) || 0,
+                        Number(e.target.value) || 0,
                       )
                     }
                   />
@@ -960,8 +1160,8 @@ export default function AlumniFormPage() {
                     name={`educationResult_${entry.id}` as never}
                     label="Result"
                     control={control}
-                    onChange={(event) =>
-                      updateEducation(entry.id, "result", event.target.value)
+                    onChange={(e) =>
+                      updateEducation(entry.id, "result", e.target.value)
                     }
                   />
                 </Grid>
@@ -1073,7 +1273,6 @@ export default function AlumniFormPage() {
                 onClick={() =>
                   appendFamily({
                     name: "",
-                    nameNative: "",
                     relation: "",
                     occupation: "",
                     phone: "",
@@ -1103,7 +1302,6 @@ export default function AlumniFormPage() {
                 },
               }}
             >
-              {/* Form Item Header */}
               <Box
                 sx={{
                   px: 2.5,
@@ -1126,7 +1324,6 @@ export default function AlumniFormPage() {
                 >
                   Family Member #{index + 1}
                 </Typography>
-
                 <IconButton
                   size="small"
                   color="error"
@@ -1142,8 +1339,6 @@ export default function AlumniFormPage() {
                   <Trash2 size={16} />
                 </IconButton>
               </Box>
-
-              {/* Inputs Grid */}
               <Box sx={{ p: 2.5 }}>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6 }}>
@@ -1156,14 +1351,6 @@ export default function AlumniFormPage() {
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <CommonInputField
-                      name={`familyMembers.${index}.nameNative` as never}
-                      label="Name (Native)"
-                      control={control}
-                      required
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <CommonInputField
                       name={`familyMembers.${index}.relation` as never}
                       label="Relation"
                       control={control}
@@ -1171,14 +1358,14 @@ export default function AlumniFormPage() {
                       placeholder="e.g. Father, Spouse"
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <CommonInputField
                       name={`familyMembers.${index}.occupation` as never}
                       label="Occupation"
                       control={control}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
                     <CommonInputField
                       name={`familyMembers.${index}.phone` as never}
                       label="Phone"
@@ -1190,7 +1377,6 @@ export default function AlumniFormPage() {
             </Paper>
           ))}
 
-          {/* Bottom Action Button */}
           {familyFields.length > 0 && (
             <Button
               fullWidth
@@ -1199,7 +1385,6 @@ export default function AlumniFormPage() {
               onClick={() =>
                 appendFamily({
                   name: "",
-                  nameNative: "",
                   relation: "",
                   occupation: "",
                   phone: "",
@@ -1224,60 +1409,6 @@ export default function AlumniFormPage() {
             </Button>
           )}
         </Section>
-
-        {/* <Section title="Alumni Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="username"
-                label="Username"
-                control={control}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="password"
-                label={
-                  isEdit ? "New Password (leave blank to keep)" : "Password"
-                }
-                control={control}
-                type="password"
-                required={!isEdit}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
-                name="status"
-                label="Status"
-                control={control}
-                options={statusOptions}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonCheckbox
-                name="isVerified"
-                label="Verified Alumni"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonCheckbox
-                name="isMentor"
-                label="Is Mentor"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonCheckbox
-                name="willingToMentor"
-                label="Willing to Mentor"
-                control={control}
-              />
-            </Grid>
-          </Grid>
-        </Section> */}
 
         <Section title="Biography">
           <CommonTextArea

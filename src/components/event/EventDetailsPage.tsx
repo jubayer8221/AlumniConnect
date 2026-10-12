@@ -5,7 +5,6 @@ import {
   CardContent,
   Typography,
   Chip,
-  Button,
   Grid,
   Divider,
   Alert,
@@ -22,49 +21,53 @@ import {
   Trash2,
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchEventByIdAsync,
-  registerForEventAsync,
-  cancelEventRegistrationAsync,
-  fetchEventRegistrationsAsync,
-  deleteEventAsync,
-} from "@/Slice/eventSlice";
-import { showToast } from "@/Slice/uiSlice";
+import { useEvents } from "@/hooks/useEvents";
+import { useAuth } from "@/hooks/useAuth";
+import { useAppDispatch } from "@/hooks";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonLoading,
   CommonEmptyState,
+  CommonErrorState,
   CommonStatusBadge,
   CommonButton,
   CommonConfirmDialog,
 } from "@/components/common";
-import { formatDate, formatTime } from "@/utils/dateUtils";
-import { isUpcoming } from "@/utils/dateUtils";
+import { formatDate, formatTime, isUpcoming } from "@/utils/dateUtils";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
-export default function EventDetailsPage({
-  isAdmin = false,
-}: {
-  isAdmin?: boolean;
-}) {
+export default function EventDetailsPage() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { selectedEvent, registrations, loading } = useAppSelector(
-    (s) => s.events,
-  );
-  const { user } = useAppSelector((s) => s.auth);
+  const { authUser: user } = useAuth();
+
+  const isAdmin = user?.role === "ADMIN";
+  const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
+  const homePath = isAdmin ? "/dashboard" : "/alumni/dashboard";
+
+  const {
+    selectedEvent,
+    registrations,
+    loading,
+    error,
+    fetchEventById,
+    fetchRegistrations,
+    registerForEvent,
+    cancelRegistration,
+    deleteEvent,
+  } = useEvents();
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchEventByIdAsync(id));
-      dispatch(fetchEventRegistrationsAsync(id));
-    }
-  }, [dispatch, id]);
+    if (!id) return;
+    void fetchEventById(id);
+    void fetchRegistrations(id);
+  }, [id, fetchEventById, fetchRegistrations]);
 
   useEffect(() => {
     if (!id) return;
@@ -80,6 +83,15 @@ export default function EventDetailsPage({
   ]);
 
   if (loading && !selectedEvent) return <CommonLoading />;
+  if (error && !selectedEvent)
+    return (
+      <CommonErrorState
+        message={error}
+        onRetry={() => {
+          if (id) void fetchEventById(id);
+        }}
+      />
+    );
   if (!selectedEvent) return <CommonEmptyState title="Event not found" />;
 
   const evt = selectedEvent;
@@ -90,18 +102,16 @@ export default function EventDetailsPage({
   const activeRegs = registrations.filter((r) => r.status === "REGISTERED");
   const seatsLeft = evt.capacity - activeRegs.length;
   const canRegister = isUpcoming(evt.date) && seatsLeft > 0 && !isRegistered;
-  const basePath = isAdmin ? "/events" : "/alumni/events";
 
   const handleRegister = async () => {
-    const res = await dispatch(
-      registerForEventAsync({ eventId: evt.id, alumniId: myAlumniId }),
-    );
-    if (res.meta.requestStatus === "fulfilled") {
+    if (!id) return;
+    try {
+      await registerForEvent(id, myAlumniId);
       dispatch(
         showToast({ message: "Registered successfully!", severity: "success" }),
       );
-      dispatch(fetchEventRegistrationsAsync(evt.id));
-    } else {
+      await fetchRegistrations(id);
+    } catch {
       dispatch(
         showToast({ message: "Registration failed", severity: "error" }),
       );
@@ -109,20 +119,22 @@ export default function EventDetailsPage({
   };
 
   const handleCancel = async () => {
-    const res = await dispatch(
-      cancelEventRegistrationAsync({ eventId: evt.id, alumniId: myAlumniId }),
-    );
-    if (res.meta.requestStatus === "fulfilled") {
+    if (!id) return;
+    try {
+      await cancelRegistration(id, myAlumniId);
       dispatch(
         showToast({ message: "Registration cancelled", severity: "info" }),
       );
-      dispatch(fetchEventRegistrationsAsync(evt.id));
+      await fetchRegistrations(id);
+    } catch {
+      dispatch(showToast({ message: "Unable to cancel", severity: "error" }));
     }
   };
 
   const handleDelete = async () => {
-    const res = await dispatch(deleteEventAsync(evt.id));
-    if (res.meta.requestStatus === "fulfilled") {
+    if (!id) return;
+    try {
+      await deleteEvent(id);
       dispatch(
         showToast({
           message: "Event deleted successfully",
@@ -130,6 +142,10 @@ export default function EventDetailsPage({
         }),
       );
       navigate(basePath);
+    } catch {
+      dispatch(
+        showToast({ message: "Unable to delete event", severity: "error" }),
+      );
     }
     setConfirmDelete(false);
   };
@@ -139,7 +155,7 @@ export default function EventDetailsPage({
       <CommonPageHeader
         title={evt.title}
         breadcrumbs={[
-          { label: "Home", path: isAdmin ? "/dashboard" : "/alumni/dashboard" },
+          { label: "Home", path: homePath },
           { label: "Events", path: basePath },
           { label: evt.eventId },
         ]}
@@ -327,12 +343,13 @@ export default function EventDetailsPage({
                   Event is at full capacity.
                 </Alert>
               ))}
+
             {isAdmin && (
               <>
                 <CommonButton
                   variant="outlined"
                   startIcon={<Pencil size={18} />}
-                  onClick={() => navigate(`/events/${evt.id}/edit`)}
+                  onClick={() => navigate(`/alumni/events/${evt.id}/edit`)}
                 >
                   Edit Event
                 </CommonButton>

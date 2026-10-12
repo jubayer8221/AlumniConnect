@@ -1,43 +1,88 @@
+import api from "@/services/api/apiClient";
 import type { NoticeService } from "@/services/interfaces/NoticeService";
+import type { ApiResponse, PagedResult } from "@/types/api";
 import type {
-  Notice,
   CreateNoticeRequest,
-  UpdateNoticeRequest,
+  Notice,
   NoticeQueryParams,
+  UpdateNoticeRequest,
 } from "@/types/notice";
-import type { PaginatedResponse, ApiResponse } from "@/types/common";
-import { apiClient } from "./apiClient";
 
 export const restNoticeService: NoticeService = {
-  async getAll(params?: NoticeQueryParams): Promise<PaginatedResponse<Notice>> {
-    const res = await apiClient.get("/notices", { params });
-    return res.data;
+  async getAll(params: NoticeQueryParams) {
+    const res = await api.get<PagedResult<Notice>>("/Notice/GetAllNotices", {
+      params: {
+        search: params.search,
+        category: params.filters?.category,
+        status: params.filters?.status,
+        pageNumber: params.pageNumber,
+        pageSize: params.pageSize,
+      },
+    });
+    return { success: true, message: "OK", data: res.data };
   },
-  async getById(id: string): Promise<ApiResponse<Notice>> {
-    const res = await apiClient.get(`/notices/${id}`);
-    return res.data;
+
+  async getById(id) {
+    const res = await api.get<Notice>(`/Notice/GetNoticeByID/${id}`);
+    return { success: true, message: "OK", data: res.data };
   },
-  async create(data: CreateNoticeRequest): Promise<ApiResponse<Notice>> {
-    const res = await apiClient.post("/notices", data);
-    return res.data;
+
+  async create(payload: CreateNoticeRequest) {
+    const res = await api.post<{
+      success: boolean;
+      id: string;
+      message: string;
+    }>("/Notice/CreateUpdateNotice", payload);
+    // backend returns { id } — return the id so the caller can refetch
+    return {
+      success: res.data.success,
+      message: res.data.message,
+      data: { ...payload, id: res.data.id } as Notice,
+    };
   },
-  async update(
-    id: string,
-    data: UpdateNoticeRequest,
-  ): Promise<ApiResponse<Notice>> {
-    const res = await apiClient.put(`/notices/${id}`, data);
-    return res.data;
+
+  async update(id, payload: UpdateNoticeRequest) {
+    const res = await api.post<{
+      success: boolean;
+      id: string;
+      message: string;
+    }>(`/Notice/CreateUpdateNotice?id=${encodeURIComponent(id)}`, payload);
+    return {
+      success: res.data.success,
+      message: res.data.message,
+      data: { ...payload, id } as Notice,
+    };
   },
-  async delete(id: string): Promise<ApiResponse<null>> {
-    const res = await apiClient.delete(`/notices/${id}`);
-    return res.data;
+
+  async remove(id) {
+    const res = await api.post<{ success: boolean; message: string }>(
+      "/Notice/DeleteNotice",
+      { id },
+    );
+    return { success: res.data.success, message: res.data.message, data: true };
   },
-  async publish(id: string): Promise<ApiResponse<Notice>> {
-    const res = await apiClient.patch(`/notices/${id}/publish`);
-    return res.data;
+
+  async publish(id) {
+    const res = await api.post<{ success: boolean; message: string }>(
+      "/Notice/SetNoticeStatus",
+      { id, status: "PUBLISHED" },
+    );
+    return {
+      success: res.data.success,
+      message: res.data.message,
+      data: true as unknown as Notice,
+    };
   },
-  async unpublish(id: string): Promise<ApiResponse<Notice>> {
-    const res = await apiClient.patch(`/notices/${id}/unpublish`);
-    return res.data;
+
+  async unpublish(id) {
+    const res = await api.post<{ success: boolean; message: string }>(
+      "/Notice/SetNoticeStatus",
+      { id, status: "DRAFT" },
+    );
+    return {
+      success: res.data.success,
+      message: res.data.message,
+      data: true as unknown as Notice,
+    };
   },
 };
