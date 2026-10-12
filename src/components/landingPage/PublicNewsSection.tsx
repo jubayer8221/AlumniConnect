@@ -5,74 +5,108 @@ import {
   Grid,
   Card,
   CardContent,
-  CardMedia,
   CardActionArea,
   Button,
   Chip,
   Stack,
+  Skeleton,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Newspaper } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNews } from "@/hooks/useNews";
+import NewsDetailsDialog from "../news/NewsDetailsDialog";
+// import NewsDetailsDialog from "./NewsDetailsDialog";
 
-interface NewsItem {
-  id: number | string;
+/* ---------- shared type ---------- */
+export interface NewsItem {
+  NewsID: string;
+  Title: string;
+  Summary: string;
+  Content: string;
+  CategoryID: string;
+  Tags: string[];
+  Image: string;
+  AuthorID: string;
+  Status: "Draft" | "Published" | "Unpublished";
+  IsFeatured: boolean;
+  IsBreakingNews: boolean;
+  PublishedAt: string | null;
+  ScheduledAt: string | null;
+  MetaDescription: string;
+  IsActive: boolean;
+  CreatedBy: string;
+  CreatedAt: string;
+  UpdatedBy: string;
+  UpdatedAt: string | null;
+}
+
+/* ---------- local render shape ---------- */
+interface NewsCardItem {
+  id: string;
   title: string;
   excerpt: string;
   date: string;
   category: string;
   image?: string;
-  href?: string;
 }
-
-// Replace with your real data (or wire to redux/react-query).
-const newsItems: NewsItem[] = [
-  {
-    id: 1,
-    title: "Annual Alumni Homecoming 2026 — Save the Date",
-    excerpt:
-      "Join hundreds of graduates for a weekend of celebrations, networking, and memories. Registration opens next month.",
-    date: "Mar 15, 2026",
-    category: "Event",
-    image: "/image/news/homecoming.jpg",
-  },
-  {
-    id: 2,
-    title: "New Scholarship Fund Supports 50 Students",
-    excerpt:
-      "The Alumni Association has launched a $250K scholarship initiative to support first-generation students.",
-    date: "Feb 28, 2026",
-    category: "Announcement",
-    image: "/image/news/scholarship.jpg",
-  },
-  {
-    id: 3,
-    title: "Distinguished Alumni Awards — Call for Nominations",
-    excerpt:
-      "Nominate a fellow alum whose career and service inspire our community. Submissions close April 30.",
-    date: "Feb 10, 2026",
-    category: "Awards",
-    image: "/image/news/awards.jpg",
-  },
-];
 
 const categoryColor: Record<
   string,
   "primary" | "secondary" | "success" | "warning"
 > = {
+  "0001": "primary",
+  "0002": "secondary",
+  "0003": "warning",
   Event: "primary",
   Announcement: "secondary",
   Awards: "warning",
 };
 
+const categoryLabel: Record<string, string> = {
+  "0001": "Event",
+  "0002": "Announcement",
+  "0003": "Awards",
+};
+
+const formatDate = (iso?: string | null) => {
+  if (!iso) return "Recently";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Recently";
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const mapToCard = (n: NewsItem): NewsCardItem => ({
+  id: n.NewsID,
+  title: n.Title,
+  excerpt: n.Summary ?? "",
+  date: formatDate(n.PublishedAt ?? n.CreatedAt),
+  category: categoryLabel[n.CategoryID] ?? n.CategoryID ?? "News",
+  image: n.Image || undefined,
+});
+
 export default function NewsSection() {
+  const { newsList, loading, fetchAllNews } = useNews();
+  const [selected, setSelected] = useState<NewsItem | null>(null);
+
+  useEffect(() => {
+    void fetchAllNews({ status: "Published", pageNumber: 1, pageSize: 3 });
+  }, [fetchAllNews]);
+
+  const published = (newsList ?? []).filter(
+    (n) => n.Status === "Published" && n.IsActive,
+  );
+  const newsItems: NewsCardItem[] = published.slice(0, 3).map(mapToCard);
+
   return (
     <Box
       component="section"
       id="news"
-      sx={{
-        py: { xs: 6, md: 10 },
-        bgcolor: "background.default",
-      }}
+      sx={{ py: { xs: 6, md: 10 }, bgcolor: "background.default" }}
     >
       <Container maxWidth="lg">
         {/* Header */}
@@ -108,13 +142,13 @@ export default function NewsSection() {
                 color: "text.primary",
               }}
             >
-              News &amp; Announcements
+              News
             </Typography>
           </Box>
 
           <Button
             component={Link}
-            to="/landing/news"
+            to="/news"
             endIcon={<ArrowRight size={16} />}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
@@ -122,8 +156,23 @@ export default function NewsSection() {
           </Button>
         </Box>
 
-        {/* Cards */}
-        {newsItems.length === 0 ? (
+        {/* Loading */}
+        {loading && newsItems.length === 0 && (
+          <Grid container spacing={{ xs: 3, md: 4 }}>
+            {[0, 1, 2].map((i) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
+                <Skeleton
+                  variant="rounded"
+                  height={340}
+                  sx={{ borderRadius: 3 }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+
+        {/* Empty */}
+        {!loading && newsItems.length === 0 && (
           <Box
             sx={{
               py: 8,
@@ -137,7 +186,10 @@ export default function NewsSection() {
             <Newspaper size={32} style={{ marginBottom: 8 }} />
             <Typography>No news yet. Check back soon.</Typography>
           </Box>
-        ) : (
+        )}
+
+        {/* Cards */}
+        {newsItems.length > 0 && (
           <Grid container spacing={{ xs: 3, md: 4 }}>
             {newsItems.map((item) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
@@ -162,8 +214,10 @@ export default function NewsSection() {
                   }}
                 >
                   <CardActionArea
-                    component={Link}
-                    to={item.href ?? `/landing/news/${item.id}`}
+                    onClick={() => {
+                      const full = published.find((n) => n.NewsID === item.id);
+                      if (full) setSelected(full);
+                    }}
                     sx={{
                       flex: 1,
                       display: "flex",
@@ -175,7 +229,7 @@ export default function NewsSection() {
                     <Box
                       sx={{
                         position: "relative",
-                        pt: "56.25%", // 16:9
+                        pt: "56.25%",
                         bgcolor: "action.hover",
                         overflow: "hidden",
                       }}
@@ -186,6 +240,10 @@ export default function NewsSection() {
                           component="img"
                           src={item.image}
                           alt={item.title}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src =
+                              "/image/favicon.png";
+                          }}
                           sx={{
                             position: "absolute",
                             inset: 0,
@@ -230,7 +288,6 @@ export default function NewsSection() {
                       <Stack
                         direction="row"
                         spacing={0.75}
-                        // alignItems="center"
                         sx={{
                           color: "text.secondary",
                           mb: 1,
@@ -284,6 +341,12 @@ export default function NewsSection() {
           </Grid>
         )}
       </Container>
+
+      <NewsDetailsDialog
+        open={!!selected}
+        news={selected}
+        onClose={() => setSelected(null)}
+      />
     </Box>
   );
 }

@@ -25,11 +25,12 @@ type NavItem =
 
 const NAV: NavItem[] = [
   { label: "Home", type: "hash", href: "/" },
-  { label: "About", type: "hash", href: "#about" },
-  { label: "Programs", type: "hash", href: "#programs" },
+  { label: "About", type: "route", to: "/about" },
+  // { label: "Programs", type: "hash", href: "#programs" },
   { label: "Events", type: "route", to: "/events" },
-  { label: "Activities", type: "hash", href: "#activities" },
-  { label: "Gallery", type: "hash", href: "#gallery" },
+  { label: "News", type: "route", to: "/news" },
+  // { label: "Activities", type: "hash", href: "#activities" },
+  // { label: "Gallery", type: "hash", href: "#gallery" },
 ];
 
 export default function LandingHeader() {
@@ -42,8 +43,6 @@ export default function LandingHeader() {
   // Are we on the landing page itself?
   const isOnLanding = location.pathname === "/";
 
-  // Scroll handler only matters on the landing page; on other routes the
-  // header is always solid (see `solid` below).
   useEffect(() => {
     if (!isOnLanding) return;
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -61,12 +60,6 @@ export default function LandingHeader() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  /**
-   * Handle a nav item click.
-   *  - On landing page: hash items scroll smoothly.
-   *  - Off landing page: hash items navigate to "/#section" so the browser
-   *    goes home first, then the effect below scrolls to the target.
-   */
   const handleNav = (item: NavItem) => {
     setMobileOpen(false);
     if (item.type === "route") {
@@ -76,16 +69,14 @@ export default function LandingHeader() {
     if (isOnLanding) {
       scrollTo(item.href);
     } else {
-      navigate(`/${item.href}`); // e.g. "/#programs"
+      navigate(`/${item.href}`);
     }
   };
 
-  // If we arrived at "/#section", scroll to it once the landing page mounts.
   useEffect(() => {
     if (!isOnLanding) return;
     if (location.hash) {
-      const id = location.hash; // "#programs"
-      // Wait a tick so sections are in the DOM
+      const id = location.hash;
       const t = setTimeout(() => {
         const el = document.querySelector(id);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });

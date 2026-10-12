@@ -6,6 +6,8 @@ import dashboardReducer from "@/store/Slice/dashboardSlice";
 import uiReducer from "@/store/Slice/uiSlice";
 import authReducer from "./Slice/authSlice";
 import alumniReducer from "@/store/Slice/alumniSlice";
+import newsReducer from "@/store/Slice/newsSlice";
+import landingReducer from "@/store/Slice/landingSlice";
 
 export const store = configureStore({
   reducer: {
@@ -15,6 +17,8 @@ export const store = configureStore({
     notices: noticeReducer,
     dashboard: dashboardReducer,
     ui: uiReducer,
+    news: newsReducer,
+    landing: landingReducer,
   },
 });
 

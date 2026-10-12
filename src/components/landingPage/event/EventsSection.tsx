@@ -86,13 +86,13 @@ export default function EventsSection() {
                 mb: 1,
               }}
             >
-              Mark Your Calendar
+              Events
             </Typography>
-            <Typography
+            {/* <Typography
               sx={{ color: "text.secondary", maxWidth: 520, lineHeight: 1.7 }}
             >
               Stay connected with everything happening in the alumni community.
-            </Typography>
+            </Typography> */}
           </Box>
           <Button
             endIcon={<ArrowRight size={18} />}
@@ -101,6 +101,7 @@ export default function EventsSection() {
               textTransform: "none",
               fontWeight: 600,
               color: "primary.main",
+              pb: 3,
             }}
           >
             View All Events

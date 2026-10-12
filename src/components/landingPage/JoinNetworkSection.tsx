@@ -86,7 +86,7 @@ export default function JoinNetworkSection() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                1,200+ alumni
+                320+ alumni
               </Box>{" "}
               making a difference
             </Typography>

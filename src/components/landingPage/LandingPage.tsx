@@ -5,7 +5,7 @@ import FeaturedSlider from "./FeaturedSlider";
 // import AboutUsSection from "./AboutUsSection";
 import ProgramsSection from "./ProgramsSection";
 import EventsSection from "./event/EventsSection";
-import NewsSection from "./NewsSection";
+import NewsSection from "./PublicNewsSection";
 import ActivitiesSection from "./ActivitiesSection";
 import MomentsGallery from "./MomentsGallery";
 import JoinNetworkSection from "./JoinNetworkSection";

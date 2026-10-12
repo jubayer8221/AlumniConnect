@@ -7,13 +7,8 @@ import { store } from "@/store/store";
 import { createAppTheme } from "@/store/theme";
 import AppLayout from "@/components/layout/AppLayout";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
-import {
-  ToastContainer,
-  CommonLoading,
-  NotFoundPage,
-} from "@/components/common";
+import { ToastContainer, NotFoundPage } from "@/components/common";
 
-// import LandingPage from "@/components/landing/LandingPage";
 import LoginPage from "@/components/login/LoginPage";
 import UnauthorizedPage from "@/components/common/UnauthorizedPage";
 import AdminDashboardPage from "@/components/dashboard/AdminDashboardPage";
@@ -35,10 +30,16 @@ import ReportsPage from "@/components/report/ReportsPage";
 import SettingsPage from "@/components/settings/SettingsPage";
 import { useAppDispatch, useAppSelector } from "./hooks/useAppDispatch";
 import LandingPage from "./components/landingPage/LandingPage";
-// import PublicEventDetailsPage from "./components/landingPage/event/PublicEventDetailsPage";
 import PublicEventsListPage from "./components/landingPage/event/PublicEventsListPage";
 import PublicEventDetailsPage from "./components/landingPage/event/PublicEventDetailsPage";
-// import { useAppDispatch, useAppSelector } from "@/hooks";
+import AboutPage from "./components/landingPage/about/AboutPage";
+import PublicNewsListPage from "./components/landingPage/PublicNewsListPage";
+import NewsListPage from "./components/news/NewsListPage";
+import NewsFormPage from "./components/news/NewsFormPage";
+import LandingContentPage from "./components/LandingContent/LandingContentPage";
+import HeroSlideFormPage from "./components/LandingContent/HeroSlideFormPage";
+import GalleryPhotoFormPage from "./components/LandingContent/GalleryPhotoFormPage";
+import PublicGalleryPage from "./components/landingPage/PublicGalleryPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,15 +49,13 @@ const queryClient = new QueryClient({
 });
 
 function AppRoutes() {
-  const dispatch = useAppDispatch();
   const token = useAppSelector((s) => s.auth.token);
   const user = useAppSelector((s) => s.auth.authUser);
 
   const isAuthenticated = Boolean(token && user);
   const role = user?.role ?? null;
 
-  // Where an authenticated user should land
-  const homePath = role === "ADMIN" ? "/dashboard" : "/alumni/profile";
+  const homePath = role === "ADMIN" ? "/dashboard" : "/alumni/dashboard";
 
   useEffect(() => {
     if (!isAuthenticated) queryClient.clear();
@@ -64,10 +63,15 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* ---------- Public ---------- */}
       <Route path="/" element={<LandingPage />} />
-      {/* <Route path="/landing" element={<LandingPage />} /> */}
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/events" element={<PublicEventsListPage />} />
       <Route path="/events/:id" element={<PublicEventDetailsPage />} />
+      <Route path="/news" element={<PublicNewsListPage />} />
+      <Route path="/gallery" element={<PublicGalleryPage />} />
+
+      {/* <Route path="/news/:id" element={<PublicEventDetailsPage />} /> */}
 
       <Route
         path="/login"
@@ -77,7 +81,7 @@ function AppRoutes() {
       />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-      {/* Shared alumni routes */}
+      {/* ---------- Alumni + Admin (shared app shell) ---------- */}
       <Route
         element={
           <ProtectedRoute roles={["ADMIN", "ALUMNI"]}>
@@ -85,6 +89,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
+        {/* Alumni home / profile */}
         <Route path="/alumni/dashboard" element={<AlumniDashboardPage />} />
         <Route path="/alumni/profile" element={<AlumniDetailsPage />} />
         <Route path="/alumni/profile-setup" element={<ProfileSetupPage />} />
@@ -93,10 +98,6 @@ function AppRoutes() {
           element={<SettingsPrivacyPage />}
         />
         <Route path="/alumni/directory" element={<AlumniDirectoryPage />} />
-        <Route path="/alumni/events" element={<EventListPage />} />
-        <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
-        <Route path="/alumni/notices" element={<NoticeListPage />} />
-        <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
         <Route path="/alumni/account" element={<AlumniAccountPage />} />
         <Route path="/alumni/new" element={<AlumniFormPage />} />
         <Route
@@ -105,9 +106,35 @@ function AppRoutes() {
         />
         <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
         <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
+        <Route path="/alumni/events" element={<EventListPage />} />
+        <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
+        <Route path="/alumni/news" element={<NewsListPage />} />
+        <Route path="/alumni/news" element={<NewsListPage />} />
+        <Route path="/alumni/news/create" element={<NewsFormPage />} />
+        <Route path="/alumni/news/edit/:id" element={<NewsFormPage />} />
+        <Route
+          path="/alumni/landing/gallery/new"
+          element={<GalleryPhotoFormPage />}
+        />
+        <Route
+          path="/alumni/landing/gallery/:id"
+          element={<GalleryPhotoFormPage />}
+        />
+
+        <Route path="/alumni/landing" element={<LandingContentPage />} />
+        <Route
+          path="/alumni/landing/slides/new"
+          element={<HeroSlideFormPage />}
+        />
+        <Route
+          path="/alumni/landing/slides/:id"
+          element={<HeroSlideFormPage />}
+        />
+        <Route path="/alumni/notices" element={<NoticeListPage />} />
+        <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
       </Route>
 
-      {/* Admin routes */}
+      {/* ---------- Admin only ---------- */}
       <Route
         element={
           <ProtectedRoute roles={["ADMIN"]}>
@@ -117,22 +144,26 @@ function AppRoutes() {
       >
         <Route path="/dashboard" element={<AdminDashboardPage />} />
         <Route path="/alumni" element={<AlumniListPage />} />
-        <Route path="/alumni/events" element={<EventListPage isAdmin />} />
+
+        {/* Event create / edit — admin only */}
         <Route path="/alumni/events/new" element={<EventFormPage />} />
         <Route
           path="/alumni/events/create"
           element={<Navigate to="/alumni/events/new" replace />}
         />
-        <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
         <Route path="/alumni/events/:id/edit" element={<EventFormPage />} />
+
+        {/* Notices — admin */}
         <Route path="/notices" element={<NoticeListPage isAdmin />} />
         <Route path="/notices/create" element={<NoticeFormPage />} />
         <Route path="/notices/:id" element={<NoticeDetailsPage isAdmin />} />
         <Route path="/notices/:id/edit" element={<NoticeFormPage />} />
+
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
 
+      {/* ---------- Redirects ---------- */}
       <Route
         path="/profile-setup"
         element={<Navigate to="/alumni/profile-setup" replace />}
@@ -144,17 +175,7 @@ function AppRoutes() {
 
       <Route
         path="*"
-        element={
-          <NotFoundPage
-            homePath={
-              isAuthenticated
-                ? role === "ADMIN"
-                  ? "/dashboard"
-                  : "/alumni/dashboard"
-                : "/"
-            }
-          />
-        }
+        element={<NotFoundPage homePath={isAuthenticated ? homePath : "/"} />}
       />
     </Routes>
   );

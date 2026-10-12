@@ -1,61 +1,90 @@
-import { useState } from "react";
-import { Box, Container, Dialog, IconButton, Typography } from "@mui/material";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Container,
+  Dialog,
+  IconButton,
+  Skeleton,
+  Typography,
+} from "@mui/material";
+import { X, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useLanding } from "@/hooks/useLanding";
+import type { GalleryPhoto } from "@/store/Slice/landingSlice";
 
-interface Photo {
-  id: string;
-  url: string;
-  caption: string;
-  span?: 1 | 2; // 2 = larger tile
-}
-
-const PHOTOS: Photo[] = [
-  {
-    id: "1",
-    url: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80",
-    caption: "Annual Cultural Night 2025",
-    span: 2,
-  },
-  {
-    id: "2",
-    url: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80",
-    caption: "Graduation Day",
-  },
-  {
-    id: "3",
-    url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80",
-    caption: "Campus Memories",
-  },
-  {
-    id: "4",
-    url: "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=800&q=80",
-    caption: "Reunion 2024",
-  },
-  {
-    id: "5",
-    url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
-    caption: "Sports Meet",
-  },
-  {
-    id: "6",
-    url: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80",
-    caption: "Workshop Session",
-    span: 2,
-  },
-  {
-    id: "7",
-    url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=800&q=80",
-    caption: "Networking Evening",
-  },
-  {
-    id: "8",
-    url: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80",
-    caption: "Community Outreach",
-  },
-];
+const PREVIEW_COUNT = 8;
 
 export default function MomentsGallery() {
-  const [active, setActive] = useState<Photo | null>(null);
+  const { galleryPhotos, loading, fetchLandingContent } = useLanding();
+  const [active, setActive] = useState<GalleryPhoto | null>(null);
+
+  useEffect(() => {
+    void fetchLandingContent();
+  }, [fetchLandingContent]);
+
+  const allPhotos = galleryPhotos.filter((p) => p.isActive);
+  const previewPhotos = allPhotos.slice(0, PREVIEW_COUNT);
+  const hasMore = allPhotos.length > PREVIEW_COUNT;
+
+  /* ---------- loading state ---------- */
+  if (loading && allPhotos.length === 0) {
+    return (
+      <Box
+        id="gallery"
+        sx={{
+          py: { xs: 8, md: 12 },
+          bgcolor: "#0f172a",
+          color: "#ffffff",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 2 }}>
+          <Box sx={{ textAlign: "center", mb: 6 }}>
+            <Skeleton
+              variant="text"
+              width={140}
+              height={28}
+              sx={{ bgcolor: "rgba(255,255,255,0.08)", mx: "auto", mb: 1.5 }}
+            />
+            <Skeleton
+              variant="text"
+              width={320}
+              height={56}
+              sx={{ bgcolor: "rgba(255,255,255,0.08)", mx: "auto", mb: 1.5 }}
+            />
+          </Box>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "repeat(2, 1fr)",
+                sm: "repeat(3, 1fr)",
+                md: "repeat(4, 1fr)",
+              },
+              gap: { xs: 1.5, md: 2 },
+              gridAutoRows: { xs: 140, md: 180 },
+            }}
+          >
+            {[...Array(PREVIEW_COUNT)].map((_, i) => (
+              <Skeleton
+                key={i}
+                variant="rounded"
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.06)",
+                  borderRadius: 2.5,
+                }}
+              />
+            ))}
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  /* ---------- empty state ---------- */
+  if (allPhotos.length === 0) return null;
 
   return (
     <Box
@@ -144,9 +173,9 @@ export default function MomentsGallery() {
             gridAutoRows: { xs: 140, md: 180 },
           }}
         >
-          {PHOTOS.map((photo) => (
+          {previewPhotos.map((photo) => (
             <Box
-              key={photo.id}
+              key={photo.photoID}
               onClick={() => setActive(photo)}
               sx={{
                 gridColumn: { md: `span ${photo.span ?? 1}` },
@@ -155,7 +184,7 @@ export default function MomentsGallery() {
                 borderRadius: 2.5,
                 overflow: "hidden",
                 cursor: "pointer",
-                backgroundImage: `url('${photo.url}')`,
+                backgroundImage: `url('${photo.imageURL}')`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 transition: "all 0.4s ease",
@@ -175,24 +204,60 @@ export default function MomentsGallery() {
                 },
               }}
             >
-              <Typography
-                sx={{
-                  position: "absolute",
-                  bottom: 12,
-                  left: 12,
-                  right: 12,
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  color: "#fff",
-                  zIndex: 2,
-                  textShadow: "0 1px 4px rgba(0,0,0,0.6)",
-                }}
-              >
-                {photo.caption}
-              </Typography>
+              {photo.caption && (
+                <Typography
+                  sx={{
+                    position: "absolute",
+                    bottom: 12,
+                    left: 12,
+                    right: 12,
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "#fff",
+                    zIndex: 2,
+                    textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                  }}
+                >
+                  {photo.caption}
+                </Typography>
+              )}
             </Box>
           ))}
         </Box>
+
+        {/* View all button */}
+        {hasMore && (
+          <Box
+            sx={{
+              textAlign: "center",
+              mt: 5,
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            <Button
+              component={Link}
+              to="/gallery"
+              variant="outlined"
+              endIcon={<ArrowRight size={16} />}
+              sx={{
+                color: "#fff",
+                borderColor: "rgba(255,255,255,0.35)",
+                textTransform: "none",
+                fontWeight: 600,
+                px: 3.5,
+                py: 1.25,
+                borderRadius: 2,
+                "&:hover": {
+                  borderColor: "rgba(255,255,255,0.7)",
+                  bgcolor: "rgba(255,255,255,0.06)",
+                },
+              }}
+            >
+              View all {allPhotos.length} moments
+            </Button>
+          </Box>
+        )}
       </Container>
 
       {/* Lightbox */}
@@ -228,24 +293,26 @@ export default function MomentsGallery() {
             </IconButton>
             <Box
               component="img"
-              src={active.url}
-              alt={active.caption}
+              src={active.imageURL}
+              alt={active.caption ?? ""}
               sx={{
                 width: "100%",
                 borderRadius: 2,
                 display: "block",
               }}
             />
-            <Typography
-              sx={{
-                color: "#fff",
-                textAlign: "center",
-                mt: 2,
-                fontSize: "0.9rem",
-              }}
-            >
-              {active.caption}
-            </Typography>
+            {active.caption && (
+              <Typography
+                sx={{
+                  color: "#fff",
+                  textAlign: "center",
+                  mt: 2,
+                  fontSize: "0.9rem",
+                }}
+              >
+                {active.caption}
+              </Typography>
+            )}
           </Box>
         )}
       </Dialog>
