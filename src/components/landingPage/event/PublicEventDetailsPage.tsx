@@ -31,7 +31,7 @@ export default function PublicEventDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const back = () => navigate("/events");
+  const back = () => navigate(-1);
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>

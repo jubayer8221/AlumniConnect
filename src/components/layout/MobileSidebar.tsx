@@ -76,7 +76,7 @@ const adminNav: NavItem[] = [
     icon: <Users size={16} />,
   },
   {
-    label: getRouteLabel("/events"),
+    label: getRouteLabel("/alumni/events"),
     path: "/alumni/events",
     icon: <CalendarDays size={22} />,
   },

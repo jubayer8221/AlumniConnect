@@ -21,6 +21,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEvents } from "@/hooks/useEvents";
+import { useAuth } from "@/hooks/useAuth";
 import {
   CommonPageHeader,
   CommonSearchField,
@@ -39,12 +40,13 @@ const TAB_ALL = 0;
 const TAB_UPCOMING = 1;
 const TAB_PAST = 2;
 
-export default function EventListPage({
-  isAdmin = true,
-}: {
-  isAdmin?: boolean;
-}) {
+export default function EventListPage() {
   const navigate = useNavigate();
+  const { authUser: user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const basePath = isAdmin ? "/events" : "/alumni/events";
+  const homePath = isAdmin ? "/dashboard" : "/alumni/dashboard";
+
   const {
     items,
     loading,
@@ -94,7 +96,6 @@ export default function EventListPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, tab, fromDate, toDate, pageNumber, pageSize]);
 
-  // Client-side filter as fallback (status is derived in the hook)
   const filtered = items.filter((e) => {
     if (tab === TAB_UPCOMING) return e.status === "UPCOMING";
     if (tab === TAB_PAST)
@@ -102,22 +103,17 @@ export default function EventListPage({
     return true;
   });
 
-  const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
-
   return (
     <Box>
       <CommonPageHeader
         title="Events"
         subtitle={`${totalCount} events total`}
-        breadcrumbs={[
-          { label: "Home", path: isAdmin ? "/dashboard" : "/alumni/dashboard" },
-          { label: "Events" },
-        ]}
+        breadcrumbs={[{ label: "Home", path: homePath }, { label: "Events" }]}
         actions={
           isAdmin ? (
             <CommonButton
               startIcon={<Plus size={18} />}
-              onClick={() => navigate("/alumni/events/new")}
+              onClick={() => navigate(`${basePath}/new`)}
             >
               Create Event
             </CommonButton>
@@ -184,11 +180,14 @@ export default function EventListPage({
           icon={<CalendarDays size={48} className="text-gray-300" />}
         />
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
           {filtered.map((evt: EventItem) => (
             <Grid key={evt.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Card
                 sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
                   borderRadius: 3,
                   border: "1px solid",
                   borderColor: "divider",
@@ -197,18 +196,39 @@ export default function EventListPage({
                   "&:hover": { boxShadow: 4, transform: "translateY(-2px)" },
                 }}
               >
-                {evt.image && (
+                {/* Fixed image area — always same height */}
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: 180,
+                    flexShrink: 0,
+                    bgcolor: "action.hover",
+                  }}
+                >
                   <Box
                     component="img"
-                    src={evt.image}
+                    src={evt.image || "/image/favicon.png"}
                     alt={evt.title}
                     onError={(e) => {
                       e.currentTarget.src = "/image/favicon.png";
                     }}
-                    sx={{ width: "100%", height: 180, objectFit: "cover" }}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
                   />
-                )}
-                <CardContent sx={{ p: 3 }}>
+                </Box>
+
+                <CardContent
+                  sx={{
+                    p: 3,
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
                   <Box
                     sx={{ display: "flex", gap: 0.5, mb: 1, flexWrap: "wrap" }}
                   >
@@ -220,9 +240,22 @@ export default function EventListPage({
                     />
                     <CommonStatusBadge status={evt.status} />
                   </Box>
-                  <Typography variant="h6" sx={{ mb: 1, fontWeight: 700 }}>
+
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 1,
+                      fontWeight: 700,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      minHeight: "3rem", // ~2 lines
+                    }}
+                  >
                     {evt.title}
                   </Typography>
+
                   <Typography
                     variant="body2"
                     sx={{
@@ -232,16 +265,19 @@ export default function EventListPage({
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
                       color: "text.secondary",
+                      minHeight: "2.5rem", // ~2 lines
                     }}
                   >
                     {evt.description}
                   </Typography>
+
                   <Box
                     sx={{
                       display: "flex",
                       flexDirection: "column",
                       gap: 0.5,
                       mb: 2,
+                      flex: 1,
                     }}
                   >
                     <Typography
@@ -274,6 +310,9 @@ export default function EventListPage({
                         alignItems: "center",
                         gap: 0.5,
                         color: "text.secondary",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       <MapPin size={14} /> {evt.venue}, {evt.location}
@@ -290,11 +329,13 @@ export default function EventListPage({
                       <Users size={14} /> Capacity: {evt.capacity}
                     </Typography>
                   </Box>
+
                   <Button
                     variant="outlined"
                     fullWidth
                     onClick={() => navigate(`${basePath}/${evt.id}`)}
                     endIcon={<ArrowRight size={16} />}
+                    sx={{ mt: "auto" }}
                   >
                     View Details
                   </Button>
@@ -304,6 +345,7 @@ export default function EventListPage({
           ))}
         </Grid>
       )}
+
       {totalCount > 0 && (
         <CommonPagination
           count={Math.max(1, Math.ceil(totalCount / pageSize))}

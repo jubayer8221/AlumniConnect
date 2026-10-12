@@ -123,10 +123,7 @@ function AppRoutes() {
           path="/alumni/events/create"
           element={<Navigate to="/alumni/events/new" replace />}
         />
-        <Route
-          path="/alumni/events/:id"
-          element={<EventDetailsPage isAdmin />}
-        />
+        <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
         <Route path="/alumni/events/:id/edit" element={<EventFormPage />} />
         <Route path="/notices" element={<NoticeListPage isAdmin />} />
         <Route path="/notices/create" element={<NoticeFormPage />} />

@@ -37,16 +37,16 @@ import {
 import { formatDate, formatTime, isUpcoming } from "@/utils/dateUtils";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
-export default function EventDetailsPage({
-  isAdmin = false,
-}: {
-  isAdmin?: boolean;
-}) {
+export default function EventDetailsPage() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const toast = useAppDispatch();
+  const dispatch = useAppDispatch();
   const { authUser: user } = useAuth();
+
+  const isAdmin = user?.role === "ADMIN";
+  const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
+  const homePath = isAdmin ? "/dashboard" : "/alumni/dashboard";
 
   const {
     selectedEvent,
@@ -102,18 +102,19 @@ export default function EventDetailsPage({
   const activeRegs = registrations.filter((r) => r.status === "REGISTERED");
   const seatsLeft = evt.capacity - activeRegs.length;
   const canRegister = isUpcoming(evt.date) && seatsLeft > 0 && !isRegistered;
-  const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
 
   const handleRegister = async () => {
     if (!id) return;
     try {
       await registerForEvent(id, myAlumniId);
-      toast(
+      dispatch(
         showToast({ message: "Registered successfully!", severity: "success" }),
       );
       await fetchRegistrations(id);
     } catch {
-      toast(showToast({ message: "Registration failed", severity: "error" }));
+      dispatch(
+        showToast({ message: "Registration failed", severity: "error" }),
+      );
     }
   };
 
@@ -121,10 +122,12 @@ export default function EventDetailsPage({
     if (!id) return;
     try {
       await cancelRegistration(id, myAlumniId);
-      toast(showToast({ message: "Registration cancelled", severity: "info" }));
+      dispatch(
+        showToast({ message: "Registration cancelled", severity: "info" }),
+      );
       await fetchRegistrations(id);
     } catch {
-      toast(showToast({ message: "Unable to cancel", severity: "error" }));
+      dispatch(showToast({ message: "Unable to cancel", severity: "error" }));
     }
   };
 
@@ -132,7 +135,7 @@ export default function EventDetailsPage({
     if (!id) return;
     try {
       await deleteEvent(id);
-      toast(
+      dispatch(
         showToast({
           message: "Event deleted successfully",
           severity: "success",
@@ -140,7 +143,7 @@ export default function EventDetailsPage({
       );
       navigate(basePath);
     } catch {
-      toast(
+      dispatch(
         showToast({ message: "Unable to delete event", severity: "error" }),
       );
     }
@@ -152,7 +155,7 @@ export default function EventDetailsPage({
       <CommonPageHeader
         title={evt.title}
         breadcrumbs={[
-          { label: "Home", path: isAdmin ? "/dashboard" : "/alumni/dashboard" },
+          { label: "Home", path: homePath },
           { label: "Events", path: basePath },
           { label: evt.eventId },
         ]}
@@ -340,6 +343,7 @@ export default function EventDetailsPage({
                   Event is at full capacity.
                 </Alert>
               ))}
+
             {isAdmin && (
               <>
                 <CommonButton

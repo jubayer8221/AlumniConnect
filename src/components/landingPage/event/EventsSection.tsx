@@ -18,7 +18,6 @@ import { formatTime } from "@/utils/dateUtils";
 import type { EventItem } from "@/types/event";
 import EventDetailsDialog from "./EventDetailsDialog";
 
-/* ---------- per-type color palette ---------- */
 const typeColors: Record<string, string> = {
   Reunion: "#0f766e",
   Workshop: "#c2410c",
@@ -47,18 +46,15 @@ export default function EventsSection() {
   const { items, loading, error, fetchEvents } = useEvents();
   const [selected, setSelected] = useState<EventItem | null>(null);
 
-  // Fetch the first 3 upcoming events once on mount
   useEffect(() => {
-    void fetchEvents({ pageNumber: 1, pageSize: 3 });
+    void fetchEvents({ pageNumber: 1, pageSize: 3, upcomingOnly: true });
   }, [fetchEvents]);
 
-  // Guard against extra items (belt-and-braces — API already limits to 3)
   const events = (items ?? []).slice(0, 3);
 
   return (
     <Box id="events" sx={{ py: { xs: 8, md: 12 }, bgcolor: "#f6faf9" }}>
       <Container maxWidth="lg">
-        {/* ---------- Header ---------- */}
         <Box
           sx={{
             display: "flex",
@@ -111,38 +107,20 @@ export default function EventsSection() {
           </Button>
         </Box>
 
-        {/* ---------- Loading skeletons ---------- */}
         {loading && events.length === 0 && (
-          <Grid container spacing={3} sx={{ p: 1 }}>
+          <Grid container spacing={3}>
             {[0, 1, 2].map((i) => (
               <Grid key={i} size={{ xs: 12, md: 4 }}>
-                <Card
-                  sx={{
-                    borderRadius: 3,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    boxShadow: "none",
-                  }}
-                >
-                  <Box sx={{ display: "flex", p: 3, gap: 2.5 }}>
-                    <Skeleton variant="rounded" width={72} height={72} />
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Skeleton width="40%" height={20} />
-                      <Skeleton width="90%" height={24} sx={{ mt: 1 }} />
-                    </Box>
-                  </Box>
-                  <CardContent sx={{ pt: 0, px: 3, pb: 3 }}>
-                    <Skeleton width="60%" height={16} />
-                    <Skeleton width="70%" height={16} sx={{ mt: 0.5 }} />
-                    <Skeleton variant="rounded" height={40} sx={{ mt: 2.5 }} />
-                  </CardContent>
-                </Card>
+                <Skeleton
+                  variant="rounded"
+                  height={360}
+                  sx={{ borderRadius: 3 }}
+                />
               </Grid>
             ))}
           </Grid>
         )}
 
-        {/* ---------- Empty / error ---------- */}
         {!loading && (error || events.length === 0) && (
           <Box
             sx={{
@@ -164,9 +142,8 @@ export default function EventsSection() {
           </Box>
         )}
 
-        {/* ---------- Cards ---------- */}
         {events.length > 0 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
             {events.map((event) => {
               const color = getColor(event.eventType);
               const { day, month } = getDayMonth(event.date);
@@ -176,11 +153,12 @@ export default function EventsSection() {
                   <Card
                     sx={{
                       height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
                       borderRadius: 3,
                       border: "1px solid",
                       borderColor: "divider",
                       boxShadow: "none",
-                      bgcolor: "background.paper",
                       overflow: "hidden",
                       transition: "all 0.25s ease",
                       "&:hover": {
@@ -192,19 +170,42 @@ export default function EventsSection() {
                     <CardActionArea
                       onClick={() => setSelected(event)}
                       sx={{
+                        height: "100%",
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "stretch",
                       }}
                     >
-                      <Box sx={{ display: "flex", p: 3, gap: 2.5 }}>
-                        {/* Date badge */}
+                      {/* Image + date badge overlay */}
+                      <Box
+                        sx={{
+                          position: "relative",
+                          height: 180,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={event.image || "/image/favicon.png"}
+                          alt={event.title}
+                          onError={(e) => {
+                            e.currentTarget.src = "/image/favicon.png";
+                          }}
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
                         <Box
                           sx={{
-                            flexShrink: 0,
-                            width: 72,
-                            height: 72,
-                            borderRadius: 2.5,
+                            position: "absolute",
+                            left: 16,
+                            bottom: -20,
+                            width: 64,
+                            height: 64,
+                            borderRadius: 2,
                             background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
                             color: "#fff",
                             display: "flex",
@@ -212,11 +213,12 @@ export default function EventsSection() {
                             alignItems: "center",
                             justifyContent: "center",
                             boxShadow: `0 8px 20px ${color}40`,
+                            border: "3px solid #fff",
                           }}
                         >
                           <Typography
                             sx={{
-                              fontSize: "1.5rem",
+                              fontSize: "1.25rem",
                               fontWeight: 800,
                               lineHeight: 1,
                             }}
@@ -225,57 +227,63 @@ export default function EventsSection() {
                           </Typography>
                           <Typography
                             sx={{
-                              fontSize: "0.7rem",
+                              fontSize: "0.65rem",
                               fontWeight: 700,
                               letterSpacing: "0.05em",
-                              mt: 0.25,
                             }}
                           >
                             {month}
                           </Typography>
                         </Box>
-
-                        {/* Title + tag */}
-                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                          {event.eventType && event.eventType !== "Other" && (
-                            <Chip
-                              label={event.eventType}
-                              size="small"
-                              sx={{
-                                bgcolor: color + "15",
-                                color: color,
-                                fontWeight: 600,
-                                fontSize: "0.7rem",
-                                mb: 1,
-                              }}
-                            />
-                          )}
-                          <Typography
-                            sx={{
-                              fontSize: "1rem",
-                              fontWeight: 700,
-                              mb: 1.5,
-                              lineHeight: 1.35,
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {event.title}
-                          </Typography>
-                        </Box>
                       </Box>
 
-                      <CardContent sx={{ pt: 0, px: 3, pb: 3, width: "100%" }}>
+                      <CardContent
+                        sx={{
+                          pt: 4,
+                          px: 3,
+                          pb: 3,
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        {event.eventType && event.eventType !== "Other" && (
+                          <Chip
+                            label={event.eventType}
+                            size="small"
+                            sx={{
+                              alignSelf: "flex-start",
+                              bgcolor: color + "15",
+                              color,
+                              fontWeight: 600,
+                              fontSize: "0.7rem",
+                              mb: 1,
+                            }}
+                          />
+                        )}
+                        <Typography
+                          sx={{
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            mb: 1.5,
+                            lineHeight: 1.35,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            minHeight: "2.7rem",
+                          }}
+                        >
+                          {event.title}
+                        </Typography>
+
                         <Box
                           sx={{
                             display: "flex",
                             flexDirection: "column",
                             gap: 1,
-                            pt: 2,
-                            borderTop: "1px solid",
-                            borderColor: "divider",
+                            mb: 2,
+                            flex: 1,
                           }}
                         >
                           <Box
@@ -319,10 +327,9 @@ export default function EventsSection() {
                           </Box>
                         </Box>
 
-                        {/* Button-look row (whole card is clickable) */}
                         <Box
                           sx={{
-                            mt: 2.5,
+                            mt: "auto",
                             py: 1,
                             display: "flex",
                             alignItems: "center",
@@ -330,7 +337,6 @@ export default function EventsSection() {
                             gap: 0.75,
                             fontSize: "0.875rem",
                             fontWeight: 600,
-                            color: "text.primary",
                             border: "1px solid",
                             borderColor: "divider",
                             borderRadius: 2,
@@ -348,7 +354,6 @@ export default function EventsSection() {
         )}
       </Container>
 
-      {/* ---------- Detail dialog ---------- */}
       <EventDetailsDialog
         open={!!selected}
         event={selected}

@@ -61,7 +61,11 @@ export default function PublicEventsListPage() {
             <Grid container spacing={3}>
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
-                  <Skeleton variant="rounded" height={260} />
+                  <Skeleton
+                    variant="rounded"
+                    height={360}
+                    sx={{ borderRadius: 3 }}
+                  />
                 </Grid>
               ))}
             </Grid>
@@ -89,8 +93,8 @@ export default function PublicEventsListPage() {
           )}
 
           {items && items.length > 0 && (
-            <Grid container spacing={3}>
-              {items.map((evt) => (
+            <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
+              {items.map((evt: EventItem) => (
                 <Grid key={evt.id} size={{ xs: 12, sm: 6, md: 4 }}>
                   <Card
                     sx={{
@@ -111,35 +115,52 @@ export default function PublicEventsListPage() {
                     <CardActionArea
                       onClick={() => setSelected(evt)}
                       sx={{
-                        flexGrow: 1,
+                        height: "100%",
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "stretch",
                       }}
                     >
-                      {evt.image && (
+                      {/* Always same image height */}
+                      <Box
+                        sx={{
+                          width: "100%",
+                          height: 180,
+                          flexShrink: 0,
+                          bgcolor: "action.hover",
+                        }}
+                      >
                         <Box
                           component="img"
-                          src={evt.image}
+                          src={evt.image || "/image/favicon.png"}
                           alt={evt.title}
                           onError={(e) => {
                             e.currentTarget.src = "/image/favicon.png";
                           }}
                           sx={{
                             width: "100%",
-                            height: 180,
+                            height: "100%",
                             objectFit: "cover",
+                            display: "block",
                           }}
                         />
-                      )}
-                      <CardContent sx={{ p: 3, flexGrow: 1 }}>
+                      </Box>
+
+                      <CardContent
+                        sx={{
+                          p: 3,
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
                         {evt.eventType && evt.eventType !== "Other" && (
                           <Chip
                             label={evt.eventType}
                             size="small"
                             color="primary"
                             variant="outlined"
-                            sx={{ mb: 1.5 }}
+                            sx={{ mb: 1.5, alignSelf: "flex-start" }}
                           />
                         )}
                         <Typography
@@ -152,6 +173,7 @@ export default function PublicEventsListPage() {
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
+                            minHeight: "2.8rem",
                           }}
                         >
                           {evt.title}
@@ -161,6 +183,8 @@ export default function PublicEventsListPage() {
                             display: "flex",
                             flexDirection: "column",
                             gap: 0.75,
+                            flex: 1,
+                            mb: 2,
                           }}
                         >
                           <Typography
@@ -193,15 +217,19 @@ export default function PublicEventsListPage() {
                               alignItems: "center",
                               gap: 0.5,
                               color: "text.secondary",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
                             }}
                           >
                             <MapPin size={14} /> {evt.venue}
+                            {evt.location ? `, ${evt.location}` : ""}
                           </Typography>
                         </Box>
-                      </CardContent>
-                      <Box sx={{ p: 3, pt: 0 }}>
+
                         <Box
                           sx={{
+                            mt: "auto",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -217,7 +245,7 @@ export default function PublicEventsListPage() {
                         >
                           View Details <ArrowRight size={16} />
                         </Box>
-                      </Box>
+                      </CardContent>
                     </CardActionArea>
                   </Card>
                 </Grid>

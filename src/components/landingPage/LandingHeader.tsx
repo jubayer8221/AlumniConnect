@@ -24,10 +24,10 @@ type NavItem =
   | { label: string; type: "route"; to: string };
 
 const NAV: NavItem[] = [
-  { label: "Home", type: "hash", href: "#home" },
+  { label: "Home", type: "hash", href: "/" },
   { label: "About", type: "hash", href: "#about" },
   { label: "Programs", type: "hash", href: "#programs" },
-  { label: "Events", type: "route", to: "/events" }, // goes to the public events list
+  { label: "Events", type: "route", to: "/events" },
   { label: "Activities", type: "hash", href: "#activities" },
   { label: "Gallery", type: "hash", href: "#gallery" },
 ];
