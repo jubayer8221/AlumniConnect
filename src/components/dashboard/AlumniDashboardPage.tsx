@@ -28,7 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
 import { useAlumni } from "@/hooks/useAlumni";
-import { fetchEventsAsync } from "@/store/Slice/eventSlice";
+import { useEvents } from "@/hooks/useEvents";
 import { fetchNoticesAsync } from "@/store/Slice/noticeSlice";
 import {
   CommonLoading,
@@ -57,15 +57,15 @@ export default function AlumniDashboardPage() {
 
   const { authUser: user } = useAuth();
   const { selectedAlumni, loading, fetchAlumniById } = useAlumni();
+  const { items: events, fetchEvents } = useEvents();
 
-  const events = useAppSelector((s) => s.events.items);
   const notices = useAppSelector((s) => s.notices.items);
 
   useEffect(() => {
     if (user?.alumniId) {
       void fetchAlumniById(user.alumniId).catch(() => undefined);
     }
-    dispatch(fetchEventsAsync({ pageNumber: 1, pageSize: 5 } as never));
+    void fetchEvents({ pageNumber: 1, pageSize: 5 });
     dispatch(fetchNoticesAsync({ pageNumber: 1, pageSize: 5 } as never));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, user?.alumniId]);

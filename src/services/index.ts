@@ -1,11 +1,7 @@
 import axios from "axios";
-import type { EventService } from "@/services/interfaces/EventService";
-import type { NoticeService } from "@/services/interfaces/NoticeService";
-import { mockEventService } from "@/services/mock/mockEventService";
-import { mockNoticeService } from "@/services/mock/mockNoticeService";
-// import { restEventService } from "@/services/api/eventApi";
 import { restNoticeService } from "@/services/api/noticeApi";
-import { restEventService } from "@/hooks/api/useEventApi";
+import { mockNoticeService } from "@/services/mock/mockNoticeService";
+import type { NoticeService } from "@/services/interfaces/NoticeService";
 
 const useMock = import.meta.env.VITE_DATA_SOURCE === "mock";
 
@@ -35,10 +31,6 @@ function withFallback<T extends object>(api: T, mock: T): T {
     },
   });
 }
-
-export const eventService: EventService = useMock
-  ? mockEventService
-  : withFallback(restEventService, mockEventService);
 
 export const noticeService: NoticeService = useMock
   ? mockNoticeService

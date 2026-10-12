@@ -275,7 +275,7 @@ export default function AdminDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("/events")}
+                  onClick={() => navigate("/alumni/events")}
                   sx={{ color: "#ec4899", fontWeight: 600 }}
                 >
                   View All
@@ -295,7 +295,7 @@ export default function AdminDashboardPage() {
                           borderRadius: 2,
                           cursor: "pointer",
                         }}
-                        onClick={() => navigate(`/events/${evt.id}`)}
+                        onClick={() => navigate(`/alumni/event/${evt.id}`)}
                       >
                         <ListItemAvatar>
                           <Avatar

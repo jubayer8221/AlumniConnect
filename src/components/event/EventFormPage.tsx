@@ -4,13 +4,9 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  createEventAsync,
-  updateEventAsync,
-  fetchEventByIdAsync,
-} from "@/store/Slice/eventSlice";
+import { useEffect, useState } from "react";
+import { useAppDispatch } from "@/hooks";
+import { useEvents } from "@/hooks/useEvents";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
@@ -21,13 +17,11 @@ import {
   CommonButton,
   CommonLoading,
   CommonCard,
+  CommonFileUpload,
 } from "@/components/common";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
-import { getApiErrorMessage } from "@/utils/apiError";
+import type { CreateUpdateEventPayload } from "@/hooks/useEvents";
 
-/* ============================================================
-   Form validation — inline
-   ============================================================ */
 const eventSchema = yup.object({
   title: yup.string().trim().required("Title is required"),
   description: yup.string().trim().required("Description is required"),
@@ -71,6 +65,24 @@ const statusOptions = [
   { label: "Cancelled", value: "CANCELLED" },
 ];
 
+const toIsoDateTime = (date: string, time: string) => {
+  const t = time.length === 5 ? `${time}:00` : time;
+  return `${date}T${t}`;
+};
+
+const formToPayload = (data: EventFormValues): CreateUpdateEventPayload => ({
+  eventTitle: data.title,
+  description: data.description,
+  startDate: toIsoDateTime(data.date, data.startTime),
+  endDate: toIsoDateTime(data.date, data.endTime),
+  location: data.location,
+  venue: data.venue,
+  organizer: data.organizer,
+  capacity: data.capacity,
+  regDeadline: data.registrationDeadline,
+  image: data.image || undefined,
+});
+
 export default function EventFormPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -78,36 +90,42 @@ export default function EventFormPage() {
   const location = useLocation();
   const isEdit = !!id;
 
-  const { selectedEvent, loading } = useAppSelector((s) => s.events);
+  const { selectedEvent, loading, fetchEventById, createEvent, updateEvent } =
+    useEvents();
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
-  const { control, handleSubmit, reset, formState } = useForm<EventFormValues>({
-    resolver: yupResolver(eventSchema) as never,
-    defaultValues: {
-      title: "",
-      description: "",
-      eventType: "" as never,
-      date: "",
-      startTime: "",
-      endTime: "",
-      location: "",
-      venue: "",
-      organizer: "",
-      registrationDeadline: "",
-      capacity: undefined as never,
-      status: "UPCOMING" as never,
-    },
-  });
+  /** Raw file kept for a future dedicated upload endpoint */
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // ★ Fetch the existing event when editing, only if not already loaded
+  const { control, handleSubmit, reset, setValue, watch, formState } =
+    useForm<EventFormValues>({
+      resolver: yupResolver(eventSchema) as never,
+      defaultValues: {
+        title: "",
+        description: "",
+        eventType: "" as never,
+        date: "",
+        startTime: "",
+        endTime: "",
+        location: "",
+        venue: "",
+        organizer: "",
+        registrationDeadline: "",
+        capacity: undefined as never,
+        status: "UPCOMING" as never,
+        image: "",
+      },
+    });
+
+  const imagePreview = watch("image");
+
   useEffect(() => {
     if (isEdit && id && (!selectedEvent || selectedEvent.id !== id)) {
-      void dispatch(fetchEventByIdAsync(id));
+      void fetchEventById(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, id]);
 
-  // Populate the form once the event is in the store
   useEffect(() => {
     if (isEdit && selectedEvent && selectedEvent.id === id) {
       reset({
@@ -123,7 +141,9 @@ export default function EventFormPage() {
         registrationDeadline: selectedEvent.registrationDeadline,
         capacity: selectedEvent.capacity as never,
         status: selectedEvent.status as never,
+        image: selectedEvent.image ?? "",
       });
+      setImageFile(null);
     }
   }, [isEdit, id, selectedEvent, reset]);
 
@@ -139,57 +159,56 @@ export default function EventFormPage() {
     setBreadcrumbLabel,
   ]);
 
-  // ★ Real submit handler — actually dispatches the create/update thunk
-  const onSubmit = async (data: EventFormValues) => {
-    try {
-      if (isEdit && id) {
-        const res = await dispatch(
-          updateEventAsync({
-            id,
-            data: { ...data, id } as never,
-          }),
-        );
-
-        if (updateEventAsync.fulfilled.match(res)) {
-          dispatch(
-            showToast({
-              message: "Event updated successfully",
-              severity: "success",
-            }),
-          );
-          navigate(`/events/${id}`);
-        } else {
-          const message =
-            typeof res.payload === "string"
-              ? res.payload
-              : "Unable to update event";
-          dispatch(showToast({ message, severity: "error" }));
-        }
-      } else {
-        const res = await dispatch(createEventAsync(data as never));
-
-        if (createEventAsync.fulfilled.match(res)) {
-          dispatch(
-            showToast({
-              message: "Event created successfully",
-              severity: "success",
-            }),
-          );
-          navigate("/events");
-        } else {
-          const message =
-            typeof res.payload === "string"
-              ? res.payload
-              : "Unable to create event";
-          dispatch(showToast({ message, severity: "error" }));
-        }
-      }
-    } catch (error) {
+  const handleImageSelect = (dataUrl: string, file: File) => {
+    // Optional: basic size check (5 MB)
+    if (file.size > 5 * 1024 * 1024) {
       dispatch(
         showToast({
-          message: getApiErrorMessage(error, "Unable to save event"),
+          message: "Image must be 5 MB or smaller",
           severity: "error",
         }),
+      );
+      return;
+    }
+    setValue("image", dataUrl, { shouldDirty: true });
+    setImageFile(file);
+  };
+
+  const onSubmit = async (data: EventFormValues) => {
+    try {
+      // If you later get a real upload URL from the server, replace data.image:
+      // if (imageFile) {
+      //   const url = await uploadEventImage(imageFile);
+      //   data = { ...data, image: url };
+      // }
+
+      const payload = formToPayload(data);
+
+      // imageFile is available here if API switches to multipart
+      void imageFile;
+
+      if (isEdit && id) {
+        await updateEvent(id, payload);
+        dispatch(
+          showToast({
+            message: "Event updated successfully",
+            severity: "success",
+          }),
+        );
+        navigate(`/alumni/events/${id}`);
+      } else {
+        await createEvent(payload);
+        dispatch(
+          showToast({
+            message: "Event created successfully",
+            severity: "success",
+          }),
+        );
+        navigate("/alumni/events");
+      }
+    } catch {
+      dispatch(
+        showToast({ message: "Unable to save event", severity: "error" }),
       );
     }
   };
@@ -202,7 +221,7 @@ export default function EventFormPage() {
         title={isEdit ? "Edit Event" : "Create Event"}
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Events", path: "/events" },
+          { label: "Events", path: "/alumni/events" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={
@@ -238,15 +257,7 @@ export default function EventFormPage() {
               required
               placeholder="Select"
             />
-            <Box sx={{ gridColumn: { xs: "1", sm: "span 2" } }}>
-              <CommonTextArea
-                name="description"
-                label="Description"
-                control={control}
-                required
-                rows={3}
-              />
-            </Box>
+
             <CommonDatePicker
               name="date"
               label="Event Date"
@@ -305,6 +316,28 @@ export default function EventFormPage() {
               options={statusOptions}
               required
             />
+
+            <Box sx={{ gridColumn: { xs: "1", sm: "span 2" } }}>
+              <CommonTextArea
+                name="description"
+                label="Description"
+                control={control}
+                required
+                rows={3}
+              />
+            </Box>
+
+            {/* Image upload */}
+            <Box sx={{ gridColumn: { xs: "1", sm: "span 2" } }}>
+              <CommonFileUpload
+                label="Upload Event Banner"
+                accept="image/*"
+                currentFile={imagePreview || undefined}
+                previewSize={320}
+                onFileSelect={handleImageSelect}
+              />
+            </Box>
+
             <Box
               sx={{
                 gridColumn: { xs: "1", sm: "span 2" },

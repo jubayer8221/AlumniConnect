@@ -20,13 +20,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  setPage,
-  setPageSize,
-  setSearch,
-  fetchEventsAsync,
-} from "@/store/Slice/eventSlice";
+import { useEvents } from "@/hooks/useEvents";
 import {
   CommonPageHeader,
   CommonSearchField,
@@ -38,109 +32,77 @@ import {
   CommonPagination,
 } from "@/components/common";
 import { formatDate, formatTime } from "@/utils/dateUtils";
-import type { EventItem, EventFilters } from "@/types/event";
+import type { EventItem } from "@/types/event";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
-// Tab indices — matches visual order (All first, then Upcoming, then Past)
 const TAB_ALL = 0;
 const TAB_UPCOMING = 1;
 const TAB_PAST = 2;
 
-/**
- * Build the filter object sent to the API based on the active tab and
- * the two date inputs. `TAB_ALL` sends nothing — the SP returns every
- * event ordered by StartDate DESC.
- */
-function buildFilters(
-  tab: number,
-  fromDate: string,
-  toDate: string,
-): EventFilters {
-  if (tab === TAB_UPCOMING) {
-    return {
-      status: "UPCOMING",
-      dateFrom: fromDate || undefined,
-      dateTo: toDate || undefined,
-    };
-  }
-  if (tab === TAB_PAST) {
-    return {
-      dateFrom: fromDate || undefined,
-      dateTo: toDate || new Date().toISOString().slice(0, 10),
-    };
-  }
-  return {
-    dateFrom: fromDate || undefined,
-    dateTo: toDate || undefined,
-  };
-}
-
 export default function EventListPage({
-  isAdmin = false,
+  isAdmin = true,
 }: {
   isAdmin?: boolean;
 }) {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
-  const { items, loading, error, totalCount, search, pageNumber, pageSize } =
-    useAppSelector((s) => s.events);
+  const {
+    items,
+    loading,
+    error,
+    totalCount,
+    search,
+    pageNumber,
+    pageSize,
+    fetchEvents,
+    setSearch,
+    setPage,
+    setPageSize,
+  } = useEvents();
 
   const [tab, setTab] = useState(TAB_ALL);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const debouncedSearch = useDebouncedValue(search);
 
-  /* ============================================================
-     Effect 1 — Initial mount
-     Fetch only if the store is empty. If we already have cached
-     events (user visited the page earlier), skip the network call.
-     ============================================================ */
+  const upcomingOnly = tab === TAB_UPCOMING ? true : undefined;
+  const pastToDate =
+    tab === TAB_PAST && !toDate
+      ? new Date().toISOString().slice(0, 10)
+      : undefined;
+
+  const buildParams = () => ({
+    pageNumber,
+    pageSize,
+    search: debouncedSearch || undefined,
+    upcomingOnly,
+    fromDate: fromDate || undefined,
+    toDate: toDate || pastToDate || undefined,
+  });
+
   useEffect(() => {
-    if (!items || items.length === 0) {
-      void dispatch(
-        fetchEventsAsync({
-          pageNumber,
-          pageSize,
-          search: debouncedSearch || undefined,
-          filters: buildFilters(tab, fromDate, toDate),
-        }),
-      );
-    }
+    void fetchEvents(buildParams());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ============================================================
-     Effect 2 — Filter / search / pagination changes
-     Refetch whenever any of these change. Skip the very first
-     render because Effect 1 already handled the mount case.
-     ============================================================ */
   const didMountRef = useRef(false);
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
     }
-    void dispatch(
-      fetchEventsAsync({
-        pageNumber,
-        pageSize,
-        search: debouncedSearch || undefined,
-        filters: buildFilters(tab, fromDate, toDate),
-      }),
-    );
+    void fetchEvents(buildParams());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, tab, fromDate, toDate, pageNumber, pageSize]);
 
-  // Client-side filter safety net — the server already filters, but
-  // this keeps the UI consistent if an event's status changes mid-session.
+  // Client-side filter as fallback (status is derived in the hook)
   const filtered = items.filter((e) => {
     if (tab === TAB_UPCOMING) return e.status === "UPCOMING";
-    if (tab === TAB_PAST) return e.status === "COMPLETED";
+    if (tab === TAB_PAST)
+      return e.status === "COMPLETED" || e.status === "CANCELLED";
     return true;
   });
 
-  const basePath = isAdmin ? "/events" : "/alumni/events";
+  const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
 
   return (
     <Box>
@@ -155,7 +117,7 @@ export default function EventListPage({
           isAdmin ? (
             <CommonButton
               startIcon={<Plus size={18} />}
-              onClick={() => navigate("/events/new")}
+              onClick={() => navigate("/alumni/events/new")}
             >
               Create Event
             </CommonButton>
@@ -167,7 +129,7 @@ export default function EventListPage({
         <Box sx={{ flexGrow: 1, minWidth: 250 }}>
           <CommonSearchField
             value={search}
-            onChange={(value) => dispatch(setSearch(value))}
+            onChange={setSearch}
             placeholder="Search events..."
           />
         </Box>
@@ -176,9 +138,9 @@ export default function EventListPage({
           type="date"
           size="small"
           value={fromDate}
-          onChange={(event) => {
-            setFromDate(event.target.value);
-            dispatch(setPage(1));
+          onChange={(e) => {
+            setFromDate(e.target.value);
+            setPage(1);
           }}
           slotProps={{ inputLabel: { shrink: true } }}
         />
@@ -187,9 +149,9 @@ export default function EventListPage({
           type="date"
           size="small"
           value={toDate}
-          onChange={(event) => {
-            setToDate(event.target.value);
-            dispatch(setPage(1));
+          onChange={(e) => {
+            setToDate(e.target.value);
+            setPage(1);
           }}
           slotProps={{ inputLabel: { shrink: true } }}
         />
@@ -197,9 +159,9 @@ export default function EventListPage({
 
       <Tabs
         value={tab}
-        onChange={(_, value) => {
-          setTab(value);
-          dispatch(setPage(1));
+        onChange={(_, v) => {
+          setTab(v);
+          setPage(1);
         }}
         sx={{ mb: 2 }}
       >
@@ -211,16 +173,7 @@ export default function EventListPage({
       {error && !items.length ? (
         <CommonErrorState
           message={error}
-          onRetry={() =>
-            void dispatch(
-              fetchEventsAsync({
-                pageNumber,
-                pageSize,
-                search: debouncedSearch || undefined,
-                filters: buildFilters(tab, fromDate, toDate),
-              }),
-            )
-          }
+          onRetry={() => void fetchEvents(buildParams())}
         />
       ) : loading ? (
         <CommonLoading fullHeight={false} />
@@ -249,8 +202,8 @@ export default function EventListPage({
                     component="img"
                     src={evt.image}
                     alt={evt.title}
-                    onError={(event) => {
-                      event.currentTarget.src = "/image/favicon.png";
+                    onError={(e) => {
+                      e.currentTarget.src = "/image/favicon.png";
                     }}
                     sx={{ width: "100%", height: 180, objectFit: "cover" }}
                   />
@@ -356,8 +309,8 @@ export default function EventListPage({
           count={Math.max(1, Math.ceil(totalCount / pageSize))}
           page={pageNumber}
           pageSize={pageSize}
-          onChange={(page) => dispatch(setPage(page))}
-          onPageSizeChange={(size) => dispatch(setPageSize(size))}
+          onChange={setPage}
+          onPageSizeChange={setPageSize}
         />
       )}
     </Box>

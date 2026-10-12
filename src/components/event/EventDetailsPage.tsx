@@ -21,15 +21,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
+import { useEvents } from "@/hooks/useEvents";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  registerForEventAsync,
-  cancelEventRegistrationAsync,
-  fetchEventRegistrationsAsync,
-  fetchEventByIdAsync,
-  deleteEventAsync,
-} from "@/store/Slice/eventSlice";
+import { useAppDispatch } from "@/hooks";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
@@ -51,21 +45,29 @@ export default function EventDetailsPage({
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const toast = useAppDispatch();
   const { authUser: user } = useAuth();
 
-  const { selectedEvent, registrations, loading, error } = useAppSelector(
-    (s) => s.events,
-  );
+  const {
+    selectedEvent,
+    registrations,
+    loading,
+    error,
+    fetchEventById,
+    fetchRegistrations,
+    registerForEvent,
+    cancelRegistration,
+    deleteEvent,
+  } = useEvents();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   useEffect(() => {
     if (!id) return;
-    void dispatch(fetchEventByIdAsync(id));
-    void dispatch(fetchEventRegistrationsAsync(id));
-  }, [dispatch, id]);
+    void fetchEventById(id);
+    void fetchRegistrations(id);
+  }, [id, fetchEventById, fetchRegistrations]);
 
   useEffect(() => {
     if (!id) return;
@@ -86,7 +88,7 @@ export default function EventDetailsPage({
       <CommonErrorState
         message={error}
         onRetry={() => {
-          if (id) void dispatch(fetchEventByIdAsync(id));
+          if (id) void fetchEventById(id);
         }}
       />
     );
@@ -100,49 +102,47 @@ export default function EventDetailsPage({
   const activeRegs = registrations.filter((r) => r.status === "REGISTERED");
   const seatsLeft = evt.capacity - activeRegs.length;
   const canRegister = isUpcoming(evt.date) && seatsLeft > 0 && !isRegistered;
-  const basePath = isAdmin ? "/events" : "/alumni/events";
+  const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
 
   const handleRegister = async () => {
     if (!id) return;
-    const res = await dispatch(
-      registerForEventAsync({ eventId: id, alumniId: myAlumniId }),
-    );
-    if (registerForEventAsync.fulfilled.match(res)) {
-      dispatch(
+    try {
+      await registerForEvent(id, myAlumniId);
+      toast(
         showToast({ message: "Registered successfully!", severity: "success" }),
       );
-      void dispatch(fetchEventRegistrationsAsync(id));
-    } else {
-      dispatch(
-        showToast({ message: "Registration failed", severity: "error" }),
-      );
+      await fetchRegistrations(id);
+    } catch {
+      toast(showToast({ message: "Registration failed", severity: "error" }));
     }
   };
 
   const handleCancel = async () => {
     if (!id) return;
-    const res = await dispatch(
-      cancelEventRegistrationAsync({ eventId: id, alumniId: myAlumniId }),
-    );
-    if (cancelEventRegistrationAsync.fulfilled.match(res)) {
-      dispatch(
-        showToast({ message: "Registration cancelled", severity: "info" }),
-      );
-      void dispatch(fetchEventRegistrationsAsync(id));
+    try {
+      await cancelRegistration(id, myAlumniId);
+      toast(showToast({ message: "Registration cancelled", severity: "info" }));
+      await fetchRegistrations(id);
+    } catch {
+      toast(showToast({ message: "Unable to cancel", severity: "error" }));
     }
   };
 
   const handleDelete = async () => {
     if (!id) return;
-    const res = await dispatch(deleteEventAsync(id));
-    if (deleteEventAsync.fulfilled.match(res)) {
-      dispatch(
+    try {
+      await deleteEvent(id);
+      toast(
         showToast({
           message: "Event deleted successfully",
           severity: "success",
         }),
       );
       navigate(basePath);
+    } catch {
+      toast(
+        showToast({ message: "Unable to delete event", severity: "error" }),
+      );
     }
     setConfirmDelete(false);
   };
@@ -345,7 +345,7 @@ export default function EventDetailsPage({
                 <CommonButton
                   variant="outlined"
                   startIcon={<Pencil size={18} />}
-                  onClick={() => navigate(`/events/${evt.id}/edit`)}
+                  onClick={() => navigate(`/alumni/events/${evt.id}/edit`)}
                 >
                   Edit Event
                 </CommonButton>

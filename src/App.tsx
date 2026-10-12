@@ -13,6 +13,7 @@ import {
   NotFoundPage,
 } from "@/components/common";
 
+// import LandingPage from "@/components/landing/LandingPage";
 import LoginPage from "@/components/login/LoginPage";
 import UnauthorizedPage from "@/components/common/UnauthorizedPage";
 import AdminDashboardPage from "@/components/dashboard/AdminDashboardPage";
@@ -33,6 +34,10 @@ import NoticeFormPage from "@/components/notice/NoticeFormPage";
 import ReportsPage from "@/components/report/ReportsPage";
 import SettingsPage from "@/components/settings/SettingsPage";
 import { useAppDispatch, useAppSelector } from "./hooks/useAppDispatch";
+import LandingPage from "./components/landingPage/LandingPage";
+// import PublicEventDetailsPage from "./components/landingPage/event/PublicEventDetailsPage";
+import PublicEventsListPage from "./components/landingPage/event/PublicEventsListPage";
+import PublicEventDetailsPage from "./components/landingPage/event/PublicEventDetailsPage";
 // import { useAppDispatch, useAppSelector } from "@/hooks";
 
 const queryClient = new QueryClient({
@@ -50,36 +55,24 @@ function AppRoutes() {
   const isAuthenticated = Boolean(token && user);
   const role = user?.role ?? null;
 
+  // Where an authenticated user should land
+  const homePath = role === "ADMIN" ? "/dashboard" : "/alumni/profile";
+
   useEffect(() => {
     if (!isAuthenticated) queryClient.clear();
   }, [isAuthenticated]);
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          isAuthenticated ? (
-            <Navigate
-              to={role === "ADMIN" ? "/dashboard" : "/alumni/profile"}
-              replace
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
+      <Route path="/" element={<LandingPage />} />
+      {/* <Route path="/landing" element={<LandingPage />} /> */}
+      <Route path="/events" element={<PublicEventsListPage />} />
+      <Route path="/events/:id" element={<PublicEventDetailsPage />} />
+
       <Route
         path="/login"
         element={
-          isAuthenticated ? (
-            <Navigate
-              to={role === "ADMIN" ? "/dashboard" : "/alumni/profile"}
-              replace
-            />
-          ) : (
-            <LoginPage />
-          )
+          isAuthenticated ? <Navigate to={homePath} replace /> : <LoginPage />
         }
       />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -124,14 +117,17 @@ function AppRoutes() {
       >
         <Route path="/dashboard" element={<AdminDashboardPage />} />
         <Route path="/alumni" element={<AlumniListPage />} />
-        <Route path="/events" element={<EventListPage isAdmin />} />
-        <Route path="/events/new" element={<EventFormPage />} />
+        <Route path="/alumni/events" element={<EventListPage isAdmin />} />
+        <Route path="/alumni/events/new" element={<EventFormPage />} />
         <Route
-          path="/events/create"
-          element={<Navigate to="/events/new" replace />}
+          path="/alumni/events/create"
+          element={<Navigate to="/alumni/events/new" replace />}
         />
-        <Route path="/events/:id" element={<EventDetailsPage isAdmin />} />
-        <Route path="/events/:id/edit" element={<EventFormPage />} />
+        <Route
+          path="/alumni/events/:id"
+          element={<EventDetailsPage isAdmin />}
+        />
+        <Route path="/alumni/events/:id/edit" element={<EventFormPage />} />
         <Route path="/notices" element={<NoticeListPage isAdmin />} />
         <Route path="/notices/create" element={<NoticeFormPage />} />
         <Route path="/notices/:id" element={<NoticeDetailsPage isAdmin />} />
@@ -158,7 +154,7 @@ function AppRoutes() {
                 ? role === "ADMIN"
                   ? "/dashboard"
                   : "/alumni/dashboard"
-                : "/login"
+                : "/"
             }
           />
         }
