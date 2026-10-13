@@ -15,8 +15,7 @@ import {
 } from "@mui/material";
 import { Bell, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchNoticesAsync } from "@/store/Slice/noticeSlice";
+import { useNotices } from "@/hooks/useNotices";
 import { formatDate, fromNow } from "@/utils/dateUtils";
 
 interface NotificationsPopoverProps {
@@ -42,17 +41,14 @@ export default function NotificationsPopover({
   anchorEl,
   onClose,
 }: NotificationsPopoverProps) {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { items, loading } = useAppSelector((s) => s.notices);
+  const { items, loading, fetchNotices } = useNotices();
   const [lastSeen, setLastSeen] = useState<string | null>(null);
 
   // Fetch notices once if empty
   useEffect(() => {
     if (!items || items.length === 0) {
-      void dispatch(
-        fetchNoticesAsync({ pageNumber: 1, pageSize: 20 } as never),
-      );
+      void fetchNotices({ pageNumber: 1, pageSize: 20 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

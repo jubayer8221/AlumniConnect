@@ -23,12 +23,16 @@ import {
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import { showToast } from "@/store/Slice/uiSlice";
-import { CommonInputField, CommonButton } from "@/components/common";
 import { appConfig } from "@/config/appConfig";
+
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import CommonInputField from "../common/CommonInputField";
+import CommonButton from "../common/CommonButton";
 
 /* ============================================================
    Form validation — inline
@@ -50,6 +54,9 @@ type LoginFormValues = yup.InferType<typeof loginSchema>;
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const signupUsername = (location.state as { signupUsername?: string } | null)
+    ?.signupUsername;
   const { login, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
@@ -58,14 +65,14 @@ export default function LoginPage() {
 
   const { control, handleSubmit } = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
-    defaultValues: { username: "", password: "" },
+    defaultValues: { username: signupUsername ?? "", password: "" },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     setError(null);
     try {
       const user = await login(data);
-      navigate(user.role === "ADMIN" ? "/dashboard" : "/alumni/dashboard", {
+      navigate(hasAdminAccess(user.role) ? "/dashboard" : "/alumni/dashboard", {
         replace: true,
       });
     } catch (err) {
@@ -178,7 +185,8 @@ export default function LoginPage() {
             <Box
               component="span"
               sx={{
-                background: "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
+                background:
+                  "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -380,9 +388,7 @@ export default function LoginPage() {
               <CommonInputField
                 name="username"
                 label={
-                  loginMethod === "phone"
-                    ? "Phone Number / Username"
-                    : "Username / Email"
+                  loginMethod === "phone" ? "Phone Number " : "Username / Email"
                 }
                 control={control}
                 placeholder={
@@ -437,6 +443,8 @@ export default function LoginPage() {
                   }
                 />
                 <Button
+                  component={RouterLink}
+                  to="/forgot-password"
                   variant="text"
                   sx={{
                     fontSize: "0.85rem",
@@ -470,6 +478,29 @@ export default function LoginPage() {
               </CommonButton>
             </Stack>
           </form>
+          <Typography
+            sx={{
+              textAlign: "center",
+              fontSize: "0.9rem",
+              color: "text.secondary",
+              mt: 2,
+            }}
+          >
+            New to {appConfig.appName}?{" "}
+            <Button
+              component={RouterLink}
+              to="/signup"
+              sx={{
+                textTransform: "none",
+                fontWeight: 700,
+                p: 0,
+                minWidth: 0,
+                verticalAlign: "baseline",
+              }}
+            >
+              Create an account
+            </Button>
+          </Typography>
         </Box>
       </Box>
     </Box>

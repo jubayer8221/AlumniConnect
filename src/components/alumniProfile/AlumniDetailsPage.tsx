@@ -41,6 +41,7 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import { useAlumni } from "@/hooks/useAlumni";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
@@ -213,7 +214,7 @@ export default function AlumniDetailsPage() {
 
   const completion = calculateProfileCompletion(alumni);
   const missing = getMissingProfileFields(alumni);
-  const isAdmin = role === "ADMIN";
+  const isAdmin = hasAdminAccess(role);
   const isOwner = Boolean(
     user &&
     (user.id === String(alumni.userID) ||

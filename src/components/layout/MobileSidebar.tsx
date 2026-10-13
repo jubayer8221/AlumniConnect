@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { appConfig } from "@/config/appConfig";
 import { getNavForRole, type NavItem } from "@/config/navigation";
 import HeaderProfileDialog from "../alumniProfile/HeaderProfileDialog";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 export default function MobileSidebar() {
   const location = useLocation();
@@ -349,7 +350,7 @@ export default function MobileSidebar() {
                     lineHeight: 1.4,
                   }}
                 >
-                  {role === "ADMIN" ? "Administrator" : "Alumni Member"}
+                  {role === "MODERATOR" ? "Moderator" : hasAdminAccess(role) ? "Administrator" : "Alumni Member"}
                 </Typography>
               </Box>
             </Box>

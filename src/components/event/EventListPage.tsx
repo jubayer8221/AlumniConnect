@@ -35,6 +35,7 @@ import {
 import { formatDate, formatTime } from "@/utils/dateUtils";
 import type { EventItem } from "@/types/event";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 const TAB_ALL = 0;
 const TAB_UPCOMING = 1;
@@ -43,7 +44,7 @@ const TAB_PAST = 2;
 export default function EventListPage() {
   const navigate = useNavigate();
   const { authUser: user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = hasAdminAccess(user?.role);
   const basePath = isAdmin ? "/events" : "/alumni/events";
   const homePath = isAdmin ? "/dashboard" : "/alumni/dashboard";
 

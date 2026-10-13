@@ -11,14 +11,18 @@ import { store } from "@/store/store";
 import { createAppTheme } from "@/store/theme";
 import { colors } from "@/theme/colors";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
+import { hasAdminAccess } from "@/utils/authUtils";
 import NotFoundPage from "@/components/common/NotFoundPage";
 import ToastContainer from "@/components/common/Toast";
 
 import { useAppSelector } from "./hooks/useAppDispatch";
 import LandingPage from "./components/landingPage/LandingPage";
+import ForgotPasswordPage from "./components/login/ForgotPasswordPage";
+import ResetPasswordPage from "./components/login/ResetPasswordPage";
 
 const AppLayout = lazy(() => import("@/components/layout/AppLayout"));
 const LoginPage = lazy(() => import("@/components/login/LoginPage"));
+const SignUpPage = lazy(() => import("@/components/login/SignUpPage"));
 const UnauthorizedPage = lazy(
   () => import("@/components/common/UnauthorizedPage"),
 );
@@ -61,6 +65,9 @@ const NoticeDetailsPage = lazy(
 const NoticeFormPage = lazy(() => import("@/components/notice/NoticeFormPage"));
 const ReportsPage = lazy(() => import("@/components/report/ReportsPage"));
 const SettingsPage = lazy(() => import("@/components/settings/SettingsPage"));
+const UserRoleManagementPage = lazy(
+  () => import("@/components/settings/UserRoleManagementPage"),
+);
 const PublicEventsListPage = lazy(
   () => import("./components/landingPage/event/PublicEventsListPage"),
 );
@@ -98,7 +105,7 @@ function AppRoutes() {
   const isAuthenticated = Boolean(token && user);
   const role = user?.role ?? null;
 
-  const homePath = role === "ADMIN" ? "/dashboard" : "/alumni/dashboard";
+  const homePath = hasAdminAccess(role) ? "/dashboard" : "/alumni/dashboard";
 
   return (
     <Suspense
@@ -126,6 +133,10 @@ function AppRoutes() {
         <Route path="/news/:id/:slug" element={<PublicNewsDetailsPage />} />
         <Route path="/gallery" element={<PublicGalleryPage />} />
 
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+
         {/* <Route path="/news/:id" element={<PublicEventDetailsPage />} /> */}
 
         <Route
@@ -139,7 +150,7 @@ function AppRoutes() {
         {/* ---------- Alumni + Admin (shared app shell) ---------- */}
         <Route
           element={
-            <ProtectedRoute roles={["ADMIN", "ALUMNI"]}>
+            <ProtectedRoute roles={["ADMIN", "MODERATOR", "ALUMNI"]}>
               <AppLayout />
             </ProtectedRoute>
           }
@@ -164,9 +175,6 @@ function AppRoutes() {
           <Route path="/alumni/events" element={<EventListPage />} />
           <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
           <Route path="/alumni/news" element={<NewsListPage />} />
-          <Route path="/alumni/news" element={<NewsListPage />} />
-          <Route path="/alumni/news/create" element={<NewsFormPage />} />
-          <Route path="/alumni/news/edit/:id" element={<NewsFormPage />} />
           <Route
             path="/alumni/landing/gallery/new"
             element={<GalleryPhotoFormPage />}
@@ -192,13 +200,21 @@ function AppRoutes() {
         {/* ---------- Admin only ---------- */}
         <Route
           element={
-            <ProtectedRoute roles={["ADMIN"]}>
+            <ProtectedRoute roles={["ADMIN", "MODERATOR"]}>
               <AppLayout />
             </ProtectedRoute>
           }
         >
           <Route path="/dashboard" element={<AdminDashboardPage />} />
           <Route path="/alumni" element={<AlumniListPage />} />
+          <Route
+            path="/alumni/user-roles"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <UserRoleManagementPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Event create / edit — admin only */}
           <Route path="/alumni/events/new" element={<EventFormPage />} />
@@ -208,17 +224,23 @@ function AppRoutes() {
           />
           <Route path="/alumni/events/:id/edit" element={<EventFormPage />} />
 
+          {/* News creation and editing are admin only. */}
+          <Route path="/alumni/news/create" element={<NewsFormPage />} />
+          <Route path="/alumni/news/edit/:id" element={<NewsFormPage />} />
+
           {/* Notices — admin */}
-          <Route path="alumni/notices" element={<NoticeListPage isAdmin />} />
-          <Route path="alumni/notices/create" element={<NoticeFormPage />} />
-          <Route
-            path="alumni/notices/:id"
-            element={<NoticeDetailsPage isAdmin />}
-          />
-          <Route path="alumni/notices/:id/edit" element={<NoticeFormPage />} />
+          <Route path="/alumni/notices/create" element={<NoticeFormPage />} />
+          <Route path="/alumni/notices/:id/edit" element={<NoticeFormPage />} />
 
           <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* ---------- Redirects ---------- */}

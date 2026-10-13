@@ -12,6 +12,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAppSelector } from "@/hooks";
 import { labelForSegment, isDynamicSegment } from "@/config/navigation";
 import { useBreadcrumbLabels } from "./breadcrumbLabelContext";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 interface Crumb {
   label: string;
@@ -40,7 +41,7 @@ export default function Breadcrumbs() {
     return null;
   }
 
-  const rootPath = role === "ADMIN" ? "/dashboard" : "/alumni/dashboard";
+  const rootPath = hasAdminAccess(role) ? "/dashboard" : "/alumni/dashboard";
   const paths = getPartialPaths(location.pathname);
 
   if (paths.length === 0) return null;

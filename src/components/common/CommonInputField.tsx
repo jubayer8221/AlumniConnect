@@ -11,6 +11,11 @@ import {
   type Theme,
   type OutlinedInputProps,
 } from "@mui/material";
+import { format, isValid } from "date-fns";
+import { DateField } from "@mui/x-date-pickers/DateField";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { commonDateFieldSx } from "./CommonDatePicker";
 
 interface CommonInputFieldProps<T extends FieldValues> {
   name: Path<T>;
@@ -53,6 +58,70 @@ export default function CommonInputField<T extends FieldValues>({
   InputProps,
   onChange,
 }: CommonInputFieldProps<T>) {
+  if (type === "date") {
+    return (
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <Controller
+          name={name}
+          control={control}
+          render={({ field, fieldState }) => {
+            const rawValue = field.value == null ? "" : String(field.value);
+            const value = rawValue
+              ? new Date(`${rawValue.slice(0, 10)}T00:00:00`)
+              : null;
+            const validValue =
+              value && !Number.isNaN(value.getTime()) ? value : null;
+
+            return (
+              <DateField
+                label={label}
+                value={validValue}
+                onChange={(date) => {
+                  const nextValue =
+                    date && isValid(date) ? format(date, "yyyy-MM-dd") : "";
+                  field.onChange(nextValue);
+                  onChange?.({
+                    target: { name: field.name, value: nextValue },
+                  } as unknown as React.ChangeEvent<HTMLInputElement>);
+                }}
+                onBlur={field.onBlur}
+                disabled={disabled}
+                readOnly={readOnly}
+                format="dd/MM/yyyy"
+                slotProps={{
+                  textField: {
+                    required,
+                    fullWidth,
+                    size,
+                    error: !!fieldState.error,
+                    helperText: fieldState.error?.message ?? helperText ?? "",
+                    sx: [commonDateFieldSx, sx].filter(
+                      Boolean,
+                    ) as SxProps<Theme>,
+                    slotProps: {
+                      input: {
+                        startAdornment: startAdornment ? (
+                          <InputAdornment position="start">
+                            {startAdornment}
+                          </InputAdornment>
+                        ) : undefined,
+                        endAdornment: endAdornment ? (
+                          <InputAdornment position="end">
+                            {endAdornment}
+                          </InputAdornment>
+                        ) : undefined,
+                      },
+                    },
+                  },
+                }}
+              />
+            );
+          }}
+        />
+      </LocalizationProvider>
+    );
+  }
+
   return (
     <Controller
       name={name}

@@ -11,6 +11,7 @@ import {
   Globe,
   Newspaper,
   Image,
+  UserCog,
 } from "lucide-react";
 
 export interface NavChild {
@@ -63,6 +64,11 @@ export const adminNav: NavItem[] = [
     icon: <Users size={20} />,
   },
   {
+    label: "User Roles",
+    path: "/alumni/user-roles",
+    icon: <UserCog size={20} />,
+  },
+  {
     label: "Landing Page",
     path: "/alumni/landing",
     icon: <Image size={20} />,
@@ -74,7 +80,7 @@ export const adminNav: NavItem[] = [
   },
   {
     label: "Notices",
-    path: "alumni/notices",
+    path: "/alumni/notices",
     icon: <Bell size={20} />,
   },
   {
@@ -141,8 +147,15 @@ export const alumniNav: NavItem[] = [
   publicSiteItem,
 ];
 
-export const getNavForRole = (role: string | null | undefined): NavItem[] =>
-  role === "ADMIN" ? adminNav : alumniNav;
+export const getNavForRole = (role: string | null | undefined): NavItem[] => {
+  if (role === "ADMIN") return adminNav;
+  if (role === "MODERATOR") {
+    return adminNav.filter(
+      (item) => item.path !== "/alumni/user-roles" && item.path !== "/settings",
+    );
+  }
+  return alumniNav;
+};
 
 /* ============================================================
    Breadcrumb / document-title helpers

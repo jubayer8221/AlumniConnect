@@ -5,17 +5,13 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchNoticeByIdAsync,
-  createNoticeAsync,
-  updateNoticeAsync,
-} from "@/store/Slice/noticeSlice";
+import { useAppDispatch } from "@/hooks";
+import { useNotices } from "@/hooks/useNotices";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
-  CommonSelectField,
+  CommonDropDown,
   CommonDatePicker,
   CommonTextArea,
   CommonButton,
@@ -59,7 +55,7 @@ export default function NoticeFormPage() {
   const { id } = useParams();
   const location = useLocation();
   const isEdit = !!id;
-  const { selectedNotice, loading } = useAppSelector((s) => s.notices);
+  const { selectedNotice, loading, fetchNoticeById, createNotice, updateNotice } = useNotices();
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   const { control, handleSubmit, reset, formState } = useForm<NoticeFormValues>(
@@ -78,7 +74,7 @@ export default function NoticeFormPage() {
   // ★ Fetch existing only if empty / different record
   useEffect(() => {
     if (isEdit && id && (!selectedNotice || selectedNotice.id !== id)) {
-      void dispatch(fetchNoticeByIdAsync(id));
+      void fetchNoticeById(id).catch(() => undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, id]);
@@ -109,10 +105,8 @@ export default function NoticeFormPage() {
 
   const onSubmit = async (data: NoticeFormValues) => {
     if (isEdit && id) {
-      const res = await dispatch(
-        updateNoticeAsync({ id, data: { ...data, id } as never }),
-      );
-      if (updateNoticeAsync.fulfilled.match(res)) {
+      try {
+        await updateNotice(id, { ...data, id } as never);
         // refetch list to reflect the update
         dispatch(
           showToast({
@@ -120,18 +114,28 @@ export default function NoticeFormPage() {
             severity: "success",
           }),
         );
-        navigate(`/notices/${id}`);
+        navigate(`/alumni/notices/${id}`);
+      } catch (error) {
+        dispatch(showToast({
+          message: typeof error === "string" ? error : error instanceof Error ? error.message : "Unable to update notice",
+          severity: "error",
+        }));
       }
     } else {
-      const res = await dispatch(createNoticeAsync(data as never));
-      if (createNoticeAsync.fulfilled.match(res)) {
+      try {
+        await createNotice(data as never);
         dispatch(
           showToast({
             message: "Notice created successfully",
             severity: "success",
           }),
         );
-        navigate("alumni/notices");
+        navigate("/alumni/notices");
+      } catch (error) {
+        dispatch(showToast({
+          message: typeof error === "string" ? error : error instanceof Error ? error.message : "Unable to create notice",
+          severity: "error",
+        }));
       }
     }
   };
@@ -180,19 +184,19 @@ export default function NoticeFormPage() {
                 gap: 2,
               }}
             >
-              <CommonSelectField
+              <CommonDropDown
                 name="category"
                 label="Category"
                 control={control}
-                options={categoryOptions}
+                menuItems={categoryOptions}
                 required
                 placeholder="Select"
               />
-              <CommonSelectField
+              <CommonDropDown
                 name="status"
                 label="Status"
                 control={control}
-                options={statusOptions}
+                menuItems={statusOptions}
                 required
               />
               <CommonDatePicker

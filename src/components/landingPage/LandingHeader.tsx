@@ -31,6 +31,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { appConfig } from "@/config/appConfig";
 import { useAuth } from "@/hooks/useAuth";
 import ChangePasswordDialog from "../login/ChangePasswordDialog";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 /** Nav items either scroll to a landing section or navigate to a route. */
 type NavItem =
@@ -72,7 +73,8 @@ export default function LandingHeader() {
   }, [isOnLanding]);
 
   const solid = !isOnLanding || scrolled;
-  const isAdmin = role === "ADMIN";
+  const isAdmin = hasAdminAccess(role);
+  const roleLabel = role === "MODERATOR" ? "Moderator" : "Administrator";
 
   const displayName =
     authUser?.displayName || authUser?.fullName || authUser?.username || "User";
@@ -378,7 +380,7 @@ export default function LandingHeader() {
                   noWrap
                   sx={{ fontSize: "0.75rem", color: "text.secondary" }}
                 >
-                  {isAdmin ? "Administrator" : "Alumni Member"}
+                  {isAdmin ? roleLabel : "Alumni Member"}
                 </Typography>
               </Box>
             </Box>
@@ -524,7 +526,7 @@ export default function LandingHeader() {
               </Typography>
             )}
             <Chip
-              label={isAdmin ? "Administrator" : "Alumni Member"}
+              label={isAdmin ? roleLabel : "Alumni Member"}
               size="small"
               color={isAdmin ? "primary" : "default"}
               variant={isAdmin ? "filled" : "outlined"}

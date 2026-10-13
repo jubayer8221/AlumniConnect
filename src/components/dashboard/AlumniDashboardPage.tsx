@@ -25,11 +25,10 @@ import {
   Bell,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
 import { useAlumni } from "@/hooks/useAlumni";
 import { useEvents } from "@/hooks/useEvents";
-import { fetchNoticesAsync } from "@/store/Slice/noticeSlice";
+import { useNotices } from "@/hooks/useNotices";
 import {
   CommonLoading,
   CommonPageHeader,
@@ -52,23 +51,21 @@ const cardSx = {
 } as const;
 
 export default function AlumniDashboardPage() {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const { authUser: user } = useAuth();
   const { selectedAlumni, loading, fetchAlumniById } = useAlumni();
   const { items: events, fetchEvents } = useEvents();
-
-  const notices = useAppSelector((s) => s.notices.items);
+  const { items: notices, fetchNotices } = useNotices();
 
   useEffect(() => {
     if (user?.alumniId) {
       void fetchAlumniById(user.alumniId).catch(() => undefined);
     }
     void fetchEvents({ pageNumber: 1, pageSize: 5 });
-    dispatch(fetchNoticesAsync({ pageNumber: 1, pageSize: 5 } as never));
+    void fetchNotices({ pageNumber: 1, pageSize: 5 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, user?.alumniId]);
+  }, [user?.alumniId]);
 
   if (loading && !selectedAlumni) return <CommonLoading />;
   if (!selectedAlumni) return <CommonEmptyState title="Profile not found" />;

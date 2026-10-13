@@ -290,7 +290,6 @@ export const useEvents = () => {
   );
 
   const deleteEvent = useCallback(async (id: string) => {
-    // update when you have the real delete endpoint
     await api.delete(`/Event/${id}`);
   }, []);
 

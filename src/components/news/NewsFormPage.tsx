@@ -11,7 +11,7 @@ import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
-  CommonSelectField,
+  CommonDropDown,
   CommonTextArea,
   CommonCheckbox,
   CommonFileUpload,
@@ -254,21 +254,21 @@ export default function NewsFormPage() {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="CategoryID"
                 label="Category"
                 control={control}
-                options={CATEGORY_OPTIONS}
+                menuItems={CATEGORY_OPTIONS}
                 placeholder="Select a category"
               />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="Status"
                 label="Status"
                 control={control}
-                options={STATUS_OPTIONS}
+                menuItems={STATUS_OPTIONS}
                 placeholder="Select status"
               />
             </Grid>

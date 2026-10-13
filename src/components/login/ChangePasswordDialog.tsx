@@ -13,8 +13,10 @@ import { Eye, EyeOff, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { CommonInputField, CommonButton } from "@/components/common";
+// import { CommonInputField, CommonButton } from "@/components/common";
 import { useAuth } from "@/hooks/useAuth";
+import CommonInputField from "../common/CommonInputField";
+import CommonButton from "../common/CommonButton";
 
 const schema = yup.object({
   currentPassword: yup.string().required("Current password is required"),

@@ -1,4 +1,5 @@
 import { Pagination, PaginationItem, Box } from "@mui/material";
+import CommonDropDown from "./CommonDropDown";
 
 interface CommonPaginationProps {
   count: number;
@@ -17,13 +18,16 @@ export default function CommonPagination({
       {pageSize && onPageSizeChange && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <span className="text-sm text-gray-500">Rows per page:</span>
-          <select
+          <CommonDropDown
+            label="Rows per page"
             value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {pageSizeOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+            menuItems={pageSizeOptions.map((size) => ({
+              value: size,
+              label: String(size),
+            }))}
+            onChange={(value) => onPageSizeChange(Number(value))}
+            sx={{ width: 90 }}
+          />
         </Box>
       )}
       <Pagination

@@ -13,6 +13,8 @@ import type {
   IAuthUser,
   LoginApiResponse,
   LoginRequest,
+  RegisterRequest,
+  RegisterResponse,
 } from "@/types/auth";
 import {
   checkPermission,
@@ -45,6 +47,32 @@ export const useAuth = () => {
         return user;
       } catch (err) {
         const message = getApiErrorMessage(err, "Unable to sign in");
+        dispatch(setAuthError(message));
+        throw new Error(message);
+      } finally {
+        dispatch(setAuthLoading(false));
+      }
+    },
+    [dispatch],
+  );
+
+  const signUp = useCallback(
+    async (payload: RegisterRequest): Promise<RegisterResponse> => {
+      dispatch(setAuthLoading(true));
+      dispatch(setAuthError(null));
+      try {
+        const res = await api.post<{
+          success?: boolean;
+          message?: string;
+          data?: RegisterResponse;
+          alumniID?: number;
+        }>("/Auth/SignUp", payload);
+        if (res.data?.success === false) {
+          throw new Error(res.data.message || "Unable to create account");
+        }
+        return res.data?.data ?? { alumniID: res.data?.alumniID };
+      } catch (err) {
+        const message = getApiErrorMessage(err, "Unable to create account");
         dispatch(setAuthError(message));
         throw new Error(message);
       } finally {
@@ -104,6 +132,7 @@ export const useAuth = () => {
     error,
     role: authUser?.role ?? null,
     login,
+    signUp,
     logout: logoutHandler,
     changePassword,
     hasPermission,

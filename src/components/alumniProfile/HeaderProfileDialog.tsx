@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import { useState } from "react";
 import ChangePasswordDialog from "../login/ChangePasswordDialog";
 import {
@@ -54,7 +55,8 @@ export default function HeaderProfileDialog({
     user?.displayName || user?.fullName || username || user?.username || "User";
   const displayEmail = user?.email ?? "";
   const photoUrl = user?.profilePhoto ?? "";
-  const isAdmin = role === "ADMIN";
+  const isAdmin = hasAdminAccess(role);
+  const roleLabel = role === "MODERATOR" ? "Moderator" : "Administrator";
 
   const go = (path: string) => {
     onClose();
@@ -144,7 +146,7 @@ export default function HeaderProfileDialog({
 
             <Chip
               icon={isAdmin ? <ShieldCheck size={14} /> : undefined}
-              label={isAdmin ? "Administrator" : "Alumni Member"}
+              label={isAdmin ? roleLabel : "Alumni Member"}
               size="small"
               color={isAdmin ? "primary" : "default"}
               variant={isAdmin ? "filled" : "outlined"}

@@ -3,8 +3,6 @@ import {
   Collapse,
   Button,
   Grid,
-  TextField,
-  MenuItem,
 } from "@mui/material";
 import { Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -14,6 +12,7 @@ import {
   clearFilters,
   type AlumniFilters as FilterType,
 } from "@/store/Slice/alumniSlice";
+import CommonDropDown from "@/components/common/CommonDropDown";
 
 const years = Array.from(
   { length: 20 },
@@ -72,79 +71,49 @@ export default function AlumniFilters() {
         >
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
+              <CommonDropDown
                 label="Program"
                 value={local.programId ?? ""}
-                onChange={(e) =>
+                menuItems={[{ label: "All", value: "" }, ...programs]}
+                onChange={(value) =>
                   setLocal({
                     ...local,
-                    programId: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
+                    programId: value ? Number(value) : undefined,
                   })
                 }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                {programs.map((p) => (
-                  <MenuItem key={p.value} value={p.value}>
-                    {p.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
+              <CommonDropDown
                 label="Graduation Year"
                 value={local.graduationYear ?? ""}
-                onChange={(e) =>
+                menuItems={[
+                  { label: "All", value: "" },
+                  ...years.map((year) => ({ label: String(year), value: year })),
+                ]}
+                onChange={(value) =>
                   setLocal({
                     ...local,
-                    graduationYear: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
+                    graduationYear: value ? Number(value) : undefined,
                   })
                 }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                {years.map((y) => (
-                  <MenuItem key={y} value={y}>
-                    {y}
-                  </MenuItem>
-                ))}
-              </TextField>
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>
-              <TextField
-                select
-                size="small"
-                margin="dense"
-                fullWidth
+              <CommonDropDown
                 label="Status"
                 value={local.status ?? ""}
-                onChange={(e) =>
-                  setLocal({ ...local, status: e.target.value || undefined })
+                menuItems={[
+                  { label: "All", value: "" },
+                  { label: "Active", value: "ACTIVE" },
+                  { label: "Inactive", value: "INACTIVE" },
+                ]}
+                onChange={(value) =>
+                  setLocal({ ...local, status: value || undefined })
                 }
-              >
-                <MenuItem value="">
-                  <em>All</em>
-                </MenuItem>
-                <MenuItem value="ACTIVE">Active</MenuItem>
-                <MenuItem value="INACTIVE">Inactive</MenuItem>
-              </TextField>
+              />
             </Grid>
 
             <Grid
