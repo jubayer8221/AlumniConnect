@@ -79,7 +79,7 @@ export default function NotificationsPopover({
   const handleViewAll = () => {
     localStorage.setItem(STORAGE_KEY, new Date().toISOString());
     onClose();
-    navigate("/notices");
+    navigate("alumni/notices");
   };
 
   return (
@@ -133,7 +133,7 @@ export default function NotificationsPopover({
         </Box>
       ) : published.length === 0 ? (
         <Box sx={{ py: 6, textAlign: "center" }}>
-          <Bell size={36} color="#cbd5e1" />
+          <Bell size={36} color="var(--color-gray200)" />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             No notifications yet
           </Typography>
@@ -149,7 +149,7 @@ export default function NotificationsPopover({
                   py: 1.5,
                   alignItems: "flex-start",
                   bgcolor: isUnread(notice.publishDate)
-                    ? "rgba(99,102,241,0.06)"
+                    ? "rgba(var(--rgb-chart-indigo), 0.06)"
                     : "transparent",
                   "&:hover": { bgcolor: "action.hover" },
                 }}
@@ -164,8 +164,8 @@ export default function NotificationsPopover({
                   >
                     <Avatar
                       sx={{
-                        bgcolor: "rgba(245,158,11,0.12)",
-                        color: "#f59e0b",
+                        bgcolor: "rgba(var(--rgb-warning), 0.12)",
+                        color: "var(--color-warning)",
                         width: 34,
                         height: 34,
                       }}

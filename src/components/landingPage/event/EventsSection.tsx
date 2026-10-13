@@ -19,18 +19,18 @@ import type { EventItem } from "@/types/event";
 import EventDetailsDialog from "./EventDetailsDialog";
 
 const typeColors: Record<string, string> = {
-  Reunion: "#0f766e",
-  Workshop: "#c2410c",
-  Seminar: "#0ea5e9",
-  Networking: "#7c3aed",
-  Sports: "#16a34a",
-  Cultural: "#db2777",
-  Career: "#0891b2",
-  Webinar: "#9333ea",
-  Other: "#475569",
+  Reunion: "var(--color-primary)",
+  Workshop: "var(--color-category-orange)",
+  Seminar: "var(--color-info)",
+  Networking: "var(--color-chart-purple-dark)",
+  Sports: "var(--color-success)",
+  Cultural: "var(--color-chart-pink-dark)",
+  Career: "var(--color-chart-cyan-dark)",
+  Webinar: "var(--color-chart-purple-deep)",
+  Other: "var(--color-chart-slate)",
 };
 
-const getColor = (type?: string) => (type && typeColors[type]) || "#0f766e";
+const getColor = (type?: string) => (type && typeColors[type]) || "var(--color-primary)";
 
 const getDayMonth = (iso: string) => {
   const d = new Date(iso);
@@ -53,7 +53,7 @@ export default function EventsSection() {
   const events = (items ?? []).slice(0, 3);
 
   return (
-    <Box id="events" sx={{ py: { xs: 8, md: 12 }, bgcolor: "#f6faf9" }}>
+    <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "var(--color-light-surface-green)" }}>
       <Container maxWidth="lg">
         <Box
           sx={{
@@ -164,7 +164,7 @@ export default function EventsSection() {
                       transition: "all 0.25s ease",
                       "&:hover": {
                         transform: "translateY(-6px)",
-                        boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
+                        boxShadow: "0 20px 40px rgba(var(--rgb-black), 0.08)",
                       },
                     }}
                   >
@@ -187,10 +187,12 @@ export default function EventsSection() {
                       >
                         <Box
                           component="img"
-                          src={event.image || "/image/favicon.png"}
+                          src={event.image || "/image/logo-small.png"}
                           alt={event.title}
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
-                            e.currentTarget.src = "/image/favicon.png";
+                            e.currentTarget.src = "/image/logo-small.png";
                           }}
                           sx={{
                             width: "100%",
@@ -207,14 +209,14 @@ export default function EventsSection() {
                             width: 64,
                             height: 64,
                             borderRadius: 2,
-                            background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
-                            color: "#fff",
+                            background: `linear-gradient(135deg, ${color} 0%, color-mix(in srgb, ${color} 80%, transparent) 100%)`,
+                            color: "var(--color-white)",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
                             justifyContent: "center",
-                            boxShadow: `0 8px 20px ${color}40`,
-                            border: "3px solid #fff",
+                            boxShadow: `0 8px 20px color-mix(in srgb, ${color} 25%, transparent)`,
+                            border: "3px solid var(--color-white)",
                           }}
                         >
                           <Typography
@@ -294,7 +296,7 @@ export default function EventsSection() {
                               gap: 1,
                             }}
                           >
-                            <Clock size={14} color="#6b7280" />
+                            <Clock size={14} color="var(--color-gray500)" />
                             <Typography
                               sx={{
                                 fontSize: "0.8rem",
@@ -312,7 +314,7 @@ export default function EventsSection() {
                               gap: 1,
                             }}
                           >
-                            <MapPin size={14} color="#6b7280" />
+                            <MapPin size={14} color="var(--color-gray500)" />
                             <Typography
                               sx={{
                                 fontSize: "0.8rem",

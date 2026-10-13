@@ -79,9 +79,9 @@ export default function EventDetailsDialog({
             position: "absolute",
             top: 12,
             right: 12,
-            bgcolor: "rgba(0,0,0,0.5)",
-            color: "#fff",
-            "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+            bgcolor: "rgba(var(--rgb-black), 0.5)",
+            color: "var(--color-white)",
+            "&:hover": { bgcolor: "rgba(var(--rgb-black), 0.7)" },
           }}
         >
           <X size={20} />
@@ -97,7 +97,7 @@ export default function EventDetailsDialog({
             <Chip
               label="Upcoming"
               size="small"
-              sx={{ bgcolor: "success.main", color: "#fff", fontWeight: 600 }}
+              sx={{ bgcolor: "success.main", color: "var(--color-white)", fontWeight: 600 }}
             />
           ) : (
             evt.status && (
@@ -130,28 +130,28 @@ export default function EventDetailsDialog({
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <DetailRow
-              icon={<CalendarDays size={18} color="#0f766e" />}
+              icon={<CalendarDays size={18} color="var(--color-primary)" />}
               label="Date"
               value={formatDate(evt.date)}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <DetailRow
-              icon={<Clock size={18} color="#0f766e" />}
+              icon={<Clock size={18} color="var(--color-primary)" />}
               label="Time"
               value={`${formatTime(evt.startTime)} – ${formatTime(evt.endTime)}`}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <DetailRow
-              icon={<MapPin size={18} color="#0f766e" />}
+              icon={<MapPin size={18} color="var(--color-primary)" />}
               label="Venue"
               value={`${evt.venue}${evt.location ? `, ${evt.location}` : ""}`}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <DetailRow
-              icon={<Users size={18} color="#0f766e" />}
+              icon={<Users size={18} color="var(--color-primary)" />}
               label="Organizer"
               value={evt.organizer}
             />
@@ -159,7 +159,7 @@ export default function EventDetailsDialog({
           {evt.registrationDeadline && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                icon={<CalendarClock size={18} color="#0f766e" />}
+                icon={<CalendarClock size={18} color="var(--color-primary)" />}
                 label="Registration Deadline"
                 value={formatDate(evt.registrationDeadline)}
               />
@@ -168,7 +168,7 @@ export default function EventDetailsDialog({
           {evt.capacity > 0 && (
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                icon={<Building2 size={18} color="#0f766e" />}
+                icon={<Building2 size={18} color="var(--color-primary)" />}
                 label="Capacity"
                 value={`${evt.capacity} seats`}
               />

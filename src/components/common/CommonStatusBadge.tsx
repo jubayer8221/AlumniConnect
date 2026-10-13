@@ -7,22 +7,22 @@ interface CommonStatusBadgeProps {
 }
 
 const colorMap: Record<string, { bg: string; color: string }> = {
-  ACTIVE: { bg: "#dcfce7", color: "#166534" },
-  INACTIVE: { bg: "#fee2e2", color: "#991b1b" },
-  PENDING: { bg: "#fef9c3", color: "#854d0e" },
-  VERIFIED: { bg: "#dcfce7", color: "#166534" },
-  PUBLISHED: { bg: "#dcfce7", color: "#166534" },
-  DRAFT: { bg: "#e0e7ff", color: "#3730a3" },
-  ARCHIVED: { bg: "#f1f5f9", color: "#475569" },
-  UPCOMING: { bg: "#dbeafe", color: "#1e40af" },
-  ONGOING: { bg: "#fef9c3", color: "#854d0e" },
-  COMPLETED: { bg: "#f1f5f9", color: "#475569" },
-  CANCELLED: { bg: "#fee2e2", color: "#991b1b" },
-  REGISTERED: { bg: "#dcfce7", color: "#166534" },
+  ACTIVE: { bg: "var(--color-success-pale)", color: "var(--color-success-dark)" },
+  INACTIVE: { bg: "var(--color-error-pale)", color: "var(--color-primary-hover)" },
+  PENDING: { bg: "var(--color-warning-pale)", color: "var(--color-warning-dark)" },
+  VERIFIED: { bg: "var(--color-success-pale)", color: "var(--color-success-dark)" },
+  PUBLISHED: { bg: "var(--color-success-pale)", color: "var(--color-success-dark)" },
+  DRAFT: { bg: "var(--color-light-surface-blue)", color: "var(--color-chart-indigo-dark)" },
+  ARCHIVED: { bg: "var(--color-light-surface-alt)", color: "var(--color-chart-slate)" },
+  UPCOMING: { bg: "var(--color-light-surface-blue)", color: "var(--color-chart-blue-dark)" },
+  ONGOING: { bg: "var(--color-warning-pale)", color: "var(--color-warning-dark)" },
+  COMPLETED: { bg: "var(--color-light-surface-alt)", color: "var(--color-chart-slate)" },
+  CANCELLED: { bg: "var(--color-error-pale)", color: "var(--color-primary-hover)" },
+  REGISTERED: { bg: "var(--color-success-pale)", color: "var(--color-success-dark)" },
 };
 
 export default function CommonStatusBadge({ status, size = "small" }: CommonStatusBadgeProps) {
-  const colors = colorMap[status] || { bg: "#e0e7ff", color: "#3730a3" };
+  const colors = colorMap[status] || { bg: "var(--color-light-surface-blue)", color: "var(--color-chart-indigo-dark)" };
   return (
     <Chip
       label={status}

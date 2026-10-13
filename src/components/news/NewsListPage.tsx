@@ -92,7 +92,7 @@ export default function NewsListPage() {
         sx={{
           borderRadius: 3.5,
           border: "none",
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+          boxShadow: "0px 4px 20px rgba(var(--rgb-black), 0.04)",
           overflow: "hidden",
         }}
       >

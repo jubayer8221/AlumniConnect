@@ -32,9 +32,10 @@ import type { GridColDef } from "@mui/x-data-grid";
 import type { AlumniProfileFullModel } from "@/types/alumni";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import { colors } from "@/theme/colors";
 
-const NAVY = "#132038";
-const TEAL = "#2dd4bf";
+const NAVY = colors.darkSurfaceAlt;
+const TEAL = colors.accent;
 
 export default function AlumniDirectoryPage() {
   const dispatch = useAppDispatch();

@@ -48,7 +48,7 @@ const cardSx = {
   borderColor: "divider",
   height: "100%",
   transition: "all 0.25s ease",
-  "&:hover": { boxShadow: "0 8px 20px rgba(0,0,0,0.06)" },
+  "&:hover": { boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.06)" },
 } as const;
 
 export default function AlumniDashboardPage() {
@@ -90,25 +90,25 @@ export default function AlumniDashboardPage() {
       label: "View Profile",
       icon: <UserCircle size={20} />,
       path: `/alumni/${selectedAlumni.alumniID}`,
-      color: "#6366f1",
+      color: "var(--color-chart-indigo)",
     },
     {
       label: "Edit Profile",
       icon: <Pencil size={20} />,
       path: "/alumni/profile-setup",
-      color: "#ec4899",
+      color: "var(--color-chart-pink)",
     },
     {
       label: "Alumni Directory",
       icon: <Users size={20} />,
       path: "/alumni/directory",
-      color: "#0ea5e9",
+      color: "var(--color-info)",
     },
     {
       label: "Upcoming Events",
       icon: <CalendarDays size={20} />,
       path: "/alumni/events",
-      color: "#10b981",
+      color: "var(--color-chart-emerald)",
     },
   ];
 
@@ -117,25 +117,25 @@ export default function AlumniDashboardPage() {
       label: "My Profile",
       value: p.fullName,
       icon: <UserCircle size={22} />,
-      color: "#6366f1",
+      color: "var(--color-chart-indigo)",
     },
     {
       label: "My Batch",
       value: firstEdu?.batch || "—",
       icon: <Calendar size={22} />,
-      color: "#10b981",
+      color: "var(--color-chart-emerald)",
     },
     {
       label: "My Department",
       value: firstEdu?.departmentName || "—",
       icon: <Building2 size={22} />,
-      color: "#f59e0b",
+      color: "var(--color-warning)",
     },
     {
       label: "Graduation Year",
       value: firstEdu?.graduationYear?.toString() || "—",
       icon: <GraduationCap size={22} />,
-      color: "#8b5cf6",
+      color: "var(--color-chart-purple)",
     },
   ];
 
@@ -166,7 +166,7 @@ export default function AlumniDashboardPage() {
             height: 200,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(var(--rgb-chart-indigo), 0.08) 0%, transparent 70%)",
             transform: "translate(30%, -30%)",
           }}
         />
@@ -185,7 +185,7 @@ export default function AlumniDashboardPage() {
                   width: 6,
                   height: 24,
                   borderRadius: 2,
-                  background: "linear-gradient(180deg, #6366f1, #8b5cf6)",
+                  background: "linear-gradient(180deg, var(--color-chart-indigo), var(--color-chart-purple))",
                 }}
               />
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
@@ -196,7 +196,7 @@ export default function AlumniDashboardPage() {
               variant="h6"
               sx={{
                 fontWeight: 800,
-                background: "linear-gradient(135deg, #6366f1, #ec4899)",
+                background: "linear-gradient(135deg, var(--color-chart-indigo), var(--color-chart-pink))",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -210,11 +210,11 @@ export default function AlumniDashboardPage() {
             sx={{
               height: 10,
               borderRadius: 5,
-              bgcolor: "rgba(99,102,241,0.08)",
+              bgcolor: "rgba(var(--rgb-chart-indigo), 0.08)",
               "& .MuiLinearProgress-bar": {
                 borderRadius: 5,
                 background:
-                  "linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)",
+                  "linear-gradient(90deg, var(--color-chart-indigo) 0%, var(--color-chart-purple) 50%, var(--color-chart-pink) 100%)",
               },
             }}
           />
@@ -245,9 +245,9 @@ export default function AlumniDashboardPage() {
                       width: 44,
                       height: 44,
                       borderRadius: 2.5,
-                      background: `linear-gradient(135deg, ${card.color} 0%, ${card.color}cc 100%)`,
+                      background: `linear-gradient(135deg, ${card.color} 0%, color-mix(in srgb, ${card.color} 80%, transparent) 100%)`,
                       color: "white",
-                      boxShadow: `0 4px 12px ${card.color}30`,
+                      boxShadow: `0 4px 12px color-mix(in srgb, ${card.color} 19%, transparent)`,
                       flexShrink: 0,
                     }}
                   >
@@ -298,7 +298,7 @@ export default function AlumniDashboardPage() {
                     width: 6,
                     height: 24,
                     borderRadius: 2,
-                    background: "linear-gradient(180deg, #6366f1, #8b5cf6)",
+                    background: "linear-gradient(180deg, var(--color-chart-indigo), var(--color-chart-purple))",
                   }}
                 />
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
@@ -330,7 +330,7 @@ export default function AlumniDashboardPage() {
                           },
                         }}
                       />
-                      <ArrowRight size={18} color="#cbd5e1" />
+                      <ArrowRight size={18} color="var(--color-gray200)" />
                     </ListItem>
                     {i < quickActions.length - 1 && <Divider />}
                   </Box>
@@ -356,7 +356,7 @@ export default function AlumniDashboardPage() {
                       width: 6,
                       height: 24,
                       borderRadius: 2,
-                      background: "linear-gradient(180deg, #ec4899, #f472b6)",
+                      background: "linear-gradient(180deg, var(--color-chart-pink), var(--color-chart-pink-light))",
                     }}
                   />
                   <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
@@ -366,7 +366,7 @@ export default function AlumniDashboardPage() {
                 <Button
                   size="small"
                   onClick={() => navigate("/alumni/events")}
-                  sx={{ color: "#ec4899", fontWeight: 600 }}
+                  sx={{ color: "var(--color-chart-pink)", fontWeight: 600 }}
                 >
                   View All
                 </Button>
@@ -386,11 +386,11 @@ export default function AlumniDashboardPage() {
                             py: 1,
                             cursor: "pointer",
                             borderRadius: 2,
-                            "&:hover": { bgcolor: "rgba(236,72,153,0.05)" },
+                            "&:hover": { bgcolor: "rgba(var(--rgb-chart-pink), 0.05)" },
                           }}
                           onClick={() => navigate(`/alumni/events/${evt.id}`)}
                         >
-                          <ListItemIcon sx={{ color: "#ec4899", minWidth: 40 }}>
+                          <ListItemIcon sx={{ color: "var(--color-chart-pink)", minWidth: 40 }}>
                             <CalendarDays size={20} />
                           </ListItemIcon>
                           <ListItemText
@@ -429,7 +429,7 @@ export default function AlumniDashboardPage() {
                       width: 6,
                       height: 24,
                       borderRadius: 2,
-                      background: "linear-gradient(180deg, #f59e0b, #fbbf24)",
+                      background: "linear-gradient(180deg, var(--color-warning), var(--color-warning-light))",
                     }}
                   />
                   <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
@@ -439,7 +439,7 @@ export default function AlumniDashboardPage() {
                 <Button
                   size="small"
                   onClick={() => navigate("/alumni/notices")}
-                  sx={{ color: "#f59e0b", fontWeight: 600 }}
+                  sx={{ color: "var(--color-warning)", fontWeight: 600 }}
                 >
                   View All
                 </Button>
@@ -461,9 +461,9 @@ export default function AlumniDashboardPage() {
                             cursor: "pointer",
                             transition: "all 0.2s",
                             "&:hover": {
-                              borderColor: "#6366f1",
+                              borderColor: "var(--color-chart-indigo)",
                               transform: "translateY(-2px)",
-                              boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                              boxShadow: "0 4px 12px rgba(var(--rgb-black), 0.06)",
                             },
                           }}
                           onClick={() =>
@@ -478,14 +478,14 @@ export default function AlumniDashboardPage() {
                               mb: 1,
                             }}
                           >
-                            <Bell size={14} color="#f59e0b" />
+                            <Bell size={14} color="var(--color-warning)" />
                             <Typography
                               sx={{
                                 fontSize: "0.7rem",
                                 fontWeight: 700,
                                 textTransform: "uppercase",
                                 letterSpacing: 0.5,
-                                color: "#f59e0b",
+                                color: "var(--color-warning)",
                               }}
                             >
                               {notice.category}

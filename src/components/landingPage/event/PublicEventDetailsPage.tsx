@@ -99,7 +99,7 @@ export default function PublicEventDetailsPage() {
                   src={evt.image}
                   alt={evt.title}
                   onError={(e) => {
-                    e.currentTarget.src = "/image/favicon.png";
+                    e.currentTarget.src = "/image/logo-small.png";
                   }}
                   sx={{
                     width: "100%",
@@ -119,7 +119,7 @@ export default function PublicEventDetailsPage() {
                       label="Upcoming"
                       sx={{
                         bgcolor: "success.main",
-                        color: "#fff",
+                        color: "var(--color-white)",
                         fontWeight: 600,
                       }}
                     />
@@ -155,7 +155,7 @@ export default function PublicEventDetailsPage() {
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CalendarDays size={18} color="#0f766e" />
+                      <CalendarDays size={18} color="var(--color-primary)" />
                       <Typography variant="body2">
                         <strong>Date:</strong> {formatDate(evt.date)}
                       </Typography>
@@ -163,7 +163,7 @@ export default function PublicEventDetailsPage() {
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Clock size={18} color="#0f766e" />
+                      <Clock size={18} color="var(--color-primary)" />
                       <Typography variant="body2">
                         <strong>Time:</strong> {formatTime(evt.startTime)} –{" "}
                         {formatTime(evt.endTime)}
@@ -172,7 +172,7 @@ export default function PublicEventDetailsPage() {
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <MapPin size={18} color="#0f766e" />
+                      <MapPin size={18} color="var(--color-primary)" />
                       <Typography variant="body2">
                         <strong>Venue:</strong> {evt.venue}, {evt.location}
                       </Typography>
@@ -180,7 +180,7 @@ export default function PublicEventDetailsPage() {
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Users size={18} color="#0f766e" />
+                      <Users size={18} color="var(--color-primary)" />
                       <Typography variant="body2">
                         <strong>Organizer:</strong> {evt.organizer}
                       </Typography>

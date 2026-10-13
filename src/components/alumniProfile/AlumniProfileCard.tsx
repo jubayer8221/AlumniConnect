@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import { CommonAvatar, CommonStatusBadge } from "../common";
 import type { AlumniProfileFullModel } from "@/types/alumni";
+import { colors } from "@/theme/colors";
 
-const NAVY = "#132038";
-const TEAL = "#2dd4bf";
+const NAVY = colors.darkSurfaceAlt;
+const TEAL = colors.accent;
 
 interface AlumniProfileCardProps {
   alumni: AlumniProfileFullModel;
@@ -66,8 +67,8 @@ export default function AlumniProfileCard({
           position: "relative",
           px: { xs: 2.5, md: 3.5 },
           py: { xs: 2.5, md: 3 },
-          background: `linear-gradient(135deg, ${NAVY} 0%, #1b2d4a 65%, #203b56 100%)`,
-          color: "#fff",
+          background: `linear-gradient(135deg, ${NAVY} 0%, var(--color-dark-surface-blue) 65%, var(--color-dark-surface-deep) 100%)`,
+          color: "var(--color-white)",
         }}
       >
         <Box
@@ -98,7 +99,7 @@ export default function AlumniProfileCard({
               borderRadius: "50%",
               p: 0.5,
               bgcolor: TEAL,
-              boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
+              boxShadow: "0 6px 20px rgba(var(--rgb-black), 0.2)",
             }}
           >
             <CommonAvatar
@@ -157,7 +158,7 @@ export default function AlumniProfileCard({
                 sx={{
                   mt: 0.35,
                   fontSize: "0.9rem",
-                  color: alpha("#fff", 0.72),
+                  color: "rgba(var(--rgb-white), 0.72)",
                 }}
               >
                 {p.nativeName}
@@ -169,7 +170,7 @@ export default function AlumniProfileCard({
                 sx={{
                   mt: 0.55,
                   fontSize: "0.88rem",
-                  color: alpha("#fff", 0.72),
+                  color: "rgba(var(--rgb-white), 0.72)",
                   lineHeight: 1.4,
                 }}
               >
@@ -179,7 +180,7 @@ export default function AlumniProfileCard({
                     {" "}
                     <Box
                       component="span"
-                      sx={{ color: "#fff", fontWeight: 600 }}
+                      sx={{ color: "var(--color-white)", fontWeight: 600 }}
                     >
                       at {firstJob.companyname}
                     </Box>
@@ -213,7 +214,7 @@ export default function AlumniProfileCard({
               <Typography
                 sx={{
                   fontSize: "0.72rem",
-                  color: alpha("#fff", 0.65),
+                  color: "rgba(var(--rgb-white), 0.65)",
                   fontWeight: 500,
                 }}
               >
@@ -235,7 +236,7 @@ export default function AlumniProfileCard({
               sx={{
                 height: 5,
                 borderRadius: 5,
-                bgcolor: alpha("#fff", 0.12),
+                bgcolor: "rgba(var(--rgb-white), 0.12)",
                 "& .MuiLinearProgress-bar": {
                   borderRadius: 5,
                   bgcolor: completionColor,

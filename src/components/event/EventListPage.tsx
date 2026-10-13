@@ -207,10 +207,10 @@ export default function EventListPage() {
                 >
                   <Box
                     component="img"
-                    src={evt.image || "/image/favicon.png"}
+                    src={evt.image || "/image/logo-small.png"}
                     alt={evt.title}
                     onError={(e) => {
-                      e.currentTarget.src = "/image/favicon.png";
+                      e.currentTarget.src = "/image/logo-small.png";
                     }}
                     sx={{
                       width: "100%",

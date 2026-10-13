@@ -10,13 +10,16 @@ import {
   Skeleton,
   Stack,
 } from "@mui/material";
-import { Calendar, Newspaper } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Calendar, Newspaper, Bell, TrendingUp } from "lucide-react";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useNews } from "@/hooks/useNews";
+import { slugify } from "@/utils/slugify";
 import { NewsItem } from "./PublicNewsSection";
 import LandingHeader from "./LandingHeader";
-import NewsDetailsDialog from "../news/NewsDetailsDialog";
 import LandingFooter from "./LandingFooter";
+import CommonBanner from "../common/CommonBanner";
+// import PageBanner from "@/components/PageBanner"; // Import your reusable PageBanner component
 
 const categoryColor: Record<
   string,
@@ -49,45 +52,49 @@ const formatDate = (iso?: string | null) => {
 
 export default function PublicNewsListPage() {
   const { newsList, loading, fetchAllNews } = useNews();
-  const [selected, setSelected] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     void fetchAllNews({ status: "Published", pageNumber: 1, pageSize: 50 });
   }, [fetchAllNews]);
 
-  const items = (newsList ?? []).filter(
+  const items: NewsItem[] = (newsList ?? []).filter(
     (n) => n.Status === "Published" && n.IsActive,
   );
+
+  // Dynamic banner stats based on actual loaded items
+  const newsStats = [
+    {
+      icon: <Newspaper size={22} />,
+      value: `${items.length}`,
+      label: "Published Stories",
+    },
+    {
+      icon: <Bell size={22} />,
+      value: "Official",
+      label: "Announcements",
+    },
+    {
+      icon: <TrendingUp size={22} />,
+      value: "Live",
+      label: "Updates",
+    },
+  ];
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
       <LandingHeader />
 
+      {/* Hero / Page Banner Component */}
+      <CommonBanner
+        badge="News & Updates"
+        title="Stories and News from"
+        highlightText="Our Community"
+        subtitle="Stay informed about campus milestones, institutional achievements, and inspiring spotlights on fellow alumni."
+        stats={newsStats}
+      />
+
       <Box component="main" sx={{ py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
-          <Typography
-            sx={{
-              fontSize: "0.8rem",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "primary.main",
-              mb: 1,
-            }}
-          >
-            News
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: { xs: "2rem", md: "2.5rem" },
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              mb: 4,
-            }}
-          >
-            News & Announcements
-          </Typography>
-
           {/* Loading skeletons */}
           {loading && items.length === 0 && (
             <Grid container spacing={3}>
@@ -103,7 +110,7 @@ export default function PublicNewsListPage() {
             </Grid>
           )}
 
-          {/* Empty */}
+          {/* Empty State */}
           {!loading && items.length === 0 && (
             <Box
               sx={{
@@ -125,7 +132,7 @@ export default function PublicNewsListPage() {
             </Box>
           )}
 
-          {/* Cards */}
+          {/* News Cards Grid */}
           {items.length > 0 && (
             <Grid container spacing={{ xs: 3, md: 4 }}>
               {items.map((item) => (
@@ -151,7 +158,8 @@ export default function PublicNewsListPage() {
                     }}
                   >
                     <CardActionArea
-                      onClick={() => setSelected(item)}
+                      component={Link}
+                      to={`/news/${item.NewsID}/${slugify(item.Title)}`}
                       sx={{
                         flex: 1,
                         display: "flex",
@@ -159,7 +167,7 @@ export default function PublicNewsListPage() {
                         alignItems: "stretch",
                       }}
                     >
-                      {/* Image */}
+                      {/* Image Container */}
                       <Box
                         sx={{
                           position: "relative",
@@ -176,7 +184,7 @@ export default function PublicNewsListPage() {
                             alt={item.Title}
                             onError={(e) => {
                               (e.currentTarget as HTMLImageElement).src =
-                                "/image/favicon.png";
+                                "/image/logo-small.png";
                             }}
                             sx={{
                               position: "absolute",
@@ -218,6 +226,7 @@ export default function PublicNewsListPage() {
                         />
                       </Box>
 
+                      {/* Content Area */}
                       <CardContent
                         sx={{
                           flex: 1,
@@ -282,12 +291,6 @@ export default function PublicNewsListPage() {
           )}
         </Container>
       </Box>
-
-      <NewsDetailsDialog
-        open={!!selected}
-        news={selected}
-        onClose={() => setSelected(null)}
-      />
 
       <LandingFooter />
     </Box>

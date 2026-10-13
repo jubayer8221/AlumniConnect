@@ -98,18 +98,29 @@ export default function LandingHeader() {
     navigate(role === "ADMIN" ? "/dashboard" : "/alumni/dashboard");
   };
 
+  const isActive = (item: NavItem): boolean => {
+    if (item.type === "route") {
+      return (
+        location.pathname === item.to ||
+        location.pathname.startsWith(`${item.to}/`)
+      );
+    }
+    // Home (hash "/")
+    return location.pathname === "/";
+  };
+
   return (
     <AppBar
       position="fixed"
       elevation={0}
       sx={{
-        bgcolor: solid ? "rgba(255,255,255,0.95)" : "transparent",
+        bgcolor: solid ? "rgba(var(--rgb-white), 0.95)" : "transparent",
         backdropFilter: solid ? "blur(12px)" : "none",
-        boxShadow: solid ? "0 4px 20px rgba(0,0,0,0.06)" : "none",
+        boxShadow: solid ? "0 4px 20px rgba(var(--rgb-black), 0.06)" : "none",
         borderBottom: solid ? "1px solid" : "none",
         borderColor: "divider",
         transition: "all 0.3s ease",
-        color: solid ? "text.primary" : "#ffffff",
+        color: solid ? "text.primary" : "var(--color-surface)",
       }}
     >
       <Container maxWidth="lg">
@@ -125,7 +136,7 @@ export default function LandingHeader() {
           >
             <Box
               component="img"
-              src="/image/logo.png"
+              src="/image/logo-small.png"
               alt={appConfig.appName}
               sx={{ width: 40, height: 40, objectFit: "contain" }}
             />
@@ -136,7 +147,7 @@ export default function LandingHeader() {
                   fontSize: "1.05rem",
                   letterSpacing: "-0.02em",
                   lineHeight: 1.1,
-                  color: solid ? "text.primary" : "#ffffff",
+                  color: solid ? "text.primary" : "var(--color-surface)",
                 }}
               >
                 {appConfig.appName}
@@ -144,7 +155,9 @@ export default function LandingHeader() {
               <Typography
                 sx={{
                   fontSize: "0.68rem",
-                  color: solid ? "text.secondary" : "rgba(255,255,255,0.75)",
+                  color: solid
+                    ? "text.secondary"
+                    : "rgba(var(--rgb-white), 0.75)",
                   lineHeight: 1.2,
                 }}
               >
@@ -160,22 +173,37 @@ export default function LandingHeader() {
             spacing={3}
             sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}
           >
-            {NAV.map((item) => (
-              <Typography
-                key={item.type === "route" ? item.to : item.href}
-                onClick={() => handleNav(item)}
-                sx={{
-                  fontSize: "0.9rem",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  opacity: 0.9,
-                  transition: "opacity 0.2s",
-                  "&:hover": { opacity: 1 },
-                }}
-              >
-                {item.label}
-              </Typography>
-            ))}
+            {NAV.map((item) => {
+              const active = isActive(item);
+              return (
+                <Typography
+                  key={item.type === "route" ? item.to : item.href}
+                  onClick={() => handleNav(item)}
+                  sx={{
+                    fontSize: "0.9rem",
+                    fontWeight: active ? 700 : 500,
+                    cursor: "pointer",
+                    opacity: active ? 1 : 0.9,
+                    color: active
+                      ? "var(--color-primary)"
+                      : solid
+                        ? "text.primary"
+                        : "var(--color-surface)",
+                    borderBottom: active
+                      ? "2px solid"
+                      : "2px solid transparent",
+                    borderColor: active
+                      ? "var(--color-primary)"
+                      : "transparent",
+                    pb: 0.25,
+                    transition: "opacity 0.2s, color 0.2s, border-color 0.2s",
+                    "&:hover": { opacity: 1 },
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              );
+            })}
           </Stack>
 
           <Stack
@@ -188,13 +216,13 @@ export default function LandingHeader() {
                 variant="contained"
                 onClick={goToDashboard}
                 sx={{
-                  bgcolor: "#0f766e",
-                  color: "#fff",
+                  bgcolor: "var(--color-primary)",
+                  color: "var(--color-white)",
                   textTransform: "none",
                   fontWeight: 600,
                   borderRadius: 2,
                   px: 3,
-                  "&:hover": { bgcolor: "#115e59" },
+                  "&:hover": { bgcolor: "var(--color-primary-hover)" },
                 }}
               >
                 Go to Dashboard
@@ -204,7 +232,7 @@ export default function LandingHeader() {
                 <Button
                   onClick={() => navigate("/login")}
                   sx={{
-                    color: solid ? "text.primary" : "#ffffff",
+                    color: solid ? "text.primary" : "var(--color-surface)",
                     textTransform: "none",
                     fontWeight: 600,
                   }}
@@ -215,13 +243,13 @@ export default function LandingHeader() {
                   variant="contained"
                   onClick={() => navigate("/login")}
                   sx={{
-                    bgcolor: "#0f766e",
-                    color: "#fff",
+                    bgcolor: "var(--color-primary)",
+                    color: "var(--color-white)",
                     textTransform: "none",
                     fontWeight: 600,
                     borderRadius: 2,
                     px: 3,
-                    "&:hover": { bgcolor: "#115e59" },
+                    "&:hover": { bgcolor: "var(--color-primary-hover)" },
                   }}
                 >
                   Join Network
@@ -231,11 +259,16 @@ export default function LandingHeader() {
           </Stack>
 
           <IconButton
+            aria-label={
+              mobileOpen ? "Close navigation menu" : "Open navigation menu"
+            }
+            aria-expanded={mobileOpen}
+            aria-controls="landing-mobile-navigation"
             sx={{
               display: { xs: "flex", md: "none" },
-              color: solid ? "text.primary" : "#ffffff",
+              color: solid ? "text.primary" : "var(--color-surface)",
             }}
-            onClick={() => setMobileOpen(true)}
+            onClick={() => setMobileOpen((open) => !open)}
           >
             <MenuIcon />
           </IconButton>
@@ -246,22 +279,42 @@ export default function LandingHeader() {
         anchor="right"
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
-        slotProps={{ paper: { sx: { width: 280 } } }}
+        slotProps={{
+          paper: { id: "landing-mobile-navigation", sx: { width: 280 } },
+        }}
       >
         <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
-          <IconButton onClick={() => setMobileOpen(false)}>
+          <IconButton
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close navigation menu"
+          >
             <X />
           </IconButton>
         </Box>
         <List>
-          {NAV.map((item) => (
-            <ListItemButton
-              key={item.type === "route" ? item.to : item.href}
-              onClick={() => handleNav(item)}
-            >
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          ))}
+          {NAV.map((item) => {
+            const active = isActive(item);
+            return (
+              <ListItemButton
+                key={item.type === "route" ? item.to : item.href}
+                onClick={() => handleNav(item)}
+                selected={active}
+                sx={{
+                  "&.Mui-selected": {
+                    bgcolor: "action.selected",
+                    borderRight: "3px solid",
+                    borderColor: "var(--color-primary)",
+                    "& .MuiListItemText-primary": {
+                      fontWeight: 700,
+                      color: "var(--color-primary)",
+                    },
+                  },
+                }}
+              >
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            );
+          })}
         </List>
         <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
           {isAuthenticated ? (
@@ -269,9 +322,9 @@ export default function LandingHeader() {
               variant="contained"
               onClick={goToDashboard}
               sx={{
-                bgcolor: "#0f766e",
+                bgcolor: "var(--color-primary)",
                 textTransform: "none",
-                "&:hover": { bgcolor: "#115e59" },
+                "&:hover": { bgcolor: "var(--color-primary-hover)" },
               }}
             >
               Go to Dashboard
@@ -289,9 +342,9 @@ export default function LandingHeader() {
                 variant="contained"
                 onClick={() => navigate("/login")}
                 sx={{
-                  bgcolor: "#0f766e",
+                  bgcolor: "var(--color-primary)",
                   textTransform: "none",
-                  "&:hover": { bgcolor: "#115e59" },
+                  "&:hover": { bgcolor: "var(--color-primary-hover)" },
                 }}
               >
                 Join Network

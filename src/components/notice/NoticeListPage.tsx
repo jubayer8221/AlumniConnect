@@ -96,7 +96,7 @@ export default function NoticeListPage({
     setActionTarget({ notice: null as unknown as Notice, anchor: null });
   };
 
-  const basePath = isAdmin ? "/notices" : "/alumni/notices";
+  const basePath = isAdmin ? "alumni/notices" : "/alumni/notices";
   const visibleItems = isAdmin
     ? items
     : items.filter((n) => n.status === "PUBLISHED");
@@ -114,7 +114,7 @@ export default function NoticeListPage({
           isAdmin ? (
             <CommonButton
               startIcon={<Plus size={18} />}
-              onClick={() => navigate("/notices/create")}
+              onClick={() => navigate("alumni/notices/create")}
             >
               Create Notice
             </CommonButton>

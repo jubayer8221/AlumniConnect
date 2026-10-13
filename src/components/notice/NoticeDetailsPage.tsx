@@ -31,7 +31,7 @@ export default function NoticeDetailsPage({
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { selectedNotice, loading } = useAppSelector((s) => s.notices);
-  const basePath = isAdmin ? "/notices" : "/alumni/notices";
+  const basePath = isAdmin ? "alumni/notices" : "/alumni/notices";
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   // ★ Fetch only if it's not the one already loaded

@@ -19,7 +19,7 @@ import { appConfig } from "@/config/appConfig";
 
 export default function LandingFooter() {
   return (
-    <Box sx={{ bgcolor: "#0a1e1c", color: "#ffffff", pt: 8, pb: 4 }}>
+    <Box sx={{ bgcolor: "var(--color-dark-forest)", color: "var(--color-surface)", pt: 8, pb: 4 }}>
       <Container maxWidth="lg">
         <Grid container spacing={5}>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -28,7 +28,7 @@ export default function LandingFooter() {
             >
               <Box
                 component="img"
-                src="/image/logo.png"
+                src="/image/logo-small.png"
                 alt={appConfig.appName}
                 sx={{ width: 40, height: 40, objectFit: "contain" }}
               />
@@ -39,7 +39,7 @@ export default function LandingFooter() {
                   {appConfig.appName}
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.55)" }}
+                  sx={{ fontSize: "0.7rem", color: "rgba(var(--rgb-white), 0.55)" }}
                 >
                   {appConfig.institutionName}
                 </Typography>
@@ -48,7 +48,7 @@ export default function LandingFooter() {
             <Typography
               sx={{
                 fontSize: "0.87rem",
-                color: "rgba(255,255,255,0.6)",
+                color: "rgba(var(--rgb-white), 0.6)",
                 lineHeight: 1.7,
                 mb: 3,
               }}
@@ -61,18 +61,22 @@ export default function LandingFooter() {
                 {
                   icon: <Facebook size={18} />,
                   href: appConfig.socialLinks.facebook,
+                  label: "Facebook",
                 },
                 {
                   icon: <Twitter size={18} />,
                   href: appConfig.socialLinks.twitter,
+                  label: "Twitter",
                 },
                 {
                   icon: <Linkedin size={18} />,
                   href: appConfig.socialLinks.linkedin,
+                  label: "LinkedIn",
                 },
                 {
                   icon: <Instagram size={18} />,
                   href: appConfig.socialLinks.instagram,
+                  label: "Instagram",
                 },
               ].map((item, i) => (
                 <IconButton
@@ -81,11 +85,12 @@ export default function LandingFooter() {
                   href={item.href}
                   target="_blank"
                   rel="noreferrer"
+                  aria-label={`Visit us on ${item.label}`}
                   size="small"
                   sx={{
-                    color: "#ffffff",
-                    bgcolor: "rgba(255,255,255,0.06)",
-                    "&:hover": { bgcolor: "#0f766e" },
+                    color: "var(--color-surface)",
+                    bgcolor: "rgba(var(--rgb-white), 0.06)",
+                    "&:hover": { bgcolor: "var(--color-primary)" },
                   }}
                 >
                   {item.icon}
@@ -105,10 +110,10 @@ export default function LandingFooter() {
                     key={link}
                     sx={{
                       fontSize: "0.85rem",
-                      color: "rgba(255,255,255,0.6)",
+                      color: "rgba(var(--rgb-white), 0.6)",
                       cursor: "pointer",
                       transition: "color 0.2s",
-                      "&:hover": { color: "#7dd3c7" },
+                      "&:hover": { color: "var(--color-accent)" },
                     }}
                   >
                     {link}
@@ -134,10 +139,10 @@ export default function LandingFooter() {
                   key={link}
                   sx={{
                     fontSize: "0.85rem",
-                    color: "rgba(255,255,255,0.6)",
+                    color: "rgba(var(--rgb-white), 0.6)",
                     cursor: "pointer",
                     transition: "color 0.2s",
-                    "&:hover": { color: "#7dd3c7" },
+                    "&:hover": { color: "var(--color-accent)" },
                   }}
                 >
                   {link}
@@ -154,13 +159,13 @@ export default function LandingFooter() {
               <Box sx={{ display: "flex", gap: 1.5 }}>
                 <MapPin
                   size={18}
-                  color="#7dd3c7"
+                  color="var(--color-accent)"
                   style={{ flexShrink: 0, marginTop: 2 }}
                 />
                 <Typography
                   sx={{
                     fontSize: "0.85rem",
-                    color: "rgba(255,255,255,0.6)",
+                    color: "rgba(var(--rgb-white), 0.6)",
                     lineHeight: 1.6,
                   }}
                 >
@@ -168,17 +173,17 @@ export default function LandingFooter() {
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
-                <Mail size={18} color="#7dd3c7" />
+                <Mail size={18} color="var(--color-accent)" />
                 <Typography
-                  sx={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}
+                  sx={{ fontSize: "0.85rem", color: "rgba(var(--rgb-white), 0.6)" }}
                 >
                   {appConfig.contactEmail}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
-                <Phone size={18} color="#7dd3c7" />
+                <Phone size={18} color="var(--color-accent)" />
                 <Typography
-                  sx={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}
+                  sx={{ fontSize: "0.85rem", color: "rgba(var(--rgb-white), 0.6)" }}
                 >
                   {appConfig.contactPhone}
                 </Typography>
@@ -189,7 +194,7 @@ export default function LandingFooter() {
 
         <Box
           sx={{
-            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderTop: "1px solid rgba(var(--rgb-white), 0.08)",
             mt: 6,
             pt: 3,
             display: "flex",
@@ -199,7 +204,7 @@ export default function LandingFooter() {
           }}
         >
           <Typography
-            sx={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.45)" }}
+            sx={{ fontSize: "0.78rem", color: "rgba(var(--rgb-white), 0.72)" }}
           >
             © {new Date().getFullYear()} {appConfig.appName}. All rights
             reserved.
@@ -210,9 +215,9 @@ export default function LandingFooter() {
                 key={item}
                 sx={{
                   fontSize: "0.78rem",
-                  color: "rgba(255,255,255,0.45)",
+                  color: "rgba(var(--rgb-white), 0.72)",
                   cursor: "pointer",
-                  "&:hover": { color: "#7dd3c7" },
+                  "&:hover": { color: "var(--color-accent)" },
                 }}
               >
                 {item}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { ArrowLeft, Home, MoveRight, Sparkles } from "lucide-react";
+import { ArrowLeft, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type NotFoundPageProps = {
@@ -27,8 +27,8 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#030712",
-        color: "#f9fafb",
+        backgroundColor: "var(--color-gray950)",
+        color: "var(--color-gray50)",
         position: "relative",
         overflow: "hidden",
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
@@ -39,7 +39,7 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
         sx={{
           position: "absolute",
           inset: 0,
-          background: `radial-gradient(800px circle at ${mousePos.x}px ${mousePos.y}px, rgba(59, 130, 246, 0.12), transparent 40%)`,
+          background: `radial-gradient(800px circle at ${mousePos.x}px ${mousePos.y}px, rgba(var(--rgb-chart-blue), 0.12), transparent 40%)`,
           pointerEvents: "none",
           transition: "background 0.1s ease-out",
         }}
@@ -50,13 +50,13 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
         sx={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                            linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(to right, rgba(var(--rgb-white), 0.03) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(var(--rgb-white), 0.03) 1px, transparent 1px)`,
           backgroundSize: "4rem 4rem",
           maskImage:
-            "radial-gradient(ellipse 60% 50% at 50% 50%, #000 70%, transparent 100%)",
+            "radial-gradient(ellipse 60% 50% at 50% 50%, var(--color-black) 70%, transparent 100%)",
           WebkitMaskImage:
-            "radial-gradient(ellipse 60% 50% at 50% 50%, #000 70%, transparent 100%)",
+            "radial-gradient(ellipse 60% 50% at 50% 50%, var(--color-black) 70%, transparent 100%)",
           pointerEvents: "none",
         }}
       />
@@ -75,8 +75,8 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
               px: 2,
               py: 0.75,
               borderRadius: "9999px",
-              backgroundColor: "rgba(255, 255, 255, 0.03)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
+              backgroundColor: "rgba(var(--rgb-white), 0.03)",
+              border: "1px solid rgba(var(--rgb-white), 0.08)",
               backdropFilter: "blur(8px)",
             }}
           >
@@ -85,8 +85,8 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                backgroundColor: "#3b82f6",
-                boxShadow: "0 0 10px #3b82f6",
+                backgroundColor: "var(--color-chart-blue)",
+                boxShadow: "0 0 10px var(--color-chart-blue)",
               }}
             />
             <Typography
@@ -94,7 +94,7 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
               sx={{
                 fontSize: "0.8125rem",
                 fontWeight: 600,
-                color: "#9ca3af",
+                color: "var(--color-gray400)",
                 letterSpacing: "0.05em",
                 textTransform: "uppercase",
               }}
@@ -112,7 +112,7 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
                 lineHeight: 0.8,
                 letterSpacing: "-0.06em",
                 background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.01) 100%)",
+                  "linear-gradient(180deg, rgba(var(--rgb-white), 0.15) 0%, rgba(var(--rgb-white), 0.01) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 userSelect: "none",
@@ -137,7 +137,7 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
                   fontSize: { xs: "1.75rem", sm: "2.75rem" },
                   fontWeight: 700,
                   letterSpacing: "-0.02em",
-                  color: "#ffffff",
+                  color: "var(--color-surface)",
                 }}
               >
                 Lost in the deep end?
@@ -148,7 +148,7 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
           {/* Subtitle */}
           <Typography
             sx={{
-              color: "#9ca3af",
+              color: "var(--color-gray400)",
               maxWidth: 460,
               fontSize: { xs: "0.95rem", sm: "1.1rem" },
               lineHeight: 1.6,
@@ -177,13 +177,13 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
                 fontWeight: 600,
                 fontSize: "0.95rem",
                 textTransform: "none",
-                backgroundColor: "#ffffff",
-                color: "#030712",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-gray950)",
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: "var(--color-gray50)",
                   transform: "translateY(-2px)",
-                  boxShadow: "0 12px 24px -8px rgba(255, 255, 255, 0.3)",
+                  boxShadow: "0 12px 24px -8px rgba(var(--rgb-white), 0.3)",
                 },
               }}
             >
@@ -201,15 +201,15 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
                 fontWeight: 600,
                 fontSize: "0.95rem",
                 textTransform: "none",
-                borderColor: "rgba(255, 255, 255, 0.12)",
-                color: "#d1d5db",
-                backgroundColor: "rgba(255, 255, 255, 0.02)",
+                borderColor: "rgba(var(--rgb-white), 0.12)",
+                color: "var(--color-gray300)",
+                backgroundColor: "rgba(var(--rgb-white), 0.02)",
                 backdropFilter: "blur(10px)",
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  borderColor: "rgba(255, 255, 255, 0.25)",
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  color: "#ffffff",
+                  borderColor: "rgba(var(--rgb-white), 0.25)",
+                  backgroundColor: "rgba(var(--rgb-white), 0.05)",
+                  color: "var(--color-surface)",
                   transform: "translateY(-2px)",
                 },
               }}

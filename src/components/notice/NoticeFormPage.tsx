@@ -131,7 +131,7 @@ export default function NoticeFormPage() {
             severity: "success",
           }),
         );
-        navigate("/notices");
+        navigate("alumni/notices");
       }
     }
   };
@@ -144,7 +144,7 @@ export default function NoticeFormPage() {
         title={isEdit ? "Edit Notice" : "Create Notice"}
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Notices", path: "/notices" },
+          { label: "Notices", path: "alumni/notices" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={

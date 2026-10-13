@@ -296,8 +296,8 @@ function SectionHeader({
           width: 32,
           height: 32,
           borderRadius: 1.5,
-          bgcolor: "rgba(99,102,241,0.1)",
-          color: "#6366f1",
+          bgcolor: "rgba(var(--rgb-chart-indigo), 0.1)",
+          color: "var(--color-chart-indigo)",
         }}
       >
         {icon}
@@ -777,7 +777,7 @@ export default function ProfileSetupPage() {
           sx={{
             height: 80,
             background:
-              "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)",
+              "linear-gradient(135deg, var(--color-chart-indigo) 0%, var(--color-chart-purple) 50%, var(--color-chart-pink) 100%)",
           }}
         />
         <CardContent sx={{ p: 2.5, pt: 0, mt: -4 }}>
@@ -1081,7 +1081,7 @@ export default function ProfileSetupPage() {
                 startIcon={<Plus size={16} />}
                 onClick={addFamilyMember}
                 sx={{
-                  color: "#6366f1",
+                  color: "var(--color-chart-indigo)",
                   fontWeight: 600,
                   textTransform: "none",
                 }}
@@ -1188,7 +1188,7 @@ export default function ProfileSetupPage() {
                 startIcon={<Plus size={16} />}
                 onClick={addEducation}
                 sx={{
-                  color: "#6366f1",
+                  color: "var(--color-chart-indigo)",
                   fontWeight: 600,
                   textTransform: "none",
                 }}
@@ -1397,7 +1397,7 @@ export default function ProfileSetupPage() {
                 startIcon={<Plus size={16} />}
                 onClick={addJob}
                 sx={{
-                  color: "#6366f1",
+                  color: "var(--color-chart-indigo)",
                   fontWeight: 600,
                   textTransform: "none",
                 }}

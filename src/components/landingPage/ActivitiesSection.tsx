@@ -16,7 +16,7 @@ const ACTIVITIES = [
     title: "Winter Reunion 2026 Registration Opens",
     excerpt:
       "Registration is now open for the biggest alumni gathering of the year. Early birds get priority seating and a special welcome kit.",
-    color: "#0f766e",
+    color: "var(--color-primary)",
     image:
       "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80",
   },
@@ -27,7 +27,7 @@ const ACTIVITIES = [
     title: "Career Mentorship Program Kicks Off",
     excerpt:
       "120 mentors across IT, banking, and healthcare have signed up. Students can now request one-on-one sessions through the portal.",
-    color: "#c2410c",
+    color: "var(--color-category-orange)",
     image:
       "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80",
   },
@@ -38,7 +38,7 @@ const ACTIVITIES = [
     title: "New Chapter Launched in Dhaka",
     excerpt:
       "The Dhaka chapter opened with 80 founding members. Monthly meetups begin this November — sign up to be part of the founding circle.",
-    color: "#0ea5e9",
+    color: "var(--color-info)",
     image:
       "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80",
   },
@@ -47,7 +47,6 @@ const ACTIVITIES = [
 export default function ActivitiesSection() {
   return (
     <Box
-      id="activities"
       sx={{ py: { xs: 8, md: 12 }, bgcolor: "background.default" }}
     >
       <Container maxWidth="lg">
@@ -103,7 +102,7 @@ export default function ActivitiesSection() {
                   cursor: "pointer",
                   "&:hover": {
                     transform: "translateY(-6px)",
-                    boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
+                    boxShadow: "0 20px 40px rgba(var(--rgb-black), 0.08)",
                     "& .post-image": { transform: "scale(1.06)" },
                   },
                 }}
@@ -113,17 +112,21 @@ export default function ActivitiesSection() {
                     position: "relative",
                     height: 200,
                     overflow: "hidden",
-                    bgcolor: "#e5e7eb",
+                    bgcolor: "var(--color-border)",
                   }}
                 >
                   <Box
                     className="post-image"
+                    component="img"
+                    src={post.image}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
                     sx={{
+                      display: "block",
                       width: "100%",
                       height: "100%",
-                      backgroundImage: `url('${post.image}')`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
+                      objectFit: "cover",
                       transition: "transform 0.5s ease",
                     }}
                   />
@@ -135,7 +138,7 @@ export default function ActivitiesSection() {
                       px: 1.5,
                       py: 0.5,
                       borderRadius: 1.5,
-                      bgcolor: "rgba(255,255,255,0.95)",
+                      bgcolor: "rgba(var(--rgb-white), 0.95)",
                       backdropFilter: "blur(8px)",
                       display: "flex",
                       alignItems: "center",

@@ -185,7 +185,7 @@ export default function EventDetailsPage() {
             src={evt.image}
             alt={evt.title}
             onError={(event) => {
-              event.currentTarget.src = "/image/favicon.png";
+              event.currentTarget.src = "/image/logo-small.png";
             }}
             sx={{ width: "100%", height: 300, objectFit: "cover" }}
           />

@@ -238,6 +238,7 @@ export default function AboutUsSection() {
 
             <Typography
               variant="h3"
+              component="h2"
               sx={{
                 fontWeight: 800,
                 fontSize: { xs: "1.75rem", md: "2.25rem" },

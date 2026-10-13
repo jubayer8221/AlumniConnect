@@ -13,10 +13,9 @@ import {
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Newspaper } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNews } from "@/hooks/useNews";
-import NewsDetailsDialog from "../news/NewsDetailsDialog";
-// import NewsDetailsDialog from "./NewsDetailsDialog";
+import { slugify } from "@/utils/slugify";
 
 /* ---------- shared type ---------- */
 export interface NewsItem {
@@ -91,7 +90,6 @@ const mapToCard = (n: NewsItem): NewsCardItem => ({
 
 export default function NewsSection() {
   const { newsList, loading, fetchAllNews } = useNews();
-  const [selected, setSelected] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     void fetchAllNews({ status: "Published", pageNumber: 1, pageSize: 3 });
@@ -214,10 +212,8 @@ export default function NewsSection() {
                   }}
                 >
                   <CardActionArea
-                    onClick={() => {
-                      const full = published.find((n) => n.NewsID === item.id);
-                      if (full) setSelected(full);
-                    }}
+                    component={Link}
+                    to={`/news/${item.id}/${slugify(item.title)}`}
                     sx={{
                       flex: 1,
                       display: "flex",
@@ -240,9 +236,11 @@ export default function NewsSection() {
                           component="img"
                           src={item.image}
                           alt={item.title}
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             (e.currentTarget as HTMLImageElement).src =
-                              "/image/favicon.png";
+                              "/image/logo-small.png";
                           }}
                           sx={{
                             position: "absolute",
@@ -341,12 +339,6 @@ export default function NewsSection() {
           </Grid>
         )}
       </Container>
-
-      <NewsDetailsDialog
-        open={!!selected}
-        news={selected}
-        onClose={() => setSelected(null)}
-      />
     </Box>
   );
 }

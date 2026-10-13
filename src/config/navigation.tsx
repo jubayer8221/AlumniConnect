@@ -74,7 +74,7 @@ export const adminNav: NavItem[] = [
   },
   {
     label: "Notices",
-    path: "/notices",
+    path: "alumni/notices",
     icon: <Bell size={20} />,
   },
   {

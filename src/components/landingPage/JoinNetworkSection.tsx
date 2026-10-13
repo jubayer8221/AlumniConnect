@@ -20,8 +20,8 @@ export default function JoinNetworkSection() {
       sx={{
         py: { xs: 8, md: 12 },
         background:
-          "linear-gradient(135deg, #0f766e 0%, #115e59 60%, #102a28 100%)",
-        color: "#ffffff",
+          "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 60%, var(--color-dark-forest-surface) 100%)",
+        color: "var(--color-surface)",
         position: "relative",
         overflow: "hidden",
       }}
@@ -36,7 +36,7 @@ export default function JoinNetworkSection() {
           height: 400,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle, rgba(45,212,191,0.25) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(var(--rgb-accent), 0.25) 0%, transparent 70%)",
         }}
       />
       <Box
@@ -48,7 +48,7 @@ export default function JoinNetworkSection() {
           height: 400,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle, rgba(244,162,97,0.2) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(var(--rgb-category-warm), 0.2) 0%, transparent 70%)",
         }}
       />
 
@@ -61,7 +61,7 @@ export default function JoinNetworkSection() {
                 fontWeight: 700,
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
-                color: "#7dd3c7",
+                color: "var(--color-accent)",
                 mb: 1.5,
               }}
             >
@@ -81,7 +81,7 @@ export default function JoinNetworkSection() {
                 component="span"
                 sx={{
                   background:
-                    "linear-gradient(135deg, #7dd3c7 0%, #f4a261 100%)",
+                    "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
@@ -93,7 +93,7 @@ export default function JoinNetworkSection() {
             <Typography
               sx={{
                 fontSize: "1.05rem",
-                color: "rgba(255,255,255,0.78)",
+                color: "rgba(var(--rgb-white), 0.78)",
                 lineHeight: 1.75,
                 mb: 4,
                 maxWidth: 620,
@@ -112,7 +112,7 @@ export default function JoinNetworkSection() {
                 >
                   <Box
                     sx={{
-                      color: "#7dd3c7",
+                      color: "var(--color-accent)",
                       display: "flex",
                       flexShrink: 0,
                     }}
@@ -122,7 +122,7 @@ export default function JoinNetworkSection() {
                   <Typography
                     sx={{
                       fontSize: "0.95rem",
-                      color: "rgba(255,255,255,0.9)",
+                      color: "rgba(var(--rgb-white), 0.9)",
                     }}
                   >
                     {benefit}
@@ -137,8 +137,8 @@ export default function JoinNetworkSection() {
               sx={{
                 p: { xs: 3, md: 4 },
                 borderRadius: 4,
-                bgcolor: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.14)",
+                bgcolor: "rgba(var(--rgb-white), 0.06)",
+                border: "1px solid rgba(var(--rgb-white), 0.14)",
                 backdropFilter: "blur(20px)",
                 textAlign: "center",
               }}
@@ -156,7 +156,7 @@ export default function JoinNetworkSection() {
               <Typography
                 sx={{
                   fontSize: "0.9rem",
-                  color: "rgba(255,255,255,0.7)",
+                  color: "rgba(var(--rgb-white), 0.7)",
                   mb: 3,
                   lineHeight: 1.6,
                 }}
@@ -171,18 +171,18 @@ export default function JoinNetworkSection() {
                 endIcon={<ArrowRight size={18} />}
                 onClick={() => navigate("/login")}
                 sx={{
-                  bgcolor: "#ffffff",
-                  color: "#0f766e",
+                  bgcolor: "var(--color-surface)",
+                  color: "var(--color-primary)",
                   textTransform: "none",
                   fontWeight: 700,
                   py: 1.75,
                   fontSize: "1rem",
                   borderRadius: 2.5,
-                  boxShadow: "0 12px 30px rgba(255,255,255,0.15)",
+                  boxShadow: "0 12px 30px rgba(var(--rgb-white), 0.15)",
                   "&:hover": {
-                    bgcolor: "#f3f4f6",
+                    bgcolor: "var(--color-gray50)",
                     transform: "translateY(-2px)",
-                    boxShadow: "0 16px 36px rgba(255,255,255,0.25)",
+                    boxShadow: "0 16px 36px rgba(var(--rgb-white), 0.25)",
                   },
                   transition: "all 0.25s ease",
                 }}
@@ -192,7 +192,7 @@ export default function JoinNetworkSection() {
               <Typography
                 sx={{
                   fontSize: "0.75rem",
-                  color: "rgba(255,255,255,0.5)",
+                  color: "rgba(var(--rgb-white), 0.5)",
                   mt: 2,
                 }}
               >

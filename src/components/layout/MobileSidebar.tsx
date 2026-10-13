@@ -266,7 +266,7 @@ export default function MobileSidebar() {
           >
             <Box
               component="img"
-              src="/image/logo.png"
+              src="/image/logo-small.png"
               alt={`${appConfig.appName} logo`}
               sx={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
