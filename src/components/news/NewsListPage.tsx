@@ -19,6 +19,8 @@ import {
 import { Plus, Pencil, Trash2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useNews } from "@/hooks/useNews";
+import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import type { NewsItem } from "@/components/news/NewsSection";
 import NewsDetailsDialog from "./NewsDetailsDialog";
 
@@ -31,6 +33,8 @@ const categoryLabel: Record<string, string> = {
 export default function NewsListPage() {
   const navigate = useNavigate();
   const { newsList, loading, fetchAllNews, deleteNews } = useNews();
+  const { role } = useAuth();
+  const canManageNews = hasAdminAccess(role);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   useEffect(() => {
@@ -77,14 +81,14 @@ export default function NewsListPage() {
             Create, edit, and publish updates and announcements for the portal.
           </Typography>
         </Box>
-        <Button
+        {canManageNews && <Button
           variant="contained"
           startIcon={<Plus size={18} />}
           onClick={() => navigate("/alumni/news/create")}
           sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2 }}
         >
           Add News Article
-        </Button>
+        </Button>}
       </Box>
 
       <Card
@@ -92,7 +96,7 @@ export default function NewsListPage() {
         sx={{
           borderRadius: 3.5,
           border: "none",
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+          boxShadow: "0px 4px 20px rgba(var(--rgb-black), 0.04)",
           overflow: "hidden",
         }}
       >
@@ -171,7 +175,7 @@ export default function NewsListPage() {
                         <Eye size={16} />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edit">
+                    {canManageNews && <Tooltip title="Edit">
                       <IconButton
                         size="small"
                         onClick={() =>
@@ -180,8 +184,8 @@ export default function NewsListPage() {
                       >
                         <Pencil size={16} />
                       </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
+                    </Tooltip>}
+                    {canManageNews && <Tooltip title="Delete">
                       <IconButton
                         size="small"
                         color="error"
@@ -189,7 +193,7 @@ export default function NewsListPage() {
                       >
                         <Trash2 size={16} />
                       </IconButton>
-                    </Tooltip>
+                    </Tooltip>}
                   </TableCell>
                 </TableRow>
               ))}

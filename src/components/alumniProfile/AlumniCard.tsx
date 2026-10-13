@@ -23,9 +23,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AlumniProfileFullModel } from "@/types/alumni";
 import { CommonAvatar } from "@/components/common";
+import { colors } from "@/theme/colors";
 
-const NAVY = "#132038";
-const TEAL = "#2dd4bf";
+const NAVY = colors.darkSurfaceAlt;
+const TEAL = colors.accent;
 
 interface AlumniCardProps {
   alumni: AlumniProfileFullModel;
@@ -58,7 +59,7 @@ export default function AlumniCard({
         transition: "all 0.25s ease",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: "0 12px 28px rgba(0,0,0,0.1)",
+          boxShadow: "0 12px 28px rgba(var(--rgb-black), 0.1)",
           borderColor: alpha(TEAL, 0.4),
         },
       }}
@@ -66,7 +67,7 @@ export default function AlumniCard({
       <Box
         sx={{
           height: 80,
-          background: `linear-gradient(135deg, ${NAVY} 0%, #1c2c4a 100%)`,
+          background: `linear-gradient(135deg, ${NAVY} 0%, var(--color-dark-surface-navy) 100%)`,
           position: "relative",
           overflow: "hidden",
         }}
@@ -88,8 +89,8 @@ export default function AlumniCard({
             onClick={(e) => setAnchor(e.currentTarget)}
             sx={{
               color: "white",
-              bgcolor: "rgba(255,255,255,0.15)",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+              bgcolor: "rgba(var(--rgb-white), 0.15)",
+              "&:hover": { bgcolor: "rgba(var(--rgb-white), 0.25)" },
             }}
           >
             <MoreVertical size={16} />
@@ -163,7 +164,7 @@ export default function AlumniCard({
               size={72}
               sx={{
                 border: "3px solid white",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                boxShadow: "0 4px 12px rgba(var(--rgb-black), 0.1)",
               }}
             />
             {alumni.isVerified && (
@@ -182,7 +183,7 @@ export default function AlumniCard({
                   justifyContent: "center",
                 }}
               >
-                <BadgeCheck size={12} color="#fff" />
+                <BadgeCheck size={12} color="var(--color-white)" />
               </Box>
             )}
           </Box>
@@ -225,7 +226,7 @@ export default function AlumniCard({
               borderRadius: 1,
               fontSize: "0.7rem",
               bgcolor: alpha(TEAL, 0.12),
-              color: "#0f9c8f",
+              color: "var(--color-primary)",
               border: "none",
               fontWeight: 600,
             }}

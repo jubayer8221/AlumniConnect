@@ -24,11 +24,12 @@ import {
 import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
 import { useAlumni } from "@/hooks/useAlumni";
+import { hasAdminAccess } from "@/utils/authUtils";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
-  CommonSelectField,
+  CommonDropDown,
   CommonDatePicker,
   CommonTextArea,
   CommonCheckbox,
@@ -680,7 +681,7 @@ export default function AlumniFormPage() {
     );
 
   if (loading && isEdit && !selectedAlumni) return <CommonLoading />;
-  if (isEdit && role !== "ADMIN" && !selectedAlumni)
+  if (isEdit && !hasAdminAccess(role) && !selectedAlumni)
     return <Navigate to="/unauthorized" replace />;
 
   return (
@@ -725,11 +726,11 @@ export default function AlumniFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="gender"
                 label="Gender"
                 control={control}
-                options={genderOptions}
+                menuItems={genderOptions}
                 placeholder="Select"
               />
             </Grid>
@@ -742,20 +743,20 @@ export default function AlumniFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="bloodGroup"
                 label="Blood Group"
                 control={control}
-                options={bloodOptions}
+                menuItems={bloodOptions}
                 placeholder="Select"
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="maritalStatus"
                 label="Marital Status"
                 control={control}
-                options={maritalStatusOptions}
+                menuItems={maritalStatusOptions}
                 placeholder="Select"
               />
             </Grid>
@@ -831,49 +832,49 @@ export default function AlumniFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="presentCountry"
                 label="Country"
                 control={control}
-                options={countryOptions}
+                menuItems={countryOptions}
                 required
                 placeholder="Select..."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="presentDivision"
                 label="Division"
                 control={control}
-                options={divisionOptions}
+                menuItems={divisionOptions}
                 required
                 placeholder="Select..."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="presentDistrict"
                 label="District"
                 control={control}
-                options={districtOptions}
+                menuItems={districtOptions}
                 placeholder="Select..."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="presentThana"
                 label="Thana"
                 control={control}
-                options={thanaOptions}
+                menuItems={thanaOptions}
                 placeholder="Select..."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="presentUnion"
                 label="Union"
                 control={control}
-                options={unionOptions}
+                menuItems={unionOptions}
                 placeholder="Select union"
               />
             </Grid>
@@ -907,47 +908,47 @@ export default function AlumniFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="permanentCountry"
                 label="Country"
                 control={control}
-                options={countryOptions}
+                menuItems={countryOptions}
                 placeholder="Select..."
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="permanentDivision"
                 label="Division"
                 control={control}
-                options={divisionOptions}
+                menuItems={divisionOptions}
                 placeholder="Select division"
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="permanentDistrict"
                 label="District"
                 control={control}
-                options={districtOptions}
+                menuItems={districtOptions}
                 placeholder="Select district"
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="permanentThana"
                 label="Thana"
                 control={control}
-                options={thanaOptions}
+                menuItems={thanaOptions}
                 placeholder="Select thana"
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="permanentUnion"
                 label="Union"
                 control={control}
-                options={unionOptions}
+                menuItems={unionOptions}
                 placeholder="Select union"
               />
             </Grid>
@@ -980,30 +981,30 @@ export default function AlumniFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="programName"
                 label="Program"
                 control={control}
-                options={programOptions}
+                menuItems={programOptions}
                 required
                 placeholder="Select"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="departmentName"
                 label="Department"
                 control={control}
-                options={departmentOptions}
+                menuItems={departmentOptions}
                 placeholder="Select"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="facultyId"
                 label="Faculty"
                 control={control}
-                options={facultyOptions}
+                menuItems={facultyOptions}
                 placeholder="Select"
               />
             </Grid>
@@ -1025,11 +1026,11 @@ export default function AlumniFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="graduationSemester"
                 label="Graduation Semester"
                 control={control}
-                options={semesterOptions}
+                menuItems={semesterOptions}
                 placeholder="Select"
               />
             </Grid>
@@ -1194,11 +1195,11 @@ export default function AlumniFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="industry"
                 label="Industry"
                 control={control}
-                options={industryOptions}
+                menuItems={industryOptions}
                 placeholder="Select"
               />
             </Grid>

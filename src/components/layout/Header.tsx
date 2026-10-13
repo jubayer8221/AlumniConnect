@@ -24,6 +24,7 @@ import {
   toggleSidebarCollapse,
 } from "@/store/Slice/uiSlice";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotices } from "@/hooks/useNotices";
 import HeaderProfileDialog from "../alumniProfile/HeaderProfileDialog";
 import NotificationsPopover, {
   getUnseenNoticeCount,
@@ -34,7 +35,7 @@ export default function Header() {
   const { authUser: user } = useAuth();
   const collapsed = useAppSelector((s) => s.ui.sidebarCollapsed);
   const colorMode = useAppSelector((s) => s.ui.theme);
-  const notices = useAppSelector((s) => s.notices.items);
+  const { items: notices } = useNotices();
   const [openDialog, setopenDialog] = useState<HTMLElement | null>(null);
   const [notifAnchor, setNotifAnchor] = useState<HTMLElement | null>(null);
 
@@ -77,7 +78,7 @@ export default function Header() {
         <Box sx={{ flexGrow: 1 }} />
 
         {/* --- View public landing page (new tab) --- */}
-        <Tooltip title="View public site">
+        {/* <Tooltip title="View public site">
           <IconButton
             size="small"
             component="a"
@@ -93,7 +94,7 @@ export default function Header() {
           >
             <Globe size={20} />
           </IconButton>
-        </Tooltip>
+        </Tooltip> */}
 
         <IconButton
           size="small"

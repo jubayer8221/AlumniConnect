@@ -11,7 +11,7 @@ import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
-  CommonSelectField,
+  CommonDropDown,
   CommonFileUpload,
   CommonCheckbox,
   CommonButton,
@@ -223,11 +223,11 @@ export default function GalleryPhotoFormPage() {
         <Section title="Display Settings">
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="span"
                 label="Tile Size"
                 control={control}
-                options={SPAN_OPTIONS}
+                menuItems={SPAN_OPTIONS}
                 placeholder="Select tile size"
               />
             </Grid>

@@ -35,6 +35,7 @@ import {
 import { formatDate, formatTime } from "@/utils/dateUtils";
 import type { EventItem } from "@/types/event";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 const TAB_ALL = 0;
 const TAB_UPCOMING = 1;
@@ -43,7 +44,7 @@ const TAB_PAST = 2;
 export default function EventListPage() {
   const navigate = useNavigate();
   const { authUser: user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = hasAdminAccess(user?.role);
   const basePath = isAdmin ? "/events" : "/alumni/events";
   const homePath = isAdmin ? "/dashboard" : "/alumni/dashboard";
 
@@ -207,10 +208,10 @@ export default function EventListPage() {
                 >
                   <Box
                     component="img"
-                    src={evt.image || "/image/favicon.png"}
+                    src={evt.image || "/image/logo-small.png"}
                     alt={evt.title}
                     onError={(e) => {
-                      e.currentTarget.src = "/image/favicon.png";
+                      e.currentTarget.src = "/image/logo-small.png";
                     }}
                     sx={{
                       width: "100%",

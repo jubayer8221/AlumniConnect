@@ -2,7 +2,7 @@ import axios, { type AxiosInstance } from "axios";
 import { clearStoredAuth, TOKEN_KEY } from "@/utils/authUtils";
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5084/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://localhost:7084/api",
   timeout: 15000,
   // ★ No default Content-Type. Axios auto-detects:
   //   - plain object body → application/json

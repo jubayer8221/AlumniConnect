@@ -163,12 +163,12 @@ export default function NewsSection() {
                     flexDirection: "column",
                     borderRadius: 3.5,
                     border: "none",
-                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+                    boxShadow: "0px 4px 20px rgba(var(--rgb-black), 0.04)",
                     overflow: "hidden",
                     transition: "all 0.25s ease",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: "0px 12px 30px rgba(0, 0, 0, 0.08)",
+                      boxShadow: "0px 12px 30px rgba(var(--rgb-black), 0.08)",
                       "& .news-title": { color: "primary.main" },
                       "& .news-image": { transform: "scale(1.05)" },
                     },
@@ -200,7 +200,7 @@ export default function NewsSection() {
                           alt={item.Title}
                           onError={(e) => {
                             (e.currentTarget as HTMLImageElement).src =
-                              "/image/favicon.png";
+                              "/image/logo-small.png";
                           }}
                           sx={{
                             position: "absolute",

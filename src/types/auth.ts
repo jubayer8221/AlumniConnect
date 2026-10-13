@@ -72,3 +72,24 @@ export interface ChangePasswordRequest {
   newPassword: string;
   confirmNewPassword: string;
 }
+
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  email: string;
+  fullName: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  programID?: number;
+  graduationYear?: number;
+  batch?: string;
+}
+
+export interface RegisterResponse {
+  alumniID?: number;
+}
+
+export interface RegisterFormValues extends RegisterRequest {
+  confirmPassword: string;
+}

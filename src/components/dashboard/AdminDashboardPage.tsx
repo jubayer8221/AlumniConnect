@@ -45,7 +45,7 @@ const cardSx = {
   borderColor: "divider",
   height: "100%",
   transition: "all 0.25s ease",
-  "&:hover": { boxShadow: "0 8px 20px rgba(0,0,0,0.06)" },
+  "&:hover": { boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.06)" },
 } as const;
 
 export default function AdminDashboardPage() {
@@ -70,49 +70,49 @@ export default function AdminDashboardPage() {
       title: "Total Alumni",
       value: data.summary.totalAlumni,
       icon: <Users size={22} />,
-      color: "#6366f1",
+      color: "var(--color-chart-indigo)",
     },
     {
       title: "Active",
       value: data.summary.activeAlumni,
       icon: <UserCheck size={22} />,
-      color: "#10b981",
+      color: "var(--color-chart-emerald)",
     },
     {
       title: "Verified",
       value: data.summary.verifiedAlumni,
       icon: <Award size={22} />,
-      color: "#8b5cf6",
+      color: "var(--color-chart-purple)",
     },
     {
       title: "Mentors",
       value: data.summary.mentors,
       icon: <Briefcase size={22} />,
-      color: "#f59e0b",
+      color: "var(--color-warning)",
     },
     {
       title: "Pending",
       value: data.summary.pendingAlumni,
       icon: <UserX size={22} />,
-      color: "#ef4444",
+      color: "var(--color-error)",
     },
     {
       title: "Inactive",
       value: data.summary.inactiveAlumni,
       icon: <UserX size={22} />,
-      color: "#64748b",
+      color: "var(--color-text-secondary)",
     },
     {
       title: "New This Year",
       value: data.summary.newAlumniThisYear,
       icon: <UserPlus size={22} />,
-      color: "#06b6d4",
+      color: "var(--color-chart-cyan)",
     },
     {
       title: "Events",
       value: data.summary.totalEvents,
       icon: <CalendarDays size={22} />,
-      color: "#ec4899",
+      color: "var(--color-chart-pink)",
     },
   ];
 
@@ -157,7 +157,8 @@ export default function AdminDashboardPage() {
                       width: 6,
                       height: 24,
                       borderRadius: 2,
-                      background: "linear-gradient(180deg, #6366f1, #8b5cf6)",
+                      background:
+                        "linear-gradient(180deg, var(--color-chart-indigo), var(--color-chart-purple))",
                     }}
                   />
                   <Typography
@@ -173,7 +174,7 @@ export default function AdminDashboardPage() {
                 <Button
                   size="small"
                   onClick={() => navigate("/alumni")}
-                  sx={{ color: "#6366f1", fontWeight: 600 }}
+                  sx={{ color: "var(--color-chart-indigo)", fontWeight: 600 }}
                 >
                   View All
                 </Button>
@@ -200,7 +201,7 @@ export default function AdminDashboardPage() {
                             alt={alum?.fullName}
                             sx={{
                               background:
-                                "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+                                "linear-gradient(135deg, var(--color-chart-indigo) 0%, var(--color-chart-pink) 100%)",
                               fontWeight: 700,
                             }}
                           >
@@ -260,7 +261,8 @@ export default function AdminDashboardPage() {
                       width: 6,
                       height: 24,
                       borderRadius: 2,
-                      background: "linear-gradient(180deg, #ec4899, #f472b6)",
+                      background:
+                        "linear-gradient(180deg, var(--color-chart-pink), var(--color-chart-pink-light))",
                     }}
                   />
                   <Typography
@@ -276,7 +278,7 @@ export default function AdminDashboardPage() {
                 <Button
                   size="small"
                   onClick={() => navigate("/alumni/events")}
-                  sx={{ color: "#ec4899", fontWeight: 600 }}
+                  sx={{ color: "var(--color-chart-pink)", fontWeight: 600 }}
                 >
                   View All
                 </Button>
@@ -300,8 +302,8 @@ export default function AdminDashboardPage() {
                         <ListItemAvatar>
                           <Avatar
                             sx={{
-                              bgcolor: "rgba(236,72,153,0.1)",
-                              color: "#ec4899",
+                              bgcolor: "rgba(var(--rgb-chart-pink), 0.1)",
+                              color: "var(--color-chart-pink)",
                             }}
                           >
                             <CalendarDays size={20} />
@@ -353,7 +355,8 @@ export default function AdminDashboardPage() {
                       width: 6,
                       height: 24,
                       borderRadius: 2,
-                      background: "linear-gradient(180deg, #f59e0b, #fbbf24)",
+                      background:
+                        "linear-gradient(180deg, var(--color-warning), var(--color-warning-light))",
                     }}
                   />
                   <Typography
@@ -368,8 +371,8 @@ export default function AdminDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("/notices")}
-                  sx={{ color: "#f59e0b", fontWeight: 600 }}
+                  onClick={() => navigate("alumni/notices")}
+                  sx={{ color: "var(--color-warning)", fontWeight: 600 }}
                 >
                   View All
                 </Button>
@@ -393,8 +396,8 @@ export default function AdminDashboardPage() {
                         <ListItemAvatar>
                           <Avatar
                             sx={{
-                              bgcolor: "rgba(245,158,11,0.1)",
-                              color: "#f59e0b",
+                              bgcolor: "rgba(var(--rgb-warning), 0.1)",
+                              color: "var(--color-warning)",
                             }}
                           >
                             <Bell size={20} />
@@ -441,7 +444,8 @@ export default function AdminDashboardPage() {
                     width: 6,
                     height: 24,
                     borderRadius: 2,
-                    background: "linear-gradient(180deg, #ef4444, #f87171)",
+                    background:
+                      "linear-gradient(180deg, var(--color-error), var(--color-error-light))",
                   }}
                 />
                 <Typography
@@ -476,8 +480,8 @@ export default function AdminDashboardPage() {
                             src={alum?.profilePhoto}
                             alt={alum?.fullName}
                             sx={{
-                              bgcolor: "rgba(239,68,68,0.1)",
-                              color: "#ef4444",
+                              bgcolor: "rgba(var(--rgb-error), 0.1)",
+                              color: "var(--color-error)",
                               fontWeight: 700,
                             }}
                           >

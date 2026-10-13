@@ -88,7 +88,7 @@
 //         <Box
 //           sx={{
 //             height: 100,
-//             background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+//             background: "linear-gradient(135deg, var(--color-chart-blue-deep) 0%, var(--color-chart-blue) 100%)",
 //           }}
 //         />
 //         <CardContent sx={{ p: 3, pt: 0, mt: -5 }}>

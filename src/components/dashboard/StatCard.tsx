@@ -21,7 +21,7 @@ export default function StatCard({
   title,
   value,
   icon,
-  color = "#6366f1",
+  color = "var(--color-chart-indigo)",
   trend,
   subtitle,
 }: StatCardProps) {
@@ -45,11 +45,11 @@ export default function StatCard({
         transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
           transform: "translateY(-3px)",
-          boxShadow: `0 12px 24px -6px ${alpha(color, 0.15)}`,
-          borderColor: alpha(color, 0.35),
+          boxShadow: `0 12px 24px -6px color-mix(in srgb, ${color} 15%, transparent)`,
+          borderColor: `color-mix(in srgb, ${color} 35%, transparent)`,
           "& .stat-icon": {
             transform: "scale(1.05)",
-            backgroundColor: alpha(color, 0.15),
+            backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)`,
           },
         },
       }}
@@ -67,7 +67,7 @@ export default function StatCard({
               width: 48,
               height: 48,
               borderRadius: 2.5,
-              backgroundColor: alpha(color, 0.08),
+              backgroundColor: `color-mix(in srgb, ${color} 8%, transparent)`,
               color: color,
               transition: "all 0.25s ease",
               flexShrink: 0,

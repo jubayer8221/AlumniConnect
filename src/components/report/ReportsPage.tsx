@@ -36,14 +36,14 @@ import {
 import StatCard from "../dashboard/StatCard";
 
 const PIE_COLORS = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#06b6d4",
-  "#ec4899",
-  "#84cc16",
+  "var(--color-chart-blue)",
+  "var(--color-chart-emerald)",
+  "var(--color-warning)",
+  "var(--color-error)",
+  "var(--color-chart-purple)",
+  "var(--color-chart-cyan)",
+  "var(--color-chart-pink)",
+  "var(--color-chart-lime)",
 ];
 
 export default function ReportsPage() {
@@ -137,11 +137,11 @@ export default function ReportsPage() {
                 </Typography>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={data.alumniByGraduationYear}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-light-surface-gray)" />
                     <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="var(--color-chart-blue)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

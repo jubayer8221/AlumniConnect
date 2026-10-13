@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { appConfig } from "@/config/appConfig";
 import { getNavForRole, type NavItem } from "@/config/navigation";
 import HeaderProfileDialog from "../alumniProfile/HeaderProfileDialog";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -293,7 +294,7 @@ export default function Sidebar() {
         >
           <Box
             component="img"
-            src="/image/logo.png"
+            src="/image/logo-small.png"
             alt={`${appConfig.appName} logo`}
             sx={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
@@ -390,7 +391,7 @@ export default function Sidebar() {
                     mt: 0.25,
                   }}
                 >
-                  {role === "ADMIN" ? "Administrator" : "Alumni Member"}
+                  {role === "MODERATOR" ? "Moderator" : hasAdminAccess(role) ? "Administrator" : "Alumni Member"}
                 </Typography>
               </Box>
             )}

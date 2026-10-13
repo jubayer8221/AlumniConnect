@@ -10,8 +10,9 @@ import {
 } from "@mui/material";
 import { ArrowLeft, Bell } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { fetchNoticeByIdAsync } from "@/store/Slice/noticeSlice";
+import { useNotices } from "@/hooks/useNotices";
+import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import {
   CommonPageHeader,
   CommonLoading,
@@ -22,22 +23,23 @@ import { formatDate } from "@/utils/dateUtils";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 
 export default function NoticeDetailsPage({
-  isAdmin = false,
+  isAdmin: adminView = false,
 }: {
   isAdmin?: boolean;
 }) {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { selectedNotice, loading } = useAppSelector((s) => s.notices);
-  const basePath = isAdmin ? "/notices" : "/alumni/notices";
+  const { role } = useAuth();
+  const isAdmin = adminView || hasAdminAccess(role);
+  const { selectedNotice, loading, fetchNoticeById } = useNotices();
+  const basePath = "/alumni/notices";
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   // ★ Fetch only if it's not the one already loaded
   useEffect(() => {
     if (id && (!selectedNotice || selectedNotice.id !== id)) {
-      void dispatch(fetchNoticeByIdAsync(id));
+      void fetchNoticeById(id).catch(() => undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);

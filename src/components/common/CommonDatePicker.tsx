@@ -44,14 +44,14 @@ export const commonDateFieldSx = {
   // Disabled look identical to CommonInputField
   "& .MuiInputBase-input.Mui-disabled, & .MuiPickersInputBase-input.Mui-disabled":
     {
-      backgroundColor: "#f5f5f5ff",
-      color: "#999999ff",
-      WebkitTextFillColor: "#999999ff",
+      backgroundColor: "var(--color-gray100)",
+      color: "var(--color-gray999)",
+      WebkitTextFillColor: "var(--color-gray999)",
       borderRadius: "6px",
     },
-  "& .MuiInputLabel-root.Mui-disabled": { color: "#999999ff" },
+  "& .MuiInputLabel-root.Mui-disabled": { color: "var(--color-gray999)" },
   "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "rgba(0, 0, 0, 0.23)",
+    borderColor: "rgba(var(--rgb-black), 0.23)",
   },
 } as const;
 

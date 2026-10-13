@@ -41,6 +41,7 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import { useAlumni } from "@/hooks/useAlumni";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
@@ -213,7 +214,7 @@ export default function AlumniDetailsPage() {
 
   const completion = calculateProfileCompletion(alumni);
   const missing = getMissingProfileFields(alumni);
-  const isAdmin = role === "ADMIN";
+  const isAdmin = hasAdminAccess(role);
   const isOwner = Boolean(
     user &&
     (user.id === String(alumni.userID) ||
@@ -776,7 +777,7 @@ export default function AlumniDetailsPage() {
               borderRadius: 3,
               p: 3,
               textAlign: "center",
-              background: "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)",
+              background: "linear-gradient(135deg, var(--color-light-surface-blue) 0%, var(--color-surface) 100%)",
             }}
           >
             <Typography
@@ -858,7 +859,7 @@ export default function AlumniDetailsPage() {
         slotProps={{
           paper: {
             sx: {
-              // backgroundColor: "rgba(0, 0, 0, 0.92)",
+              // backgroundColor: "rgba(var(--rgb-black), 0.92)",
               backgroundColor: "white",
               backgroundImage: "none",
               boxShadow: 24,
@@ -878,11 +879,11 @@ export default function AlumniDetailsPage() {
             position: "absolute",
             top: 12,
             right: 12,
-            color: "#ffffff",
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
+            color: "var(--color-surface)",
+            backgroundColor: "rgba(var(--rgb-black), 0.6)",
+            border: "1px solid rgba(var(--rgb-white), 0.3)",
             "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 0.3)",
+              backgroundColor: "rgba(var(--rgb-white), 0.3)",
               color: "red",
             },
             zIndex: 10,

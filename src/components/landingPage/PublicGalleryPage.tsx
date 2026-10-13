@@ -31,7 +31,7 @@ export default function PublicGalleryPage() {
   const hasMore = visible < photos.length;
 
   return (
-    <Box sx={{ bgcolor: "#0f172a", color: "#fff", minHeight: "100vh" }}>
+    <Box sx={{ bgcolor: "var(--color-gray900)", color: "var(--color-white)", minHeight: "100vh" }}>
       <LandingHeader />
 
       <Box component="main" sx={{ py: { xs: 6, md: 10 } }}>
@@ -44,7 +44,7 @@ export default function PublicGalleryPage() {
                 fontWeight: 700,
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
-                color: "#7dd3c7",
+                color: "var(--color-accent)",
                 mb: 1.5,
               }}
             >
@@ -62,7 +62,7 @@ export default function PublicGalleryPage() {
             </Typography>
             <Typography
               sx={{
-                color: "rgba(255,255,255,0.65)",
+                color: "rgba(var(--rgb-white), 0.65)",
                 maxWidth: 560,
                 mx: "auto",
                 lineHeight: 1.7,
@@ -91,7 +91,7 @@ export default function PublicGalleryPage() {
                   key={i}
                   variant="rounded"
                   sx={{
-                    bgcolor: "rgba(255,255,255,0.06)",
+                    bgcolor: "rgba(var(--rgb-white), 0.06)",
                     borderRadius: 2.5,
                   }}
                 />
@@ -106,11 +106,11 @@ export default function PublicGalleryPage() {
                 py: 10,
                 textAlign: "center",
                 border: "1px dashed",
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: "rgba(var(--rgb-white), 0.2)",
                 borderRadius: 3,
               }}
             >
-              <Typography sx={{ color: "rgba(255,255,255,0.65)" }}>
+              <Typography sx={{ color: "rgba(var(--rgb-white), 0.65)" }}>
                 No photos yet. Check back soon.
               </Typography>
             </Box>
@@ -141,26 +141,37 @@ export default function PublicGalleryPage() {
                     borderRadius: 2.5,
                     overflow: "hidden",
                     cursor: "pointer",
-                    backgroundImage: `url('${photo.imageURL}')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
                     transition: "all 0.4s ease",
                     "&::after": {
                       content: '""',
                       position: "absolute",
                       inset: 0,
                       background:
-                        "linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)",
+                        "linear-gradient(to top, rgba(var(--rgb-black), 0.65) 0%, transparent 55%)",
                       opacity: 0.7,
                       transition: "opacity 0.3s",
                     },
                     "&:hover": {
                       transform: "scale(1.02)",
-                      boxShadow: "0 20px 40px rgba(0,0,0,0.35)",
+                      boxShadow: "0 20px 40px rgba(var(--rgb-black), 0.35)",
                       "&::after": { opacity: 1 },
                     },
                   }}
                 >
+                  <Box
+                    component="img"
+                    src={photo.imageURL}
+                    alt={photo.caption ?? ""}
+                    loading="lazy"
+                    decoding="async"
+                    sx={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
                   {photo.caption && (
                     <Typography
                       sx={{
@@ -170,9 +181,9 @@ export default function PublicGalleryPage() {
                         right: 12,
                         fontSize: "0.8rem",
                         fontWeight: 600,
-                        color: "#fff",
+                        color: "var(--color-white)",
                         zIndex: 2,
-                        textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                        textShadow: "0 1px 4px rgba(var(--rgb-black), 0.6)",
                       }}
                     >
                       {photo.caption}
@@ -190,16 +201,16 @@ export default function PublicGalleryPage() {
                 variant="outlined"
                 onClick={() => setVisible((v) => v + PAGE_SIZE)}
                 sx={{
-                  color: "#fff",
-                  borderColor: "rgba(255,255,255,0.35)",
+                  color: "var(--color-white)",
+                  borderColor: "rgba(var(--rgb-white), 0.35)",
                   textTransform: "none",
                   fontWeight: 600,
                   px: 3.5,
                   py: 1.25,
                   borderRadius: 2,
                   "&:hover": {
-                    borderColor: "rgba(255,255,255,0.7)",
-                    bgcolor: "rgba(255,255,255,0.06)",
+                    borderColor: "rgba(var(--rgb-white), 0.7)",
+                    bgcolor: "rgba(var(--rgb-white), 0.06)",
                   },
                 }}
               >
@@ -234,9 +245,9 @@ export default function PublicGalleryPage() {
                 position: "absolute",
                 top: -56,
                 right: 0,
-                color: "#fff",
-                bgcolor: "rgba(0,0,0,0.4)",
-                "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                color: "var(--color-white)",
+                bgcolor: "rgba(var(--rgb-black), 0.4)",
+                "&:hover": { bgcolor: "rgba(var(--rgb-black), 0.7)" },
               }}
             >
               <X size={20} />
@@ -254,7 +265,7 @@ export default function PublicGalleryPage() {
             {active.caption && (
               <Typography
                 sx={{
-                  color: "#fff",
+                  color: "var(--color-white)",
                   textAlign: "center",
                   mt: 2,
                   fontSize: "0.9rem",

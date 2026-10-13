@@ -37,7 +37,6 @@ export default function NewsDetailsDialog({ open, news, onClose }: Props) {
 
   return (
     <Dialog
-      disableScrollLock
       open={open}
       onClose={onClose}
       fullScreen={fullScreen}
@@ -84,9 +83,9 @@ export default function NewsDetailsDialog({ open, news, onClose }: Props) {
             position: "absolute",
             top: 12,
             right: 12,
-            bgcolor: "rgba(0,0,0,0.5)",
-            color: "#fff",
-            "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+            bgcolor: "rgba(var(--rgb-black), 0.5)",
+            color: "var(--color-white)",
+            "&:hover": { bgcolor: "rgba(var(--rgb-black), 0.7)" },
           }}
         >
           <X size={20} />

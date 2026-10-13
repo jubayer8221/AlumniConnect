@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { isAxiosError } from "axios";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import {
   setContent,
@@ -28,8 +29,14 @@ export interface CreateUpdateGalleryPhotoPayload {
   isActive?: boolean;
 }
 
-const unwrapError = (err: any, fallback: string): string =>
-  err?.response?.data?.message ?? err?.message ?? fallback;
+let landingContentRequest: Promise<LandingContent | null> | null = null;
+
+const unwrapError = (err: unknown, fallback: string): string => {
+  if (isAxiosError<{ message?: string }>(err)) {
+    return err.response?.data?.message ?? err.message ?? fallback;
+  }
+  return err instanceof Error ? err.message : fallback;
+};
 
 export const useLanding = () => {
   const dispatch = useAppDispatch();
@@ -47,15 +54,24 @@ export const useLanding = () => {
   const fetchLandingContent = useCallback(
     async (force = false) => {
       if (loaded && !force) return;
+      if (landingContentRequest) return landingContentRequest;
+
       dispatch(setLoading(true));
-      try {
-        const res = await api.get<LandingContent>("/Landing/GetLandingContent");
-        dispatch(setContent(res.data));
-        return res.data;
-      } catch (err: any) {
-        dispatch(setError(unwrapError(err, "Failed to load landing content")));
-        return null;
-      }
+      const request = api
+        .get<LandingContent>("/Landing/GetLandingContent")
+        .then((res) => {
+          dispatch(setContent(res.data));
+          return res.data;
+        })
+        .catch((err: unknown) => {
+          dispatch(setError(unwrapError(err, "Failed to load landing content")));
+          return null;
+        })
+        .finally(() => {
+          landingContentRequest = null;
+        });
+      landingContentRequest = request;
+      return request;
     },
     [dispatch, loaded],
   );
@@ -66,7 +82,7 @@ export const useLanding = () => {
       try {
         await api.post("/Landing/CreateUpdateHeroSlide", payload);
         await fetchLandingContent(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         throw new Error(unwrapError(err, "Failed to save hero slide"));
       }
     },
@@ -79,7 +95,7 @@ export const useLanding = () => {
       try {
         await api.post("/Landing/DeleteHeroSlide", { slideID });
         await fetchLandingContent(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         throw new Error(unwrapError(err, "Failed to delete hero slide"));
       }
     },
@@ -97,7 +113,7 @@ export const useLanding = () => {
       try {
         await api.post("/Landing/CreateUpdateGalleryPhoto", payload);
         await fetchLandingContent(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         throw new Error(unwrapError(err, "Failed to save gallery photo"));
       }
     },
@@ -109,7 +125,7 @@ export const useLanding = () => {
       try {
         await api.post("/Landing/DeleteGalleryPhoto", { photoID });
         await fetchLandingContent(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         throw new Error(unwrapError(err, "Failed to delete gallery photo"));
       }
     },

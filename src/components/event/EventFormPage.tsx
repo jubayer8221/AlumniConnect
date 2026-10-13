@@ -12,7 +12,7 @@ import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
   CommonInputField,
-  CommonSelectField,
+  CommonDropDown,
   CommonDatePicker,
   CommonTextArea,
   CommonButton,
@@ -24,6 +24,7 @@ import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext"
 import type { CreateUpdateEventPayload } from "@/hooks/useEvents";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { uploadImage } from "@/services/api/uploadService";
+import { hasAdminAccess } from "@/utils/authUtils";
 
 const eventSchema = yup.object({
   title: yup.string().trim().required("Title is required"),
@@ -94,7 +95,7 @@ export default function EventFormPage() {
   const isEdit = !!id;
 
   const { authUser: user } = useAuth();
-  const canManage = user?.role === "ADMIN";
+  const canManage = hasAdminAccess(user?.role);
 
   const { selectedEvent, loading, fetchEventById, createEvent, updateEvent } =
     useEvents();
@@ -245,11 +246,11 @@ export default function EventFormPage() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="eventType"
                 label="Event Type"
                 control={control}
-                options={eventTypeOptions}
+                menuItems={eventTypeOptions}
                 required
                 placeholder="Select"
               />
@@ -327,11 +328,11 @@ export default function EventFormPage() {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonSelectField
+              <CommonDropDown
                 name="status"
                 label="Status"
                 control={control}
-                options={statusOptions}
+                menuItems={statusOptions}
                 required
               />
             </Grid>

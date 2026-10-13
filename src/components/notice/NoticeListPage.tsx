@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Box,
+  Alert,
   Grid,
   Card,
   CardContent,
@@ -22,13 +23,10 @@ import {
   Archive,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import {
-  fetchNoticesAsync,
-  deleteNoticeAsync,
-  publishNoticeAsync,
-  unpublishNoticeAsync,
-} from "@/store/Slice/noticeSlice";
+import { useAppDispatch } from "@/hooks";
+import { useNotices } from "@/hooks/useNotices";
+import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
@@ -43,15 +41,26 @@ import { formatDate } from "@/utils/dateUtils";
 import type { Notice } from "@/types/notice";
 
 export default function NoticeListPage({
-  isAdmin = false,
+  isAdmin: adminView = false,
 }: {
   isAdmin?: boolean;
 }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { items, loading, totalCount, search } = useAppSelector(
-    (s) => s.notices,
-  );
+  const { role } = useAuth();
+  const isAdmin = adminView || hasAdminAccess(role);
+  const {
+    items,
+    loading,
+    totalCount,
+    search,
+    error,
+    fetchNotices,
+    deleteNotice,
+    publishNotice,
+    unpublishNotice,
+    setSearch,
+  } = useNotices();
   const [deleteTarget, setDeleteTarget] = useState<Notice | null>(null);
   const [actionTarget, setActionTarget] = useState<{
     notice: Notice;
@@ -61,42 +70,48 @@ export default function NoticeListPage({
   // ★ Fetch only if the store is empty
   useEffect(() => {
     if (!items || items.length === 0) {
-      void dispatch(fetchNoticesAsync());
+      void fetchNotices();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    const res = await dispatch(deleteNoticeAsync(deleteTarget.id));
-    if (deleteNoticeAsync.fulfilled.match(res)) {
+    try {
+      await deleteNotice(deleteTarget.id);
       dispatch(
         showToast({
           message: "Notice deleted successfully",
           severity: "success",
         }),
       );
+    } catch {
+      // Request error is reflected in the notice state.
     }
     setDeleteTarget(null);
   };
 
   const handlePublish = async (notice: Notice) => {
-    const res = await dispatch(publishNoticeAsync(notice.id));
-    if (publishNoticeAsync.fulfilled.match(res)) {
+    try {
+      await publishNotice(notice.id);
       dispatch(showToast({ message: "Notice published", severity: "success" }));
+    } catch {
+      // Request error is reflected in the notice state.
     }
     setActionTarget({ notice: null as unknown as Notice, anchor: null });
   };
 
   const handleUnpublish = async (notice: Notice) => {
-    const res = await dispatch(unpublishNoticeAsync(notice.id));
-    if (unpublishNoticeAsync.fulfilled.match(res)) {
+    try {
+      await unpublishNotice(notice.id);
       dispatch(showToast({ message: "Notice unpublished", severity: "info" }));
+    } catch {
+      // Request error is reflected in the notice state.
     }
     setActionTarget({ notice: null as unknown as Notice, anchor: null });
   };
 
-  const basePath = isAdmin ? "/notices" : "/alumni/notices";
+  const basePath = "/alumni/notices";
   const visibleItems = isAdmin
     ? items
     : items.filter((n) => n.status === "PUBLISHED");
@@ -114,7 +129,7 @@ export default function NoticeListPage({
           isAdmin ? (
             <CommonButton
               startIcon={<Plus size={18} />}
-              onClick={() => navigate("/notices/create")}
+              onClick={() => navigate(`${basePath}/create`)}
             >
               Create Notice
             </CommonButton>
@@ -126,13 +141,16 @@ export default function NoticeListPage({
         <Box sx={{ flexGrow: 1, minWidth: 250 }}>
           <CommonSearchField
             value={search}
-            onChange={(v) =>
-              void dispatch(fetchNoticesAsync({ search: v } as never))
-            }
+            onChange={(v) => {
+              setSearch(v);
+              void fetchNotices({ pageNumber: 1, pageSize: 10, search: v });
+            }}
             placeholder="Search notices..."
           />
         </Box>
       </Box>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {loading ? (
         <CommonLoading fullHeight={false} />
@@ -251,7 +269,7 @@ export default function NoticeListPage({
         </MenuItem>
         <MenuItem
           onClick={() => {
-            navigate(`/notices/${actionTarget.notice.id}/edit`);
+            navigate(`${basePath}/${actionTarget.notice.id}/edit`);
             setActionTarget({
               notice: null as unknown as Notice,
               anchor: null,

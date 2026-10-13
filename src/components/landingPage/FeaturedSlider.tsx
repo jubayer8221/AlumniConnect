@@ -133,7 +133,7 @@ export default function FeaturedSlider() {
               position: "relative",
               overflow: "hidden",
               borderRadius: 4,
-              boxShadow: "0 20px 60px rgba(15,118,110,0.12)",
+              boxShadow: "0 20px 60px rgba(var(--rgb-primary), 0.12)",
               border: "1px solid",
               borderColor: "divider",
               bgcolor: "background.paper",
@@ -160,18 +160,30 @@ export default function FeaturedSlider() {
                     sx={{
                       position: "relative",
                       minHeight: { xs: 300, md: 420 },
-                      backgroundImage: `url('${slide.photo}')`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
                       "&::after": {
                         content: '""',
                         position: "absolute",
                         inset: 0,
                         background:
-                          "linear-gradient(135deg, rgba(15,118,110,0.15) 0%, transparent 50%)",
+                          "linear-gradient(135deg, rgba(var(--rgb-primary), 0.15) 0%, transparent 50%)",
                       },
                     }}
-                  />
+                  >
+                    <Box
+                      component="img"
+                      src={slide.photo}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "fill",
+                      }}
+                    />
+                  </Box>
                   {/* Quote */}
                   <Box
                     sx={{
@@ -184,7 +196,7 @@ export default function FeaturedSlider() {
                     <Quote
                       size={40}
                       style={{
-                        color: "#0f766e",
+                        color: "var(--color-primary)",
                         marginBottom: 16,
                         opacity: 0.4,
                       }}
@@ -242,8 +254,11 @@ export default function FeaturedSlider() {
               bgcolor: "background.paper",
               border: "1px solid",
               borderColor: "divider",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-              "&:hover": { bgcolor: "primary.main", color: "#fff" },
+              boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.1)",
+              "&:hover": {
+                bgcolor: "primary.main",
+                color: "var(--color-white)",
+              },
             }}
           >
             <ChevronLeft size={20} />
@@ -259,8 +274,11 @@ export default function FeaturedSlider() {
               bgcolor: "background.paper",
               border: "1px solid",
               borderColor: "divider",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-              "&:hover": { bgcolor: "primary.main", color: "#fff" },
+              boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.1)",
+              "&:hover": {
+                bgcolor: "primary.main",
+                color: "var(--color-white)",
+              },
             }}
           >
             <ChevronRight size={20} />

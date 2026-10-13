@@ -42,7 +42,7 @@ export default function CommonFileUpload({
               height: previewSize,
               borderRadius: "50%",
               objectFit: "cover",
-              border: "1px solid rgba(0,0,0,0.08)",
+              border: "1px solid rgba(var(--rgb-black), 0.08)",
             }}
           />
         </Box>

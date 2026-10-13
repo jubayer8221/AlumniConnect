@@ -1,6 +1,6 @@
 export { default as CommonButton } from "./CommonButton";
 export { default as CommonInputField } from "./CommonInputField";
-export { default as CommonSelectField } from "./CommonSelectField";
+export { default as CommonDropDown } from "./CommonDropDown";
 export { default as CommonDatePicker } from "./CommonDatePicker";
 export { default as CommonTextArea } from "./CommonTextArea";
 export { default as CommonCheckbox } from "./CommonCheckbox";

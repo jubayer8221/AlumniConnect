@@ -23,6 +23,7 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEvents } from "@/hooks/useEvents";
 import { useAuth } from "@/hooks/useAuth";
+import { hasAdminAccess } from "@/utils/authUtils";
 import { useAppDispatch } from "@/hooks";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
@@ -44,7 +45,7 @@ export default function EventDetailsPage() {
   const dispatch = useAppDispatch();
   const { authUser: user } = useAuth();
 
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = hasAdminAccess(user?.role);
   const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
   const homePath = isAdmin ? "/dashboard" : "/alumni/dashboard";
 
@@ -185,7 +186,7 @@ export default function EventDetailsPage() {
             src={evt.image}
             alt={evt.title}
             onError={(event) => {
-              event.currentTarget.src = "/image/favicon.png";
+              event.currentTarget.src = "/image/logo-small.png";
             }}
             sx={{ width: "100%", height: 300, objectFit: "cover" }}
           />

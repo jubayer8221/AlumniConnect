@@ -9,7 +9,15 @@ import {
   Skeleton,
   CardActionArea,
 } from "@mui/material";
-import { ArrowRight, CalendarDays, Clock, MapPin } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Clock,
+  MapPin,
+  Calendar,
+  Users,
+  Globe,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEvents } from "@/hooks/useEvents";
@@ -18,6 +26,7 @@ import type { EventItem } from "@/types/event";
 import LandingHeader from "../LandingHeader";
 import LandingFooter from "../LandingFooter";
 import EventDetailsDialog from "./EventDetailsDialog";
+import CommonBanner from "@/components/common/CommonBanner";
 
 export default function PublicEventsListPage() {
   const navigate = useNavigate();
@@ -28,35 +37,42 @@ export default function PublicEventsListPage() {
     void fetchEvents({ pageNumber: 1, pageSize: 50 });
   }, [fetchEvents]);
 
+  const eventCount = items?.length ?? 0;
+
+  // Dynamic banner stats
+  const eventStats = [
+    {
+      icon: <Calendar size={22} />,
+      value: `${eventCount}+`,
+      label: "Upcoming Events",
+    },
+    {
+      icon: <Globe size={22} />,
+      value: "Global",
+      label: "Chapters & Meets",
+    },
+    {
+      icon: <Users size={22} />,
+      value: "Active",
+      label: "Community Gatherings",
+    },
+  ];
+
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
       <LandingHeader />
 
+      {/* Page Banner Header */}
+      <CommonBanner
+        badge="Community Gatherings"
+        title="Connect, Celebrate, and Relive"
+        highlightText="Alumni Events"
+        subtitle="Explore upcoming reunions, networking sessions, and cultural programs organized by the network across the globe."
+        stats={eventStats}
+      />
+
       <Box component="main" sx={{ py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
-          <Typography
-            sx={{
-              fontSize: "0.8rem",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "primary.main",
-              mb: 1,
-            }}
-          >
-            Events
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: { xs: "2rem", md: "2.5rem" },
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              mb: 4,
-            }}
-          >
-            All Upcoming Events
-          </Typography>
-
           {loading && (!items || items.length === 0) && (
             <Grid container spacing={3}>
               {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -108,7 +124,7 @@ export default function PublicEventsListPage() {
                       transition: "all 0.25s ease",
                       "&:hover": {
                         transform: "translateY(-4px)",
-                        boxShadow: "0 16px 32px rgba(0,0,0,0.08)",
+                        boxShadow: "0 16px 32px rgba(var(--rgb-black), 0.08)",
                       },
                     }}
                   >
@@ -132,10 +148,10 @@ export default function PublicEventsListPage() {
                       >
                         <Box
                           component="img"
-                          src={evt.image || "/image/favicon.png"}
+                          src={evt.image || "/image/logo-small.png"}
                           alt={evt.title}
                           onError={(e) => {
-                            e.currentTarget.src = "/image/favicon.png";
+                            e.currentTarget.src = "/image/logo-small.png";
                           }}
                           sx={{
                             width: "100%",

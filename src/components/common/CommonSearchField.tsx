@@ -1,5 +1,5 @@
 import { TextField, InputAdornment } from "@mui/material";
-import { Search } from "@mui/icons-material";
+import Search from "@mui/icons-material/Search";
 
 interface CommonSearchFieldProps {
   value: string;

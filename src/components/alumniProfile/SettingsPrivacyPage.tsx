@@ -5,14 +5,11 @@ import {
   CardContent,
   Chip,
   Divider,
-  FormControl,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  MenuItem,
   Skeleton,
-  Select,
   Switch,
   Typography,
 } from "@mui/material";
@@ -28,6 +25,7 @@ import {
   User,
   Users,
 } from "lucide-react";
+import CommonDropDown from "@/components/common/CommonDropDown";
 import { CommonButton, CommonPageHeader } from "@/components/common";
 // import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
@@ -284,21 +282,18 @@ export default function SettingsPrivacyPage() {
                     }
                     secondary={field.description}
                   />
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
-                    <Select
-                      value={settings[field.key]}
-                      onChange={(e) =>
-                        updateSetting(field.key, e.target.value as PrivacyLevel)
-                      }
-                      aria-label={`${field.label} visibility`}
-                    >
-                      {levels.map((level) => (
-                        <MenuItem value={level} key={level}>
-                          {level.replace("_", " ")}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <CommonDropDown
+                    label={`${field.label} visibility`}
+                    value={settings[field.key]}
+                    menuItems={levels.map((level) => ({
+                      value: level,
+                      label: level.replace("_", " "),
+                    }))}
+                    onChange={(value) =>
+                      updateSetting(field.key, value as PrivacyLevel)
+                    }
+                    sx={{ minWidth: 160 }}
+                  />
                 </ListItem>
               </Box>
             ))}

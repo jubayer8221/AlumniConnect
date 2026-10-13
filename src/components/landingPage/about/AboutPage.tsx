@@ -48,16 +48,16 @@ export default function AboutPage() {
 
       {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1, position: "relative" }}>
-        {/* Hero Banner Section with Reference Styling */}
+        {/* Banner Section */}
         <Box
           sx={{
             position: "relative",
             pt: { xs: 12, md: 16 },
             pb: { xs: 10, md: 14 },
             overflow: "hidden",
-            color: "#ffffff",
+            color: "var(--color-surface)",
             background:
-              "linear-gradient(135deg, #0f766e 0%, #115e59 40%, #102a28 100%)",
+              "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
           }}
         >
           {/* Background Image Overlay */}
@@ -78,7 +78,7 @@ export default function AboutPage() {
               position: "absolute",
               inset: 0,
               background:
-                "radial-gradient(ellipse at 20% 30%, rgba(42,157,143,0.35) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(194,65,12,0.25) 0%, transparent 60%)",
+                "radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.35) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.25) 0%, transparent 60%)",
             }}
           />
 
@@ -99,8 +99,8 @@ export default function AboutPage() {
                 px: 2,
                 py: 0.75,
                 borderRadius: 999,
-                bgcolor: "rgba(255,255,255,0.12)",
-                border: "1px solid rgba(255,255,255,0.2)",
+                bgcolor: "rgba(var(--rgb-white), 0.12)",
+                border: "1px solid rgba(var(--rgb-white), 0.2)",
                 backdropFilter: "blur(10px)",
                 mb: 3,
               }}
@@ -110,8 +110,8 @@ export default function AboutPage() {
                   width: 8,
                   height: 8,
                   borderRadius: "50%",
-                  bgcolor: "#2dd4bf",
-                  boxShadow: "0 0 12px #2dd4bf",
+                  bgcolor: "var(--color-accent)",
+                  boxShadow: "0 0 12px var(--color-accent)",
                 }}
               />
               <Typography
@@ -120,7 +120,7 @@ export default function AboutPage() {
                   fontWeight: 600,
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
-                  color: "#ffffff",
+                  color: "var(--color-surface)",
                 }}
               >
                 Est. 1887 · {appConfig.institutionShortName || "SGVA"}
@@ -143,7 +143,7 @@ export default function AboutPage() {
                 component="span"
                 sx={{
                   background:
-                    "linear-gradient(135deg, #7dd3c7 0%, #f4a261 100%)",
+                    "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
@@ -157,7 +157,7 @@ export default function AboutPage() {
               sx={{
                 fontSize: { xs: "1rem", md: "1.2rem" },
                 lineHeight: 1.7,
-                color: "rgba(255,255,255,0.82)",
+                color: "rgba(var(--rgb-white), 0.82)",
                 mb: 5,
                 maxWidth: 720,
               }}
@@ -183,12 +183,12 @@ export default function AboutPage() {
                       width: 46,
                       height: 46,
                       borderRadius: 2.5,
-                      bgcolor: "rgba(255,255,255,0.1)",
-                      border: "1px solid rgba(255,255,255,0.18)",
+                      bgcolor: "rgba(var(--rgb-white), 0.1)",
+                      border: "1px solid rgba(var(--rgb-white), 0.18)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#7dd3c7",
+                      color: "var(--color-accent)",
                       backdropFilter: "blur(8px)",
                     }}
                   >
@@ -207,7 +207,7 @@ export default function AboutPage() {
                     <Typography
                       sx={{
                         fontSize: "0.8rem",
-                        color: "rgba(255,255,255,0.68)",
+                        color: "rgba(var(--rgb-white), 0.68)",
                       }}
                     >
                       {stat.label}
@@ -232,7 +232,7 @@ export default function AboutPage() {
                   mb: 4,
                   p: { xs: 1, sm: 2 },
                   border: "none",
-                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+                  boxShadow: "0px 4px 20px rgba(var(--rgb-black), 0.04)",
                 }}
               >
                 <CardContent>
@@ -283,7 +283,7 @@ export default function AboutPage() {
                   borderRadius: 3.5,
                   p: { xs: 1, sm: 2 },
                   border: "none",
-                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+                  boxShadow: "0px 4px 20px rgba(var(--rgb-black), 0.04)",
                 }}
               >
                 <CardContent>
@@ -381,7 +381,7 @@ export default function AboutPage() {
                   borderRadius: 3.5,
                   p: 1,
                   border: "none",
-                  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.04)",
+                  boxShadow: "0px 4px 20px rgba(var(--rgb-black), 0.04)",
                   position: "sticky",
                   top: 100,
                 }}
