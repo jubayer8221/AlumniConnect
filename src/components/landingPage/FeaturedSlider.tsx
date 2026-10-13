@@ -180,7 +180,7 @@ export default function FeaturedSlider() {
                         inset: 0,
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
+                        objectFit: "fill",
                       }}
                     />
                   </Box>
@@ -255,7 +255,10 @@ export default function FeaturedSlider() {
               border: "1px solid",
               borderColor: "divider",
               boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.1)",
-              "&:hover": { bgcolor: "primary.main", color: "var(--color-white)" },
+              "&:hover": {
+                bgcolor: "primary.main",
+                color: "var(--color-white)",
+              },
             }}
           >
             <ChevronLeft size={20} />
@@ -272,7 +275,10 @@ export default function FeaturedSlider() {
               border: "1px solid",
               borderColor: "divider",
               boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.1)",
-              "&:hover": { bgcolor: "primary.main", color: "var(--color-white)" },
+              "&:hover": {
+                bgcolor: "primary.main",
+                color: "var(--color-white)",
+              },
             }}
           >
             <ChevronRight size={20} />

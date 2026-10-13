@@ -62,7 +62,7 @@ const FALLBACK_SLIDE = {
 // Fade only: no translate or movement.
 const fadeIn = keyframes`
   from {
-    opacity: 0.35;
+    opacity: 0.2;
   }
   to {
     opacity: 1;
@@ -133,25 +133,30 @@ export default function HeroSection() {
       WebkitTextFillColor: "transparent",
     };
 
-    if (slide.title.includes("memories")) {
-      const [before, ...afterParts] = slide.title.split("memories");
-      const after = afterParts.join("memories");
+    // The words you want to highlight
+    const HIGHLIGHT_WORDS = ["memories", "opportunities", "gatherings"];
 
-      return (
-        <>
-          {before}
-          <Box component="span" sx={highlightStyle}>
-            memories
-          </Box>
-          {after}
-        </>
-      );
-    }
+    // Split the title on any of those words (case-insensitive), keeping them
+    const parts = slide.title.split(/(memories|opportunities|gatherings)/gi);
 
     return (
-      <Box component="span" sx={highlightStyle}>
-        {slide.title}
-      </Box>
+      <>
+        {parts.map((part, i) => {
+          const isHighlight = HIGHLIGHT_WORDS.some(
+            (w) => w.toLowerCase() === part.toLowerCase(),
+          );
+
+          return isHighlight ? (
+            <Box key={i} component="span" sx={highlightStyle}>
+              {part}
+            </Box>
+          ) : (
+            <Box key={i} component="span">
+              {part}
+            </Box>
+          );
+        })}
+      </>
     );
   }, [slide?.title]);
 
@@ -169,17 +174,18 @@ export default function HeroSection() {
       sx={{
         position: "relative",
         isolation: "isolate",
-        minHeight: { xs: "auto", md: "100vh" },
+        minHeight: { xs: "auto", md: "99vh" },
         display: "flex",
         alignItems: "center",
         color: "var(--color-surface)",
         overflow: "hidden",
-        background: "var(--color-dark-forest-surface)",
-        pt: { xs: 12, md: 10 },
-        pb: { xs: 14, md: 16 },
+        background:
+          "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
+        pt: { xs: 12, md: 16 },
+        pb: { xs: 14, md: 14 },
       }}
     >
-      {/* Background slider only. */}
+      {/* Background slider matching reference page banner styling */}
       <Box
         aria-hidden="true"
         sx={{
@@ -189,36 +195,60 @@ export default function HeroSection() {
           zIndex: -1,
         }}
       >
+        {/* Background slider only. */}
         <Box
-          key={slide.slideID}
-          component="img"
-          src={slide.image || undefined}
-          alt=""
-          fetchPriority={current === 0 ? "high" : "auto"}
-          onError={(event: SyntheticEvent<HTMLImageElement>) => {
-            event.currentTarget.onerror = null;
-            event.currentTarget.style.display = "none";
-          }}
+          aria-hidden="true"
           sx={{
             position: "absolute",
             inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            opacity: 0.35,
-            animation: `${fadeIn} 800ms ease both`,
-            "@media (prefers-reduced-motion: reduce)": { animation: "none" },
+            overflow: "hidden",
+            zIndex: -1,
           }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
-            opacity: 0.9,
-          }}
-        />
+        >
+          <Box
+            key={slide.slideID}
+            component="img"
+            src={slide.image || undefined}
+            alt=""
+            fetchPriority={current === 0 ? "high" : "auto"}
+            onError={(event: SyntheticEvent<HTMLImageElement>) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.style.display = "none";
+            }}
+            sx={{
+              position: "absolute",
+              inset: -8, // Slight negative inset to contain blurred edges
+              width: "calc(100% + 16px)",
+              height: "calc(100% + 16px)",
+              objectFit: "cover",
+              opacity: 0.25,
+              filter: "blur(4px)", // Subtle, soft blur instead of heavy blur
+              transform: "scale(1.04)", // Prevents edge clipping from light blur
+              animation: `${fadeIn} 800ms ease both`,
+              "@media (prefers-reduced-motion: reduce)": { animation: "none" },
+            }}
+          />
+          {/* Rich color gradient background overlay */}
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
+              opacity: 0.9,
+            }}
+          />
+          {/* Radial light glow overlays */}
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.35) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.25) 0%, transparent 60%)",
+            }}
+          />
+        </Box>
+        {/* Radial Light Overlays matching reference styling */}
         <Box
           sx={{
             position: "absolute",
@@ -229,7 +259,28 @@ export default function HeroSection() {
         />
       </Box>
 
-      {/* Static content layer */}
+      {/* Previous and next arrows anchored to the outer hero section container */}
+      {heroSlides.length > 1 && (
+        <>
+          <IconButton
+            onClick={prev}
+            aria-label="Previous slide"
+            sx={arrowSx("left")}
+          >
+            <ChevronLeft size={24} />
+          </IconButton>
+
+          <IconButton
+            onClick={next}
+            aria-label="Next slide"
+            sx={arrowSx("right")}
+          >
+            <ChevronRight size={24} />
+          </IconButton>
+        </>
+      )}
+
+      {/* Static content layer with full width 12-column grid */}
       <Container
         maxWidth="lg"
         sx={{
@@ -239,7 +290,7 @@ export default function HeroSection() {
         }}
       >
         <Grid container spacing={6} sx={{ alignItems: "center" }}>
-          <Grid size={{ xs: 12, md: 8 }}>
+          <Grid size={{ xs: 12, md: 10 }}>
             <Box
               key={slide.slideID}
               sx={{
@@ -258,7 +309,7 @@ export default function HeroSection() {
                     display: "flex",
                     alignItems: "flex-start",
                     justifyContent: { xs: "center", md: "flex-start" },
-                    mb: 1,
+                    mb: 3,
                   }}
                 >
                   {slide.badge ? (
@@ -299,14 +350,14 @@ export default function HeroSection() {
                   ) : null}
                 </Box>
 
-                {/* Fixed title area with safe wrapping and no clipping */}
+                {/* Fixed title area with safe wrapping and full width layout */}
                 <Box
                   sx={{
                     minHeight: { xs: 120, sm: 140, md: 160 },
                     display: "flex",
                     alignItems: "flex-start",
                     justifyContent: { xs: "center", md: "flex-start" },
-                    mb: 2,
+                    mb: 2.5,
                   }}
                 >
                   <Typography
@@ -315,11 +366,11 @@ export default function HeroSection() {
                       width: "100%",
                       fontSize: {
                         xs: "2.25rem",
-                        sm: "3rem",
-                        md: "4.25rem",
+                        sm: "3.25rem",
+                        md: "4rem",
                       },
                       fontWeight: 800,
-                      lineHeight: 1.1,
+                      lineHeight: 1.15,
                       letterSpacing: "-0.03em",
                       overflowWrap: "break-word",
                       wordBreak: "break-word",
@@ -335,15 +386,16 @@ export default function HeroSection() {
                   sx={{
                     minHeight: { xs: 90, md: 100 },
                     pt: 1,
-                    mb: 3,
+                    mb: 5,
                   }}
                 >
                   {slide.subtitle ? (
                     <Typography
                       sx={{
-                        fontSize: { xs: "1rem", md: "1.15rem" },
+                        fontSize: { xs: "1rem", md: "1.2rem" },
                         lineHeight: 1.7,
                         color: "rgba(var(--rgb-white), 0.82)",
+                        maxWidth: 720,
                         mx: { xs: "auto", md: 0 },
                         overflowWrap: "break-word",
                       }}
@@ -430,7 +482,7 @@ export default function HeroSection() {
                   {heroStats.length > 0 && (
                     <Stack
                       direction="row"
-                      spacing={{ xs: 2, sm: 5 }}
+                      spacing={{ xs: 2.5, sm: 5 }}
                       sx={{
                         flexWrap: "wrap",
                         rowGap: 2,
@@ -451,16 +503,17 @@ export default function HeroSection() {
                         >
                           <Box
                             sx={{
-                              width: 40,
-                              height: 40,
+                              width: 46,
+                              height: 46,
                               flexShrink: 0,
-                              borderRadius: 2,
+                              borderRadius: 2.5,
                               bgcolor: "rgba(var(--rgb-white), 0.1)",
-                              border: "1px solid rgba(var(--rgb-white), 0.15)",
+                              border: "1px solid rgba(var(--rgb-white), 0.18)",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               color: "var(--color-accent)",
+                              backdropFilter: "blur(8px)",
                             }}
                           >
                             {getIcon(stat.iconKey)}
@@ -469,7 +522,7 @@ export default function HeroSection() {
                           <Box sx={{ textAlign: "left" }}>
                             <Typography
                               sx={{
-                                fontSize: "1.25rem",
+                                fontSize: "1.4rem",
                                 fontWeight: 800,
                                 lineHeight: 1.1,
                               }}
@@ -479,8 +532,8 @@ export default function HeroSection() {
 
                             <Typography
                               sx={{
-                                fontSize: "0.75rem",
-                                color: "rgba(var(--rgb-white), 0.65)",
+                                fontSize: "0.8rem",
+                                color: "rgba(var(--rgb-white), 0.68)",
                               }}
                             >
                               {stat.label}
@@ -496,27 +549,6 @@ export default function HeroSection() {
           </Grid>
         </Grid>
       </Container>
-
-      {/* Previous and next arrows */}
-      {heroSlides.length > 1 && (
-        <>
-          <IconButton
-            onClick={prev}
-            aria-label="Previous slide"
-            sx={arrowSx("left")}
-          >
-            <ChevronLeft size={24} />
-          </IconButton>
-
-          <IconButton
-            onClick={next}
-            aria-label="Next slide"
-            sx={arrowSx("right")}
-          >
-            <ChevronRight size={24} />
-          </IconButton>
-        </>
-      )}
 
       {/* Accessible navigation dots */}
       {heroSlides.length > 1 && (

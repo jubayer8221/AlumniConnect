@@ -19,7 +19,14 @@ import { appConfig } from "@/config/appConfig";
 
 export default function LandingFooter() {
   return (
-    <Box sx={{ bgcolor: "var(--color-dark-forest)", color: "var(--color-surface)", pt: 8, pb: 4 }}>
+    <Box
+      sx={{
+        bgcolor: "var(--color-dark-forest)",
+        color: "var(--color-surface)",
+        pt: 8,
+        pb: 4,
+      }}
+    >
       <Container maxWidth="lg">
         <Grid container spacing={5}>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -30,7 +37,7 @@ export default function LandingFooter() {
                 component="img"
                 src="/image/logo-small.png"
                 alt={appConfig.appName}
-                sx={{ width: 40, height: 40, objectFit: "contain" }}
+                sx={{ width: 50, height: 60, objectFit: "contain" }}
               />
               <Box>
                 <Typography
@@ -39,7 +46,10 @@ export default function LandingFooter() {
                   {appConfig.appName}
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.7rem", color: "rgba(var(--rgb-white), 0.55)" }}
+                  sx={{
+                    fontSize: "0.7rem",
+                    color: "rgba(var(--rgb-white), 0.55)",
+                  }}
                 >
                   {appConfig.institutionName}
                 </Typography>
@@ -175,7 +185,10 @@ export default function LandingFooter() {
               <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
                 <Mail size={18} color="var(--color-accent)" />
                 <Typography
-                  sx={{ fontSize: "0.85rem", color: "rgba(var(--rgb-white), 0.6)" }}
+                  sx={{
+                    fontSize: "0.85rem",
+                    color: "rgba(var(--rgb-white), 0.6)",
+                  }}
                 >
                   {appConfig.contactEmail}
                 </Typography>
@@ -183,7 +196,10 @@ export default function LandingFooter() {
               <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
                 <Phone size={18} color="var(--color-accent)" />
                 <Typography
-                  sx={{ fontSize: "0.85rem", color: "rgba(var(--rgb-white), 0.6)" }}
+                  sx={{
+                    fontSize: "0.85rem",
+                    color: "rgba(var(--rgb-white), 0.6)",
+                  }}
                 >
                   {appConfig.contactPhone}
                 </Typography>
