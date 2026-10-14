@@ -184,7 +184,7 @@ export default function AlumniDirectoryPage() {
         <Box onClick={(event) => event.stopPropagation()}>
           <IconButton
             size="small"
-            onClick={() => navigate(`/alumni/${row.alumniID}`)}
+            onClick={() => navigate(`/alumni/profile-details/${row.alumniID}`)}
           >
             <Eye size={16} />
           </IconButton>
@@ -209,7 +209,7 @@ export default function AlumniDirectoryPage() {
               startIcon={<Plus size={18} />}
               onClick={() => navigate("/alumni/new")}
             >
-              Add Alumni
+              Add
             </CommonButton>
           ) : null
         }

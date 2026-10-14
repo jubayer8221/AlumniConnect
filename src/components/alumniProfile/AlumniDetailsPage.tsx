@@ -61,6 +61,7 @@ import { getApiErrorMessage } from "@/utils/apiError";
 import { appConfig } from "@/config/appConfig";
 import AlumniProfileCard from "@/components/alumniProfile/AlumniProfileCard";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
+import ConnectButton from "@/components/network/ConnectButton";
 
 const formatAddress = (...parts: (string | undefined | null)[]) => {
   const joined = parts.filter(Boolean).join(", ");
@@ -160,12 +161,6 @@ export default function AlumniDetailsPage() {
   >(null);
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
-  /* ============================================================
-     Fetch only if:
-       - nothing is currently loaded, OR
-       - the loaded profile belongs to a different alumni
-     Avoids refetching the same record when the component re-mounts.
-     ============================================================ */
   useEffect(() => {
     if (!profileId) return;
 
@@ -223,9 +218,15 @@ export default function AlumniDetailsPage() {
   const canSeePrivate = isAdmin || isOwner;
   const profileIsPublic = alumni.isProfilePublic;
 
+  /* ---------- Connect visibility ----------
+     Show whenever it's not your own profile and there's a valid userID.
+     The ConnectButton resolves the real state (Connect / Pending / Message).
+  -------------------------------------------- */
+  const showConnect = !isOwner && alumni.userID > 0;
+
   const canSeePersonal =
     canSeePrivate ||
-    (profileIsPublic && alumni.privacy.isAcademicInformationVisible);
+    (profileIsPublic && alumni.privacy.isPersonalInformationVisible);
   const canSeeAcademic =
     canSeePrivate ||
     (profileIsPublic && alumni.privacy.isAcademicInformationVisible);
@@ -239,7 +240,8 @@ export default function AlumniDetailsPage() {
     (profileIsPublic && alumni.privacy.isFamilyInformationVisible);
   const canSeeSocial =
     canSeePrivate || (profileIsPublic && alumni.privacy.isSocialMediaVisible);
-  const canSeeBiography = canSeePrivate || profileIsPublic;
+  const canSeeBiography =
+    canSeePrivate || (profileIsPublic && alumni.privacy.isBiographyVisible);
 
   const presentAddress = canSeePrivate
     ? formatAddress(
@@ -334,11 +336,13 @@ export default function AlumniDetailsPage() {
         title="Alumni Profile"
         breadcrumbs={[
           { label: "Home", path: isAdmin ? "/dashboard" : "/alumni/dashboard" },
-          { label: "Alumni", path: "/alumni" },
+          { label: "Alumni", path: "/alumni/directory" },
           { label: p.fullName },
         ]}
         actions={
           <>
+            {showConnect && <ConnectButton otherUserID={alumni.userID} />}
+
             <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
               <MoreVertical size={20} />
             </IconButton>
@@ -349,8 +353,8 @@ export default function AlumniDetailsPage() {
                 onClick={() =>
                   navigate(
                     isOwner && !isAdmin
-                      ? "/alumni/profile-setup"
-                      : `/alumni/${alumni.alumniID}/edit`,
+                      ? "/alumni/profile-details/edit"
+                      : `/alumni/profile-details/${alumni.alumniID}/edit`,
                   )
                 }
               >
@@ -777,7 +781,8 @@ export default function AlumniDetailsPage() {
               borderRadius: 3,
               p: 3,
               textAlign: "center",
-              background: "linear-gradient(135deg, var(--color-light-surface-blue) 0%, var(--color-surface) 100%)",
+              background:
+                "linear-gradient(135deg, var(--color-light-surface-blue) 0%, var(--color-surface) 100%)",
             }}
           >
             <Typography
@@ -820,9 +825,6 @@ export default function AlumniDetailsPage() {
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               {p.fullName}
             </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {alumni.alumniCode}
-            </Typography>
             <Typography variant="body2" sx={{ mt: 1 }}>
               {firstEdu?.departmentName ?? "—"}
             </Typography>
@@ -859,19 +861,17 @@ export default function AlumniDetailsPage() {
         slotProps={{
           paper: {
             sx: {
-              // backgroundColor: "rgba(var(--rgb-black), 0.92)",
               backgroundColor: "white",
               backgroundImage: "none",
               boxShadow: 24,
               borderRadius: 3,
-              overflow: "visible", // Ensures button is never clipped
+              overflow: "visible",
               m: 2,
               position: "relative",
             },
           },
         }}
       >
-        {/* Close Button anchored to top-right of the modal card */}
         <IconButton
           onClick={() => setPreviewImage(null)}
           aria-label="Close image preview"
@@ -898,7 +898,7 @@ export default function AlumniDetailsPage() {
             justifyContent: "center",
             alignItems: "center",
             p: 3,
-            pt: 6, // Reserved top space so image doesn't overlap the close button
+            pt: 6,
           }}
         >
           {previewImage && (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import {
   AppBar,
   Avatar,
@@ -30,8 +30,11 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { appConfig } from "@/config/appConfig";
 import { useAuth } from "@/hooks/useAuth";
-import ChangePasswordDialog from "../login/ChangePasswordDialog";
 import { hasAdminAccess } from "@/utils/authUtils";
+
+const ChangePasswordDialog = lazy(
+  () => import("../login/ChangePasswordDialog"),
+);
 
 /** Nav items either scroll to a landing section or navigate to a route. */
 type NavItem =
@@ -44,6 +47,35 @@ const NAV: NavItem[] = [
   { label: "Events", type: "route", to: "/events" },
   { label: "News", type: "route", to: "/news" },
 ];
+
+/* Shared styles so "Sign In" matches the other nav links exactly */
+const navLinkSx = (active: boolean) => ({
+  position: "relative" as const,
+  fontSize: "0.9rem",
+  fontWeight: 700,
+  cursor: "pointer",
+  color: active ? "var(--color-primary)" : "text.primary",
+  py: 0.5,
+  transition: "color 0.2s ease",
+
+  /* Animated underline grows from center on hover */
+  "&::after": {
+    content: '""',
+    position: "absolute" as const,
+    left: "50%",
+    bottom: 0,
+    height: 2,
+    width: active ? "100%" : 0,
+    borderRadius: 2,
+    bgcolor: "var(--color-primary)",
+    transform: "translateX(-50%)",
+    transition: "width 0.25s ease, background-color 0.2s ease",
+  },
+  "&:hover": {
+    color: "var(--color-primary)",
+    "&::after": { width: "100%" },
+  },
+});
 
 function initialsOf(name?: string | null): string {
   if (!name) return "?";
@@ -146,37 +178,79 @@ export default function LandingHeader() {
     return location.pathname === "/";
   };
 
+  const isSignInActive = location.pathname === "/login";
+
   return (
     <>
       <AppBar
         position="fixed"
         elevation={0}
         sx={{
-          bgcolor: solid ? "rgba(var(--rgb-white), 0.95)" : "transparent",
-          backdropFilter: solid ? "blur(12px)" : "none",
-          boxShadow: solid ? "0 4px 20px rgba(var(--rgb-black), 0.06)" : "none",
-          borderBottom: solid ? "1px solid" : "none",
-          borderColor: "divider",
-          transition: "all 0.3s ease",
-          color: solid ? "text.primary" : "var(--color-surface)",
+          top: { xs: 8, md: 16 },
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: { xs: "calc(100% - 24px)", md: "calc(100% - 32px)" },
+          maxWidth: "lg",
+          borderRadius: 3,
+          color: "text.primary",
+          bgcolor: "rgba(var(--rgb-white), 0.92)",
+          backdropFilter: "blur(14px) saturate(180%)",
+          WebkitBackdropFilter: "blur(14px) saturate(180%)",
+          border: "1px solid",
+          borderColor: solid
+            ? "rgba(var(--rgb-black), 0.06)"
+            : "rgba(var(--rgb-white), 0.35)",
+
+          boxShadow: solid
+            ? "0 10px 30px rgba(var(--rgb-black), 0.10), 0 4px 12px rgba(var(--rgb-black), 0.05)"
+            : "0 4px 20px rgba(var(--rgb-black), 0.05)",
+
+          transition:
+            "box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
+
+          "&:hover": {
+            boxShadow:
+              "0 14px 40px rgba(var(--rgb-black), 0.12), 0 6px 16px rgba(var(--rgb-black), 0.06)",
+          },
         }}
       >
         <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ minHeight: 72 }}>
+          <Toolbar disableGutters sx={{ minHeight: { xs: 64, md: 72 } }}>
+            {/* ---------- Logo ---------- */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 gap: 1.5,
                 cursor: "pointer",
+                borderRadius: 2,
+                px: 1,
+                py: 0.5,
+                transition: "transform 0.2s ease, background-color 0.2s ease",
+                "&:hover": {
+                  transform: "translateY(-1px)",
+                  bgcolor: "rgba(var(--rgb-primary), 0.05)",
+                },
+                "&:hover .logo-img": {
+                  transform: "scale(1.06)",
+                },
               }}
               onClick={goHome}
             >
               <Box
                 component="img"
-                src="/image/logo-small.png"
+                src="/image/logo-small-64.png"
+                srcSet="/image/logo-small-64.png 1x, /image/logo-small.png 2x"
                 alt={appConfig.appName}
-                sx={{ width: 50, height: 50, objectFit: "contain" }}
+                width={64}
+                height={60}
+                className="logo-img"
+                sx={{
+                  width: 50,
+                  height: 50,
+                  objectFit: "contain",
+                  transition: "transform 0.25s ease",
+                }}
               />
               <Box>
                 <Typography
@@ -185,7 +259,7 @@ export default function LandingHeader() {
                     fontSize: "1.05rem",
                     letterSpacing: "-0.02em",
                     lineHeight: 1.1,
-                    color: solid ? "text.primary" : "var(--color-surface)",
+                    color: "text.primary",
                   }}
                 >
                   {appConfig.appName}
@@ -193,9 +267,7 @@ export default function LandingHeader() {
                 <Typography
                   sx={{
                     fontSize: "0.68rem",
-                    color: solid
-                      ? "text.secondary"
-                      : "rgba(var(--rgb-white), 0.75)",
+                    color: "text.secondary",
                     lineHeight: 1.2,
                   }}
                 >
@@ -206,7 +278,7 @@ export default function LandingHeader() {
 
             <Box sx={{ flexGrow: 1 }} />
 
-            {/* -------- Desktop nav links -------- */}
+            {/* ---------- Desktop nav links ---------- */}
             <Stack
               direction="row"
               spacing={3}
@@ -218,26 +290,7 @@ export default function LandingHeader() {
                   <Typography
                     key={item.type === "route" ? item.to : item.href}
                     onClick={() => handleNav(item)}
-                    sx={{
-                      fontSize: "0.9rem",
-                      fontWeight: active ? 700 : 500,
-                      cursor: "pointer",
-                      opacity: active ? 1 : 0.9,
-                      color: active
-                        ? "var(--color-primary)"
-                        : solid
-                          ? "text.primary"
-                          : "var(--color-surface)",
-                      borderBottom: active
-                        ? "2px solid"
-                        : "2px solid transparent",
-                      borderColor: active
-                        ? "var(--color-primary)"
-                        : "transparent",
-                      pb: 0.25,
-                      transition: "opacity 0.2s, color 0.2s, border-color 0.2s",
-                      "&:hover": { opacity: 1 },
-                    }}
+                    sx={navLinkSx(active)}
                   >
                     {item.label}
                   </Typography>
@@ -245,10 +298,10 @@ export default function LandingHeader() {
               })}
             </Stack>
 
-            {/* -------- Desktop right side -------- */}
+            {/* ---------- Desktop right side ---------- */}
             <Stack
               direction="row"
-              spacing={1.5}
+              spacing={3}
               sx={{
                 ml: 3,
                 display: { xs: "none", md: "flex" },
@@ -261,11 +314,14 @@ export default function LandingHeader() {
                   sx={{
                     p: 0.5,
                     border: "2px solid",
-                    borderColor: solid ? "divider" : "rgba(255,255,255,0.4)",
-                    transition: "border-color 0.2s, transform 0.15s",
+                    borderColor: "divider",
+                    transition:
+                      "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
                     "&:hover": {
                       borderColor: "var(--color-primary)",
-                      transform: "scale(1.04)",
+                      transform: "scale(1.05)",
+                      boxShadow:
+                        "0 0 0 4px rgba(var(--rgb-primary), 0.12), 0 4px 12px rgba(var(--rgb-primary), 0.15)",
                     },
                   }}
                   aria-label="Open user menu"
@@ -286,16 +342,15 @@ export default function LandingHeader() {
                 </IconButton>
               ) : (
                 <>
-                  <Button
+                  {/* Sign In — styled exactly like a nav link */}
+                  <Typography
                     onClick={() => navigate("/login")}
-                    sx={{
-                      color: solid ? "text.primary" : "var(--color-surface)",
-                      textTransform: "none",
-                      fontWeight: 600,
-                    }}
+                    sx={navLinkSx(isSignInActive)}
                   >
                     Sign In
-                  </Button>
+                  </Typography>
+
+                  {/* Join Network — filled CTA button */}
                   <Button
                     variant="contained"
                     onClick={() => navigate("/login")}
@@ -303,10 +358,20 @@ export default function LandingHeader() {
                       bgcolor: "var(--color-primary)",
                       color: "var(--color-white)",
                       textTransform: "none",
-                      fontWeight: 600,
+                      fontWeight: 700,
                       borderRadius: 2,
                       px: 3,
-                      "&:hover": { bgcolor: "var(--color-primary-hover)" },
+                      boxShadow: "0 4px 12px rgba(var(--rgb-primary), 0.25)",
+                      transition:
+                        "background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
+                      "&:hover": {
+                        bgcolor: "var(--color-primary-hover)",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 8px 20px rgba(var(--rgb-primary), 0.35)",
+                      },
+                      "&:active": {
+                        transform: "translateY(0)",
+                      },
                     }}
                   >
                     Join Network
@@ -315,6 +380,7 @@ export default function LandingHeader() {
               )}
             </Stack>
 
+            {/* ---------- Mobile menu icon ---------- */}
             <IconButton
               aria-label={
                 mobileOpen ? "Close navigation menu" : "Open navigation menu"
@@ -323,7 +389,12 @@ export default function LandingHeader() {
               aria-controls="landing-mobile-navigation"
               sx={{
                 display: { xs: "flex", md: "none" },
-                color: solid ? "text.primary" : "var(--color-surface)",
+                color: "text.primary",
+                transition: "background-color 0.2s ease, transform 0.2s ease",
+                "&:hover": {
+                  bgcolor: "rgba(var(--rgb-primary), 0.08)",
+                  transform: "scale(1.05)",
+                },
               }}
               onClick={() => setMobileOpen((open) => !open)}
             >
@@ -345,6 +416,13 @@ export default function LandingHeader() {
             <IconButton
               onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
+              sx={{
+                transition: "background-color 0.2s ease, transform 0.2s ease",
+                "&:hover": {
+                  bgcolor: "rgba(var(--rgb-black), 0.06)",
+                  transform: "rotate(90deg)",
+                },
+              }}
             >
               <X />
             </IconButton>
@@ -395,6 +473,12 @@ export default function LandingHeader() {
                   onClick={() => handleNav(item)}
                   selected={active}
                   sx={{
+                    transition:
+                      "background-color 0.2s ease, padding-left 0.2s ease",
+                    "&:hover": {
+                      bgcolor: "rgba(var(--rgb-primary), 0.06)",
+                      pl: 3,
+                    },
                     "&.Mui-selected": {
                       bgcolor: "action.selected",
                       borderRight: "3px solid",
@@ -425,7 +509,14 @@ export default function LandingHeader() {
                   sx={{
                     bgcolor: "var(--color-primary)",
                     textTransform: "none",
-                    "&:hover": { bgcolor: "var(--color-primary-hover)" },
+                    boxShadow: "0 4px 12px rgba(var(--rgb-primary), 0.25)",
+                    transition:
+                      "background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
+                    "&:hover": {
+                      bgcolor: "var(--color-primary-hover)",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 8px 20px rgba(var(--rgb-primary), 0.35)",
+                    },
                   }}
                 >
                   Go to Dashboard
@@ -437,7 +528,16 @@ export default function LandingHeader() {
                     setMobileOpen(false);
                     navigate("/alumni/profile");
                   }}
-                  sx={{ textTransform: "none" }}
+                  sx={{
+                    textTransform: "none",
+                    transition:
+                      "background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease",
+                    "&:hover": {
+                      borderColor: "var(--color-primary)",
+                      bgcolor: "rgba(var(--rgb-primary), 0.05)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
                 >
                   My Profile
                 </Button>
@@ -447,7 +547,16 @@ export default function LandingHeader() {
                 <Button
                   variant="outlined"
                   onClick={() => navigate("/login")}
-                  sx={{ textTransform: "none" }}
+                  sx={{
+                    textTransform: "none",
+                    transition:
+                      "background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease",
+                    "&:hover": {
+                      borderColor: "var(--color-primary)",
+                      bgcolor: "rgba(var(--rgb-primary), 0.05)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
                 >
                   Sign In
                 </Button>
@@ -457,7 +566,14 @@ export default function LandingHeader() {
                   sx={{
                     bgcolor: "var(--color-primary)",
                     textTransform: "none",
-                    "&:hover": { bgcolor: "var(--color-primary-hover)" },
+                    boxShadow: "0 4px 12px rgba(var(--rgb-primary), 0.25)",
+                    transition:
+                      "background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
+                    "&:hover": {
+                      bgcolor: "var(--color-primary-hover)",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 8px 20px rgba(var(--rgb-primary), 0.35)",
+                    },
                   }}
                 >
                   Join Network
@@ -483,12 +599,12 @@ export default function LandingHeader() {
               minWidth: 260,
               borderRadius: 2.5,
               overflow: "hidden",
-              boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
+              boxShadow:
+                "0 16px 40px rgba(var(--rgb-black), 0.14), 0 6px 16px rgba(var(--rgb-black), 0.08)",
             },
           },
         }}
       >
-        {/* Header */}
         <Box
           sx={{
             display: "flex",
@@ -535,11 +651,19 @@ export default function LandingHeader() {
           </Box>
         </Box>
 
-        {/* Menu items */}
         <List sx={{ py: 0.5 }}>
           <ListItemButton
             onClick={goToDashboard}
-            sx={{ py: 1.1, px: 2, gap: 1.5 }}
+            sx={{
+              py: 1.1,
+              px: 2,
+              gap: 1.5,
+              transition: "background-color 0.2s ease, padding-left 0.2s ease",
+              "&:hover": {
+                bgcolor: "rgba(var(--rgb-primary), 0.06)",
+                pl: 2.5,
+              },
+            }}
           >
             <ListItemIcon sx={{ minWidth: 0, color: "text.secondary" }}>
               <LayoutDashboard size={18} />
@@ -555,7 +679,16 @@ export default function LandingHeader() {
               setUserAnchor(null);
               navigate("/alumni/profile");
             }}
-            sx={{ py: 1.1, px: 2, gap: 1.5 }}
+            sx={{
+              py: 1.1,
+              px: 2,
+              gap: 1.5,
+              transition: "background-color 0.2s ease, padding-left 0.2s ease",
+              "&:hover": {
+                bgcolor: "rgba(var(--rgb-primary), 0.06)",
+                pl: 2.5,
+              },
+            }}
           >
             <ListItemIcon sx={{ minWidth: 0, color: "text.secondary" }}>
               <User size={18} />
@@ -566,35 +699,6 @@ export default function LandingHeader() {
             />
           </ListItemButton>
 
-          {/* <ListItemButton
-            onClick={openChangePassword}
-            sx={{ py: 1.1, px: 2, gap: 1.5 }}
-          >
-            <ListItemIcon sx={{ minWidth: 0, color: "text.secondary" }}>
-              <Lock size={18} />
-            </ListItemIcon>
-            <ListItemText
-              primary="Change Password"
-              sx={{ fontSize: "0.875rem", fontWeight: 500 }}
-            />
-          </ListItemButton> */}
-
-          {/* <ListItemButton
-            onClick={() => {
-              setUserAnchor(null);
-              navigate(isAdmin ? "/settings" : "/alumni/settings-privacy");
-            }}
-            sx={{ py: 1.1, px: 2, gap: 1.5 }}
-          >
-            <ListItemIcon sx={{ minWidth: 0, color: "text.secondary" }}>
-              <Settings size={18} />
-            </ListItemIcon>
-            <ListItemText
-              primary="Settings"
-              sx={{ fontSize: "0.875rem", fontWeight: 500 }}
-            />
-          </ListItemButton> */}
-
           <Divider sx={{ my: 0.5 }} />
 
           <ListItemButton
@@ -604,7 +708,11 @@ export default function LandingHeader() {
               px: 2,
               gap: 1.5,
               color: "error.main",
-              "&:hover": { bgcolor: "error.50" },
+              transition: "background-color 0.2s ease, padding-left 0.2s ease",
+              "&:hover": {
+                bgcolor: "rgba(var(--rgb-error), 0.08)",
+                pl: 2.5,
+              },
             }}
           >
             <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
@@ -622,11 +730,9 @@ export default function LandingHeader() {
         </List>
       </Popover>
 
-      {/* Change password dialog — outside popover */}
-      <ChangePasswordDialog
-        open={changePwOpen}
-        onClose={() => setChangePwOpen(false)}
-      />
+      {changePwOpen && (
+        <ChangePasswordDialog open onClose={() => setChangePwOpen(false)} />
+      )}
     </>
   );
 }

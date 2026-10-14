@@ -86,13 +86,13 @@ export default function AlumniDashboardPage() {
     {
       label: "View Profile",
       icon: <UserCircle size={20} />,
-      path: `/alumni/${selectedAlumni.alumniID}`,
+      path: `/alumni/profile-details/${selectedAlumni.alumniID}`,
       color: "var(--color-chart-indigo)",
     },
     {
       label: "Edit Profile",
       icon: <Pencil size={20} />,
-      path: "/alumni/profile-setup",
+      path: "/alumni/profile-details/edit",
       color: "var(--color-chart-pink)",
     },
     {

@@ -12,6 +12,7 @@ export interface PersonalInformation {
   bloodGroup: string | null;
   maritalStatusID: string | null;
   profilePhoto: string | null;
+  coverPhoto: string | null; // ← NEW
   bio: string | null;
   hobby: string | null;
   tShirtSize: string | null;
@@ -95,6 +96,8 @@ export interface PrivacyFlags {
   isJobExperienceVisible: boolean;
   isContactInformationVisible: boolean;
   isAcademicInformationVisible: boolean;
+  isPersonalInformationVisible: boolean; // ← NEW
+  isBiographyVisible: boolean; // ← NEW
 }
 
 export interface AlumniProfileFullModel {

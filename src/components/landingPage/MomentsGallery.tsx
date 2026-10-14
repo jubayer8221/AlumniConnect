@@ -32,7 +32,7 @@ export default function MomentsGallery() {
     return (
       <Box
         sx={{
-          py: { xs: 8, md: 12 },
+          py: 6,
           bgcolor: "var(--color-gray900)",
           color: "var(--color-surface)",
           position: "relative",
@@ -45,13 +45,21 @@ export default function MomentsGallery() {
               variant="text"
               width={140}
               height={28}
-              sx={{ bgcolor: "rgba(var(--rgb-white), 0.08)", mx: "auto", mb: 1.5 }}
+              sx={{
+                bgcolor: "rgba(var(--rgb-white), 0.08)",
+                mx: "auto",
+                mb: 1.5,
+              }}
             />
             <Skeleton
               variant="text"
               width={320}
               height={56}
-              sx={{ bgcolor: "rgba(var(--rgb-white), 0.08)", mx: "auto", mb: 1.5 }}
+              sx={{
+                bgcolor: "rgba(var(--rgb-white), 0.08)",
+                mx: "auto",
+                mb: 1.5,
+              }}
             />
           </Box>
           <Box

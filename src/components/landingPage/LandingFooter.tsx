@@ -15,15 +15,18 @@ import {
   Phone,
   Twitter,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { appConfig } from "@/config/appConfig";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LandingFooter() {
+  const { isAuthenticated } = useAuth();
   return (
     <Box
       sx={{
         bgcolor: "var(--color-dark-forest)",
         color: "var(--color-surface)",
-        pt: 8,
+        pt: 6,
         pb: 4,
       }}
     >
@@ -35,8 +38,13 @@ export default function LandingFooter() {
             >
               <Box
                 component="img"
-                src="/image/logo-small.png"
+                src="/image/logo-small-64.png"
+                srcSet="/image/logo-small-64.png 1x, /image/logo-small.png 2x"
                 alt={appConfig.appName}
+                width={64}
+                height={60}
+                loading="lazy"
+                decoding="async"
                 sx={{ width: 50, height: 60, objectFit: "contain" }}
               />
               <Box>
@@ -114,22 +122,28 @@ export default function LandingFooter() {
               Explore
             </Typography>
             <Stack spacing={1.25}>
-              {["Home", "Programs", "Events", "Gallery", "Activities"].map(
-                (link) => (
-                  <Typography
-                    key={link}
-                    sx={{
-                      fontSize: "0.85rem",
-                      color: "rgba(var(--rgb-white), 0.6)",
-                      cursor: "pointer",
-                      transition: "color 0.2s",
-                      "&:hover": { color: "var(--color-accent)" },
-                    }}
-                  >
-                    {link}
-                  </Typography>
-                ),
-              )}
+              {[
+                { label: "Home", to: "/" },
+                { label: "Programs", to: "/#programs" },
+                { label: "Events", to: "/events" },
+                { label: "Gallery", to: "/gallery" },
+                { label: "Activities", to: "/#activities" },
+              ].map(({ label, to }) => (
+                <Typography
+                  key={label}
+                  component={Link}
+                  to={to}
+                  sx={{
+                    fontSize: "0.85rem",
+                    color: "rgba(var(--rgb-white), 0.6)",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                    "&:hover": { color: "var(--color-accent)" },
+                  }}
+                >
+                  {label}
+                </Typography>
+              ))}
             </Stack>
           </Grid>
 
@@ -138,13 +152,10 @@ export default function LandingFooter() {
               Alumni
             </Typography>
             <Stack spacing={1.25}>
-              {[
-                "Sign In",
-                "Register",
-                "Directory",
-                "Mentorship",
-                "Chapters",
-              ].map((link) => (
+              {(isAuthenticated
+                ? ["Directory", "Mentorship", "Chapters"]
+                : ["Sign In", "Register", "Directory", "Mentorship", "Chapters"]
+              ).map((link) => (
                 <Typography
                   key={link}
                   sx={{

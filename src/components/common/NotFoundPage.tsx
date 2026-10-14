@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { ArrowLeft, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -9,19 +9,34 @@ type NotFoundPageProps = {
 
 export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
   const navigate = useNavigate();
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const spotlightRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const pointerPositionRef = useRef({ x: 0, y: 0 });
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+  useEffect(
+    () => () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    },
+    [],
+  );
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    pointerPositionRef.current = { x: e.clientX, y: e.clientY };
+    if (animationFrameRef.current !== null) return;
+
+    animationFrameRef.current = requestAnimationFrame(() => {
+      const { x, y } = pointerPositionRef.current;
+      spotlightRef.current?.style.setProperty("--pointer-x", `${x}px`);
+      spotlightRef.current?.style.setProperty("--pointer-y", `${y}px`);
+      animationFrameRef.current = null;
     });
   };
 
   return (
     <Box
-      onMouseMove={handleMouseMove}
+      onPointerMove={handlePointerMove}
       sx={{
         minHeight: "100vh",
         display: "flex",
@@ -36,10 +51,12 @@ export default function NotFoundPage({ homePath = "/" }: NotFoundPageProps) {
     >
       {/* Dynamic Cursor Spotlight / Radial Glow */}
       <Box
+        ref={spotlightRef}
         sx={{
-          position: "absolute",
+          position: "fixed",
           inset: 0,
-          background: `radial-gradient(800px circle at ${mousePos.x}px ${mousePos.y}px, rgba(var(--rgb-chart-blue), 0.12), transparent 40%)`,
+          background:
+            "radial-gradient(800px circle at var(--pointer-x, 50vw) var(--pointer-y, 50vh), rgba(var(--rgb-chart-blue), 0.12), transparent 40%)",
           pointerEvents: "none",
           transition: "background 0.1s ease-out",
         }}

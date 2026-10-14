@@ -269,7 +269,7 @@ export default function GalleryPhotoFormPage() {
             loading={formState.isSubmitting}
             startIcon={<Save size={18} />}
           >
-            {isEdit ? "Update Photo" : "Create Photo"}
+            {isEdit ? "Update" : "Save"}
           </CommonButton>
         </Box>
       </form>

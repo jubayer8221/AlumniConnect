@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Chip,
   Divider,
   Stack,
   Table,
@@ -14,7 +13,6 @@ import {
   TableCell,
   TableContainer,
   TableRow,
-  Paper,
 } from "@mui/material";
 import {
   School,
@@ -26,7 +24,9 @@ import {
 } from "lucide-react";
 import LandingFooter from "../LandingFooter";
 import LandingHeader from "../LandingHeader";
+// import CommonBanner from "@/components/CommonBanner"; // Adjust import path as needed
 import { appConfig } from "@/config/appConfig";
+import CommonBanner from "@/components/common/CommonBanner";
 
 const HIGHLIGHT_STATS = [
   { icon: <Award size={20} />, value: "1887", label: "Founded" },
@@ -48,176 +48,14 @@ export default function AboutPage() {
 
       {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1, position: "relative" }}>
-        {/* Banner Section */}
-        <Box
-          sx={{
-            position: "relative",
-            pt: { xs: 12, md: 16 },
-            pb: { xs: 10, md: 14 },
-            overflow: "hidden",
-            color: "var(--color-surface)",
-            background:
-              "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
-          }}
-        >
-          {/* Background Image Overlay */}
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1920&q=80')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              opacity: 0.2,
-            }}
-          />
-          {/* Radial Light Overlays */}
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.35) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.25) 0%, transparent 60%)",
-            }}
-          />
-
-          <Container
-            maxWidth="lg"
-            sx={{
-              position: "relative",
-              zIndex: 2,
-              textAlign: { xs: "center", md: "left" },
-            }}
-          >
-            {/* Institution Badge */}
-            <Box
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 1,
-                px: 2,
-                py: 0.75,
-                borderRadius: 999,
-                bgcolor: "rgba(var(--rgb-white), 0.12)",
-                border: "1px solid rgba(var(--rgb-white), 0.2)",
-                backdropFilter: "blur(10px)",
-                mb: 3,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  bgcolor: "var(--color-accent)",
-                  boxShadow: "0 0 12px var(--color-accent)",
-                }}
-              />
-              <Typography
-                sx={{
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  color: "var(--color-surface)",
-                }}
-              >
-                Est. 1887 · {appConfig.institutionShortName || "SGVA"}
-              </Typography>
-            </Box>
-
-            {/* Headline */}
-            <Typography
-              sx={{
-                fontSize: { xs: "2.25rem", sm: "3.25rem", md: "4rem" },
-                fontWeight: 800,
-                lineHeight: 1.15,
-                letterSpacing: "-0.03em",
-                mb: 2.5,
-                maxWidth: 900,
-              }}
-            >
-              Sherpur Government{" "}
-              <Box
-                component="span"
-                sx={{
-                  background:
-                    "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Victoria Academy
-              </Box>
-            </Typography>
-
-            {/* Subheading */}
-            <Typography
-              sx={{
-                fontSize: { xs: "1rem", md: "1.2rem" },
-                lineHeight: 1.7,
-                color: "rgba(var(--rgb-white), 0.82)",
-                mb: 5,
-                maxWidth: 720,
-              }}
-            >
-              A historic boys' secondary school in Sherpur, Bangladesh—fostering
-              academic distinction, leadership, and moral character for over a
-              century.
-            </Typography>
-
-            {/* Stats Row */}
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={{ xs: 2.5, sm: 5 }}
-              sx={{ justifyContent: { xs: "center", md: "flex-start" } }}
-            >
-              {HIGHLIGHT_STATS.map((stat) => (
-                <Box
-                  key={stat.label}
-                  sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
-                >
-                  <Box
-                    sx={{
-                      width: 46,
-                      height: 46,
-                      borderRadius: 2.5,
-                      bgcolor: "rgba(var(--rgb-white), 0.1)",
-                      border: "1px solid rgba(var(--rgb-white), 0.18)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "var(--color-accent)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    {stat.icon}
-                  </Box>
-                  <Box sx={{ textAlign: "left" }}>
-                    <Typography
-                      sx={{
-                        fontSize: "1.4rem",
-                        fontWeight: 800,
-                        lineHeight: 1.1,
-                      }}
-                    >
-                      {stat.value}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: "0.8rem",
-                        color: "rgba(var(--rgb-white), 0.68)",
-                      }}
-                    >
-                      {stat.label}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Stack>
-          </Container>
-        </Box>
+        {/* Banner Section replaced with CommonBanner */}
+        <CommonBanner
+          badge={`Est. 1887 · ${appConfig.institutionShortName || "SGVA"}`}
+          title="Sherpur Government"
+          highlightText="Victoria Academy"
+          subtitle="A historic boys' secondary school in Sherpur, Bangladesh—fostering academic distinction, leadership, and moral character for over a century."
+          stats={HIGHLIGHT_STATS}
+        />
 
         {/* Content Section */}
         <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>

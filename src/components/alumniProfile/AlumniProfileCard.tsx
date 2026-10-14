@@ -62,33 +62,47 @@ export default function AlumniProfileCard({
         bgcolor: "background.paper",
       }}
     >
+      {/* HEADER — cover photo (if any) with content overlay */}
       <Box
         sx={{
           position: "relative",
           px: { xs: 2.5, md: 3.5 },
           py: { xs: 2.5, md: 3 },
-          background: `linear-gradient(135deg, ${NAVY} 0%, var(--color-dark-surface-blue) 65%, var(--color-dark-surface-deep) 100%)`,
+          minHeight: p.coverPhoto ? 200 : "auto",
           color: "var(--color-white)",
+          ...(p.coverPhoto
+            ? {
+                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.75) 100%), url(${p.coverPhoto})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {
+                background: `linear-gradient(135deg, ${NAVY} 0%, var(--color-dark-surface-blue) 65%, var(--color-dark-surface-deep) 100%)`,
+              }),
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            width: 220,
-            height: 220,
-            borderRadius: "50%",
-            background: `radial-gradient(circle, ${alpha(TEAL, 0.12)} 0%, transparent 70%)`,
-            right: -80,
-            top: -100,
-            pointerEvents: "none",
-          }}
-        />
+        {!p.coverPhoto && (
+          <Box
+            sx={{
+              position: "absolute",
+              width: 220,
+              height: 220,
+              borderRadius: "50%",
+              background: `radial-gradient(circle, ${alpha(TEAL, 0.12)} 0%, transparent 70%)`,
+              right: -80,
+              top: -100,
+              pointerEvents: "none",
+            }}
+          />
+        )}
+
         <Box
           sx={{
             position: "relative",
             display: "flex",
             alignItems: "center",
             gap: { xs: 2, md: 2.5 },
+            mt: p.coverPhoto ? 8 : 0,
           }}
         >
           <Box
@@ -247,6 +261,7 @@ export default function AlumniProfileCard({
         </Box>
       </Box>
 
+      {/* META BAR */}
       <Box
         sx={{
           px: { xs: 2.5, md: 3.5 },
@@ -288,6 +303,7 @@ export default function AlumniProfileCard({
         )}
       </Box>
 
+      {/* Mobile completion bar */}
       <Box sx={{ display: { xs: "block", sm: "none" }, px: 2.5, pb: 2.5 }}>
         <Box
           sx={{

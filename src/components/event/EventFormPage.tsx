@@ -1,10 +1,14 @@
 import { Box, Grid } from "@mui/material";
 import { Save, ArrowLeft } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, type Control } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { format, isValid } from "date-fns";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
 import { useEvents } from "@/hooks/useEvents";
@@ -22,33 +26,103 @@ import {
 } from "@/components/common";
 import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 import type { CreateUpdateEventPayload } from "@/hooks/useEvents";
+import type { EventStatus, EventType } from "@/types/event";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { uploadImage } from "@/services/api/uploadService";
 import { hasAdminAccess } from "@/utils/authUtils";
 
-const eventSchema = yup.object({
-  title: yup.string().trim().required("Title is required"),
-  description: yup.string().trim().required("Description is required"),
-  eventType: yup.string().required("Event type is required"),
-  date: yup.string().required("Event date is required"),
-  startTime: yup.string().required("Start time is required"),
-  endTime: yup.string().required("End time is required"),
-  location: yup.string().trim().required("Location is required"),
-  venue: yup.string().trim().required("Venue is required"),
-  organizer: yup.string().trim().required("Organizer is required"),
-  registrationDeadline: yup
-    .string()
-    .required("Registration deadline is required"),
-  capacity: yup
-    .number()
-    .typeError("Capacity must be a number")
-    .required("Capacity is required")
-    .min(1, "Capacity must be at least 1"),
-  status: yup.string().required("Status is required"),
-  image: yup.string().optional(),
-});
+const eventSchema = yup
+  .object({
+    title: yup.string().trim().required("Title is required"),
+    description: yup.string().trim().required("Description is required"),
+    eventType: yup.string().required("Event type is required"),
+    startDate: yup.string().required("Start date is required"),
+    endDate: yup.string().required("End date is required"),
+    startTime: yup.string().required("Start time is required"),
+    endTime: yup.string().required("End time is required"),
+    location: yup.string().trim().required("Location is required"),
+    venue: yup.string().trim().required("Venue is required"),
+    organizer: yup.string().trim().required("Organizer is required"),
+    registrationDeadline: yup
+      .string()
+      .required("Registration deadline is required"),
+    capacity: yup
+      .number()
+      .typeError("Capacity must be a number")
+      .required("Capacity is required")
+      .min(1, "Capacity must be at least 1"),
+    status: yup.string().required("Status is required"),
+    image: yup.string().optional(),
+  })
+  .test("end-after-start", function (values) {
+    if (
+      !values?.startDate ||
+      !values.endDate ||
+      !values.startTime ||
+      !values.endTime
+    ) {
+      return true;
+    }
+
+    const startDateTime = Date.parse(`${values.startDate}T${values.startTime}`);
+    const endDateTime = Date.parse(`${values.endDate}T${values.endTime}`);
+    if (!Number.isFinite(startDateTime) || !Number.isFinite(endDateTime)) {
+      return true;
+    }
+
+    return (
+      endDateTime >= startDateTime ||
+      this.createError({
+        path: values.endDate < values.startDate ? "endDate" : "endTime",
+        message: "End date/time cannot be before start date/time.",
+      })
+    );
+  });
 
 type EventFormValues = yup.InferType<typeof eventSchema>;
+
+function EventTimeField({
+  name,
+  label,
+  control,
+}: {
+  name: "startTime" | "endTime";
+  label: string;
+  control: Control<EventFormValues>;
+}) {
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Controller
+        name={name}
+        control={control}
+        render={({ field, fieldState }) => (
+          <TimePicker
+            label={label}
+            ampm
+            value={
+              field.value ? new Date(`2000-01-01T${field.value}:00`) : null
+            }
+            onChange={(time) => {
+              field.onChange(
+                time && isValid(time) ? format(time, "HH:mm") : "",
+              );
+            }}
+            slotProps={{
+              textField: {
+                required: true,
+                fullWidth: true,
+                size: "small",
+                error: Boolean(fieldState.error),
+                helperText: fieldState.error?.message ?? "",
+                onBlur: field.onBlur,
+              },
+            }}
+          />
+        )}
+      />
+    </LocalizationProvider>
+  );
+}
 
 const eventTypeOptions = [
   "Reunion",
@@ -77,8 +151,10 @@ const toIsoDateTime = (date: string, time: string) => {
 const formToPayload = (data: EventFormValues): CreateUpdateEventPayload => ({
   eventTitle: data.title,
   description: data.description,
-  startDate: toIsoDateTime(data.date, data.startTime),
-  endDate: toIsoDateTime(data.date, data.endTime),
+  eventType: data.eventType as EventType,
+  status: data.status as EventStatus,
+  startDate: toIsoDateTime(data.startDate, data.startTime),
+  endDate: toIsoDateTime(data.endDate, data.endTime),
   location: data.location,
   venue: data.venue,
   organizer: data.organizer,
@@ -108,7 +184,8 @@ export default function EventFormPage() {
         title: "",
         description: "",
         eventType: "" as never,
-        date: "",
+        startDate: "",
+        endDate: "",
         startTime: "",
         endTime: "",
         location: "",
@@ -147,7 +224,8 @@ export default function EventFormPage() {
         title: selectedEvent.title,
         description: selectedEvent.description,
         eventType: selectedEvent.eventType as never,
-        date: selectedEvent.date,
+        startDate: selectedEvent.date,
+        endDate: selectedEvent.endDate || selectedEvent.date,
         startTime: selectedEvent.startTime,
         endTime: selectedEvent.endTime,
         location: selectedEvent.location,
@@ -206,9 +284,12 @@ export default function EventFormPage() {
         );
         navigate("/alumni/events");
       }
-    } catch {
+    } catch (err) {
       dispatch(
-        showToast({ message: "Unable to save event", severity: "error" }),
+        showToast({
+          message: getApiErrorMessage(err, "Unable to save event"),
+          severity: "error",
+        }),
       );
     }
   };
@@ -258,8 +339,16 @@ export default function EventFormPage() {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <CommonDatePicker
-                name="date"
-                label="Event Date"
+                name="startDate"
+                label="Start Date"
+                control={control}
+                required
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CommonDatePicker
+                name="endDate"
+                label="End Date"
                 control={control}
                 required
               />
@@ -274,21 +363,17 @@ export default function EventFormPage() {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
+              <EventTimeField
                 name="startTime"
                 label="Start Time"
                 control={control}
-                required
-                placeholder="e.g. 18:00"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
+              <EventTimeField
                 name="endTime"
                 label="End Time"
                 control={control}
-                required
-                placeholder="e.g. 22:00"
               />
             </Grid>
 
@@ -349,9 +434,9 @@ export default function EventFormPage() {
 
             <Grid size={{ xs: 12 }}>
               <CommonFileUpload
+                variant="cover"
                 label="Upload Event Banner"
                 currentFile={watch("image") || undefined}
-                previewSize={320}
                 onFileSelect={async (preview, file) => {
                   setValue("image", preview, { shouldDirty: true });
                   try {

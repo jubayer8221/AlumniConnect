@@ -477,6 +477,8 @@ export default function PublicNewsDetailsPage() {
                   component="img"
                   src={news.Image}
                   alt={news.Title}
+                  fetchPriority="high"
+                  decoding="async"
                   onError={(e) => {
                     (
                       e.currentTarget as HTMLImageElement

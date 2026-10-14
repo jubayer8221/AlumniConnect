@@ -19,6 +19,7 @@ export interface Role {
   roleCode: string;
   roleName: string;
   description: string | null;
+  isActive?: boolean; // ← NEW (optional — backend may not always return it)
 }
 
 export interface LoginUserPayload {
@@ -93,3 +94,6 @@ export interface RegisterResponse {
 export interface RegisterFormValues extends RegisterRequest {
   confirmPassword: string;
 }
+
+// Re-export role request shapes so callers can import from either location
+export type { RoleItem, CreateUpdateRoleRequest } from "./role";

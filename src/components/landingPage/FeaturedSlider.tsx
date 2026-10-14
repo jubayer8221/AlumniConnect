@@ -80,7 +80,7 @@ export default function FeaturedSlider() {
   return (
     <Box
       sx={{
-        py: { xs: 8, md: 12 },
+        py: 6,
         bgcolor: "background.default",
       }}
     >
@@ -94,22 +94,23 @@ export default function FeaturedSlider() {
               letterSpacing: "0.15em",
               textTransform: "uppercase",
               color: "primary.main",
-              mb: 1.5,
+              // mb: 1,
             }}
           >
             Featured Voices
           </Typography>
           <Typography
             sx={{
-              fontSize: { xs: "2rem", md: "2.5rem" },
+              fontSize: { xs: "2rem", md: "2rem" },
               fontWeight: 800,
-              letterSpacing: "-0.02em",
-              mb: 1.5,
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+              // mb: 1,
             }}
           >
             Stories From Our Alumni
           </Typography>
-          <Typography
+          {/* <Typography
             sx={{
               color: "text.secondary",
               maxWidth: 520,
@@ -119,7 +120,7 @@ export default function FeaturedSlider() {
           >
             Every graduate carries a piece of this institution into the world.
             Here are a few of their stories.
-          </Typography>
+          </Typography> */}
         </Box>
 
         {/* Slider */}
@@ -160,6 +161,7 @@ export default function FeaturedSlider() {
                     sx={{
                       position: "relative",
                       minHeight: { xs: 300, md: 420 },
+                      // minWidth: { xs: 300, md: 320 },
                       "&::after": {
                         content: '""',
                         position: "absolute",
@@ -178,7 +180,7 @@ export default function FeaturedSlider() {
                       sx={{
                         position: "absolute",
                         inset: 0,
-                        width: "100%",
+                        width: "90%",
                         height: "100%",
                         objectFit: "fill",
                       }}

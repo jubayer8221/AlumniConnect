@@ -299,7 +299,7 @@ export default function HeroSlideFormPage() {
             loading={formState.isSubmitting}
             startIcon={<Save size={18} />}
           >
-            {isEdit ? "Update Slide" : "Create Slide"}
+            {isEdit ? "Update" : "Save"}
           </CommonButton>
         </Box>
       </form>

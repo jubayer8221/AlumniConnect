@@ -61,7 +61,6 @@ export default function PublicNewsListPage() {
     (n) => n.Status === "Published" && n.IsActive,
   );
 
-  // Dynamic banner stats based on actual loaded items
   const newsStats = [
     {
       icon: <Newspaper size={22} />,
@@ -182,6 +181,8 @@ export default function PublicNewsListPage() {
                             component="img"
                             src={item.Image}
                             alt={item.Title}
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               (e.currentTarget as HTMLImageElement).src =
                                 "/image/logo-small.png";

@@ -58,13 +58,13 @@ export default function ProgramsSection() {
       component="section"
       aria-labelledby="programs-heading"
       sx={{
-        py: { xs: 8, md: 12 },
+        py: 6,
         bgcolor: "background.default",
       }}
     >
       <Container maxWidth="lg">
         {/* Section heading */}
-        <Box sx={{ textAlign: "center", mb: { xs: 5, md: 7 } }}>
+        <Box sx={{ textAlign: "center", mb: { xs: 2, md: 2 } }}>
           <Typography
             component="p"
             sx={{
@@ -83,17 +83,17 @@ export default function ProgramsSection() {
             id="programs-heading"
             component="h2"
             sx={{
-              fontSize: { xs: "2rem", md: "2.5rem" },
+              fontSize: { xs: "2rem", md: "2rem" },
               fontWeight: 800,
               letterSpacing: "-0.02em",
-              lineHeight: 1.2,
-              mb: 1.5,
+              textTransform: "uppercase",
+              mb: 1,
             }}
           >
             Diverse Communities, One Family
           </Typography>
 
-          <Typography
+          {/* <Typography
             sx={{
               color: "text.secondary",
               maxWidth: 560,
@@ -103,7 +103,7 @@ export default function ProgramsSection() {
           >
             Programs that connect alumni, support students, and strengthen our
             university community.
-          </Typography>
+          </Typography> */}
         </Box>
 
         {/* Program cards */}

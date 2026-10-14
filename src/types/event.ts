@@ -18,6 +18,7 @@ export interface EventItem {
   description: string;
   eventType: EventType;
   date: string;
+  endDate: string;
   startTime: string;
   endTime: string;
   location: string;

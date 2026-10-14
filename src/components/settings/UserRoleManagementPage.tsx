@@ -115,7 +115,7 @@ export default function UserRoleManagementPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ pb: 6, pt: 2 }}>
+    <Container maxWidth="lg" sx={{ pb: 6 }}>
       <CommonPageHeader
         title="User Role Management"
         subtitle="Assign and manage access roles for registered users across the platform."

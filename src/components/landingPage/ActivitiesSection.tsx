@@ -46,9 +46,7 @@ const ACTIVITIES = [
 
 export default function ActivitiesSection() {
   return (
-    <Box
-      sx={{ py: { xs: 8, md: 12 }, bgcolor: "background.default" }}
-    >
+    <Box sx={{ py: 6, bgcolor: "background.default" }}>
       <Container maxWidth="lg">
         <Box sx={{ textAlign: "center", mb: 6 }}>
           <Typography
@@ -65,15 +63,17 @@ export default function ActivitiesSection() {
           </Typography>
           <Typography
             sx={{
-              fontSize: { xs: "2rem", md: "2.5rem" },
+              fontSize: { xs: "2rem", md: "2rem" },
               fontWeight: 800,
               letterSpacing: "-0.02em",
+              textTransform: "uppercase",
+
               mb: 1.5,
             }}
           >
             Our Day-to-Day Activities
           </Typography>
-          <Typography
+          {/* <Typography
             sx={{
               color: "text.secondary",
               maxWidth: 560,
@@ -82,7 +82,7 @@ export default function ActivitiesSection() {
             }}
           >
             News, announcements, and updates straight from the alumni office.
-          </Typography>
+          </Typography> */}
         </Box>
 
         <Grid container spacing={3}>

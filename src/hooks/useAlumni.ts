@@ -1,3 +1,4 @@
+// src/hooks/useAlumni.ts
 import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import api from "@/services/api/apiClient";
@@ -202,6 +203,33 @@ export const useAlumni = () => {
     [fetchAlumniData],
   );
 
+  /* ---------- NEW: POST /api/Alumni/Verify ---------- */
+  const verifyAlumni = useCallback(
+    async (alumniID: number, refreshQuery?: AlumniListQuery) => {
+      setLoading(true);
+      try {
+        const res = await api.post<{ success: boolean; message: string }>(
+          "/Alumni/Verify",
+          { alumniID },
+        );
+        if (!res.data?.success) {
+          throw new Error(res.data?.message ?? "Verify failed");
+        }
+        if (refreshQuery) await fetchAlumniData(refreshQuery);
+        return res.data;
+      } catch (error) {
+        console.error(
+          "Error verifying alumni:",
+          getApiErrorMessage(error, "Unable to verify alumni"),
+        );
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchAlumniData],
+  );
+
   const clearAlumniDataHandler = useCallback(() => {
     dispatch(clearAlumniData());
   }, [dispatch]);
@@ -224,6 +252,7 @@ export const useAlumni = () => {
     fetchPrivacy,
     savePrivacy,
     setAlumniActive,
+    verifyAlumni,
     clearAlumniDataHandler,
     clearSelectedAlumniHandler,
   };

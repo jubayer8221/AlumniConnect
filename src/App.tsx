@@ -1,6 +1,12 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Provider } from "react-redux";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useParams,
+} from "react-router-dom";
 import {
   Box,
   CircularProgress,
@@ -12,13 +18,18 @@ import { createAppTheme } from "@/store/theme";
 import { colors } from "@/theme/colors";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import { hasAdminAccess } from "@/utils/authUtils";
-import NotFoundPage from "@/components/common/NotFoundPage";
 import ToastContainer from "@/components/common/Toast";
 
 import { useAppSelector } from "./hooks/useAppDispatch";
 import LandingPage from "./components/landingPage/LandingPage";
-import ForgotPasswordPage from "./components/login/ForgotPasswordPage";
-import ResetPasswordPage from "./components/login/ResetPasswordPage";
+
+const NotFoundPage = lazy(() => import("@/components/common/NotFoundPage"));
+const ForgotPasswordPage = lazy(
+  () => import("./components/login/ForgotPasswordPage"),
+);
+const ResetPasswordPage = lazy(
+  () => import("./components/login/ResetPasswordPage"),
+);
 
 const AppLayout = lazy(() => import("@/components/layout/AppLayout"));
 const LoginPage = lazy(() => import("@/components/login/LoginPage"));
@@ -97,6 +108,31 @@ const PublicGalleryPage = lazy(
 const PublicNewsDetailsPage = lazy(
   () => import("./components/landingPage/PublicNewsDetailsPage"),
 );
+const PublicMentorshipPage = lazy(
+  () => import("./components/landingPage/PublicMentorshipPage"),
+);
+const MentorshipPage = lazy(
+  () => import("./components/mentorship/MentorshipPage"),
+);
+const RolesPage = lazy(() => import("./components/configuration/RolesPage"));
+const VerifyMemberPage = lazy(
+  () => import("./components/configuration/VerifyMemberPage"),
+);
+const MyNetworkPage = lazy(() => import("./components/network/MyNetworkPage"));
+const MessagesPage = lazy(() => import("./components/messages/MessagesPage"));
+const JobBoardPage = lazy(() => import("./components/job/JobBoardPage"));
+const JobFormPage = lazy(() => import("./components/job/JobFormPage"));
+
+function LegacyAlumniProfileRedirect({ edit = false }: { edit?: boolean }) {
+  const { id } = useParams();
+  if (!id) return <Navigate to="/alumni/directory" replace />;
+  return (
+    <Navigate
+      to={`/alumni/profile-details/${id}${edit ? "/edit" : ""}`}
+      replace
+    />
+  );
+}
 
 function AppRoutes() {
   const token = useAppSelector((s) => s.auth.token);
@@ -128,16 +164,14 @@ function AppRoutes() {
         <Route path="/events" element={<PublicEventsListPage />} />
         <Route path="/events/:id" element={<PublicEventDetailsPage />} />
         <Route path="/news" element={<PublicNewsListPage />} />
-        {/* <Route path="/news" element={<PublicNewsListPage />} /> */}
         <Route path="/news/:id" element={<PublicNewsDetailsPage />} />
         <Route path="/news/:id/:slug" element={<PublicNewsDetailsPage />} />
         <Route path="/gallery" element={<PublicGalleryPage />} />
+        <Route path="/mentorship" element={<PublicMentorshipPage />} />
 
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/signup" element={<SignUpPage />} />
-
-        {/* <Route path="/news/:id" element={<PublicEventDetailsPage />} /> */}
 
         <Route
           path="/login"
@@ -155,10 +189,13 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         >
-          {/* Alumni home / profile */}
           <Route path="/alumni/dashboard" element={<AlumniDashboardPage />} />
-          <Route path="/alumni/profile" element={<AlumniDetailsPage />} />
-          <Route path="/alumni/profile-setup" element={<ProfileSetupPage />} />
+          <Route path="/alumni/profile-details" element={<AlumniDetailsPage />} />
+          <Route path="/alumni/profile-details/edit" element={<ProfileSetupPage />} />
+          <Route path="/alumni/profile-details/:id" element={<AlumniDetailsPage />} />
+          <Route path="/alumni/profile-details/:id/edit" element={<AlumniFormPage />} />
+          <Route path="/alumni/profile" element={<Navigate to="/alumni/profile-details" replace />} />
+          <Route path="/alumni/profile-setup" element={<Navigate to="/alumni/profile-details/edit" replace />} />
           <Route
             path="/alumni/settings-privacy"
             element={<SettingsPrivacyPage />}
@@ -170,8 +207,8 @@ function AppRoutes() {
             path="/alumni/create"
             element={<Navigate to="/alumni/new" replace />}
           />
-          <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
-          <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
+          <Route path="/alumni/:id" element={<LegacyAlumniProfileRedirect />} />
+          <Route path="/alumni/:id/edit" element={<LegacyAlumniProfileRedirect edit />} />
           <Route path="/alumni/events" element={<EventListPage />} />
           <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
           <Route path="/alumni/news" element={<NewsListPage />} />
@@ -195,6 +232,9 @@ function AppRoutes() {
           />
           <Route path="/alumni/notices" element={<NoticeListPage />} />
           <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
+          <Route path="/alumni/mentorship" element={<MentorshipPage />} />
+          <Route path="/alumni/network" element={<MyNetworkPage />} />
+          <Route path="/alumni/messages" element={<MessagesPage />} />
         </Route>
 
         {/* ---------- Admin only ---------- */}
@@ -207,16 +247,43 @@ function AppRoutes() {
         >
           <Route path="/dashboard" element={<AdminDashboardPage />} />
           <Route path="/alumni" element={<AlumniListPage />} />
+
+          {/* Configuration */}
           <Route
-            path="/alumni/user-roles"
+            path="/alumni/configuration/user-roles"
             element={
               <ProtectedRoute roles={["ADMIN"]}>
                 <UserRoleManagementPage />
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/alumni/configuration/roles"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <RolesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/alumni/configuration/verify-member"
+            element={
+              <ProtectedRoute roles={["ADMIN", "MODERATOR"]}>
+                <VerifyMemberPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/alumni/user-roles"
+            element={<Navigate to="/alumni/configuration/user-roles" replace />}
+          />
 
-          {/* Event create / edit — admin only */}
+          {/* Job Board (admin/moderator) */}
+          <Route path="/alumni/job-board" element={<JobBoardPage />} />
+          <Route path="/alumni/job-board/new" element={<JobFormPage />} />
+          <Route path="/alumni/job-board/:id/edit" element={<JobFormPage />} />
+
+          {/* Event create / edit */}
           <Route path="/alumni/events/new" element={<EventFormPage />} />
           <Route
             path="/alumni/events/create"
@@ -224,11 +291,11 @@ function AppRoutes() {
           />
           <Route path="/alumni/events/:id/edit" element={<EventFormPage />} />
 
-          {/* News creation and editing are admin only. */}
+          {/* News create / edit */}
           <Route path="/alumni/news/create" element={<NewsFormPage />} />
           <Route path="/alumni/news/edit/:id" element={<NewsFormPage />} />
 
-          {/* Notices — admin */}
+          {/* Notices admin */}
           <Route path="/alumni/notices/create" element={<NoticeFormPage />} />
           <Route path="/alumni/notices/:id/edit" element={<NoticeFormPage />} />
 
@@ -246,7 +313,7 @@ function AppRoutes() {
         {/* ---------- Redirects ---------- */}
         <Route
           path="/profile-setup"
-          element={<Navigate to="/alumni/profile-setup" replace />}
+          element={<Navigate to="/alumni/profile-details/edit" replace />}
         />
         <Route
           path="/settings-privacy"

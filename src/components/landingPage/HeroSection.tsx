@@ -49,7 +49,7 @@ const AUTOPLAY_MS = 6000;
 
 const FALLBACK_SLIDE = {
   slideID: "default",
-  image: null,
+  image: "/image/Sherpur_Victoria_Academy.jpg",
   badge: "Alumni Network",
   title: "Connected by memories, united for the future.",
   subtitle:
@@ -59,7 +59,6 @@ const FALLBACK_SLIDE = {
   isActive: true,
 };
 
-// Fade only: no translate or movement.
 const fadeIn = keyframes`
   from {
     opacity: 0.2;
@@ -90,7 +89,6 @@ export default function HeroSection() {
     return () => mediaQuery.removeEventListener("change", updatePreference);
   }, []);
 
-  // Keep the selected slide index valid when slides are added or removed.
   useEffect(() => {
     setCurrent((index) =>
       heroSlides.length > 0 ? index % heroSlides.length : 0,
@@ -111,7 +109,6 @@ export default function HeroSection() {
     );
   }, [heroSlides.length]);
 
-  // Auto-play without restarting the timer on every render.
   useEffect(() => {
     if (paused || reducedMotion || heroSlides.length < 2) return;
 
@@ -127,16 +124,15 @@ export default function HeroSection() {
     if (!slide?.title) return null;
 
     const highlightStyle = {
-      background:
-        "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
+      background: "var(--color-category-warm)",
+      // background:
+      //   "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "transparent",
     };
 
-    // The words you want to highlight
     const HIGHLIGHT_WORDS = ["memories", "opportunities", "gatherings"];
 
-    // Split the title on any of those words (case-insensitive), keeping them
     const parts = slide.title.split(/(memories|opportunities|gatherings)/gi);
 
     return (
@@ -174,18 +170,26 @@ export default function HeroSection() {
       sx={{
         position: "relative",
         isolation: "isolate",
-        minHeight: { xs: "auto", md: "99vh" },
+        minHeight: { xs: "auto", md: "80vh" },
         display: "flex",
         alignItems: "center",
         color: "var(--color-surface)",
         overflow: "hidden",
         background:
-          "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
+          "linear-gradient( 90deg, var(--color-primary) 0%, var(--color-primary) 35%, transparent 50%)",
+        // background:
+        //   "linear-gradient(90deg, var(--color-primary) 50%, transparent 100%)",
         pt: { xs: 12, md: 16 },
         pb: { xs: 14, md: 14 },
       }}
     >
-      {/* Background slider matching reference page banner styling */}
+      {/* ============================================================
+          Background layer
+          - image spans full width (sharp)
+          - dark overlay on the LEFT, fading to transparent on the right
+          - very light blur on the left so text is readable, image
+            stays largely visible
+         ============================================================ */}
       <Box
         aria-hidden="true"
         sx={{
@@ -195,71 +199,84 @@ export default function HeroSection() {
           zIndex: -1,
         }}
       >
-        {/* Background slider only. */}
+        {/* Base image */}
         <Box
-          aria-hidden="true"
+          key={slide.slideID}
+          component="img"
+          src={slide.image || undefined}
+          alt=""
+          width={1920}
+          height={1063}
+          loading={current === 0 ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={current === 0 ? "high" : "auto"}
+          onError={(event: SyntheticEvent<HTMLImageElement>) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.style.display = "none";
+          }}
           sx={{
             position: "absolute",
             inset: 0,
-            overflow: "hidden",
-            zIndex: -1,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: 0.55,
+            animation: `${fadeIn} 800ms ease both`,
+            "@media (prefers-reduced-motion: reduce)": { animation: "none" },
           }}
-        >
-          <Box
-            key={slide.slideID}
-            component="img"
-            src={slide.image || undefined}
-            alt=""
-            fetchPriority={current === 0 ? "high" : "auto"}
-            onError={(event: SyntheticEvent<HTMLImageElement>) => {
-              event.currentTarget.onerror = null;
-              event.currentTarget.style.display = "none";
-            }}
-            sx={{
-              position: "absolute",
-              inset: -8, // Slight negative inset to contain blurred edges
-              width: "calc(100% + 16px)",
-              height: "calc(100% + 16px)",
-              objectFit: "cover",
-              opacity: 0.25,
-              filter: "blur(4px)", // Subtle, soft blur instead of heavy blur
-              transform: "scale(1.04)", // Prevents edge clipping from light blur
-              animation: `${fadeIn} 800ms ease both`,
-              "@media (prefers-reduced-motion: reduce)": { animation: "none" },
-            }}
-          />
-          {/* Rich color gradient background overlay */}
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
-              opacity: 0.9,
-            }}
-          />
-          {/* Radial light glow overlays */}
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.35) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.25) 0%, transparent 60%)",
-            }}
-          />
-        </Box>
-        {/* Radial Light Overlays matching reference styling */}
+        />
+
+        {/* ── Left-only dark overlay (this is the main effect now) ── */}
         <Box
           sx={{
             position: "absolute",
             inset: 0,
             background:
-              "radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.35) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.25) 0%, transparent 60%)",
+              "linear-gradient(90deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0.05) 75%, transparent 90%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* ── Very light blur, only on the left, so text edges stay clean ── */}
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            backdropFilter: "blur(3px)",
+            WebkitBackdropFilter: "blur(3px)",
+            maskImage:
+              "linear-gradient(90deg, black 0%, black 25%, transparent 60%)",
+            WebkitMaskImage:
+              "linear-gradient(90deg, black 0%, black 25%, transparent 60%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* ── Brand color wash ── */}
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(135deg, var(--color-primary) 0%, var(--color-dark-forest-surface) 60%, #090d16 100%)",
+            opacity: 0.3,
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* ── Radial light glows ── */}
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.30) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.20) 0%, transparent 60%)",
+            pointerEvents: "none",
           }}
         />
       </Box>
 
-      {/* Previous and next arrows anchored to the outer hero section container */}
+      {/* Previous and next arrows */}
       {heroSlides.length > 1 && (
         <>
           <IconButton
@@ -280,7 +297,7 @@ export default function HeroSection() {
         </>
       )}
 
-      {/* Static content layer with full width 12-column grid */}
+      {/* Static content layer */}
       <Container
         maxWidth="lg"
         sx={{
@@ -350,7 +367,7 @@ export default function HeroSection() {
                   ) : null}
                 </Box>
 
-                {/* Fixed title area with safe wrapping and full width layout */}
+                {/* Fixed title area */}
                 <Box
                   sx={{
                     minHeight: { xs: 120, sm: 140, md: 160 },

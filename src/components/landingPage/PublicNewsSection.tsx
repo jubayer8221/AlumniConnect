@@ -88,23 +88,31 @@ const mapToCard = (n: NewsItem): NewsCardItem => ({
   image: n.Image || undefined,
 });
 
+const NEWS_PER_ROW = 4;
+
 export default function NewsSection() {
   const { newsList, loading, fetchAllNews } = useNews();
 
   useEffect(() => {
-    void fetchAllNews({ status: "Published", pageNumber: 1, pageSize: 3 });
+    void fetchAllNews({
+      status: "Published",
+      pageNumber: 1,
+      pageSize: NEWS_PER_ROW,
+    });
   }, [fetchAllNews]);
 
   const published = (newsList ?? []).filter(
     (n) => n.Status === "Published" && n.IsActive,
   );
-  const newsItems: NewsCardItem[] = published.slice(0, 3).map(mapToCard);
+  const newsItems: NewsCardItem[] = published
+    .slice(0, NEWS_PER_ROW)
+    .map(mapToCard);
 
   return (
     <Box
       component="section"
       id="news"
-      sx={{ py: { xs: 6, md: 10 }, bgcolor: "background.default" }}
+      sx={{ py: 6, bgcolor: "background.default" }}
     >
       <Container maxWidth="lg">
         {/* Header */}
@@ -115,16 +123,15 @@ export default function NewsSection() {
             justifyContent: "space-between",
             alignItems: { xs: "flex-start", sm: "flex-end" },
             gap: 2,
-            mb: { xs: 4, md: 5 },
+            mb: { xs: 2, md: 2 },
           }}
         >
           <Box>
             <Typography
               sx={{
-                color: "primary.main",
-                fontWeight: 700,
-                fontSize: "0.8rem",
-                letterSpacing: "0.1em",
+                fontSize: { xs: "2rem", md: "2rem" },
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
                 textTransform: "uppercase",
                 mb: 1,
               }}
@@ -132,12 +139,13 @@ export default function NewsSection() {
               Latest Updates
             </Typography>
             <Typography
-              variant="h3"
               sx={{
-                fontWeight: 800,
-                fontSize: { xs: "1.75rem", md: "2.25rem" },
-                letterSpacing: "-0.02em",
-                color: "text.primary",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "primary.main",
+                mb: 1,
               }}
             >
               News
@@ -150,15 +158,15 @@ export default function NewsSection() {
             endIcon={<ArrowRight size={16} />}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            View all news
+            View all
           </Button>
         </Box>
 
         {/* Loading */}
         {loading && newsItems.length === 0 && (
-          <Grid container spacing={{ xs: 3, md: 4 }}>
-            {[0, 1, 2].map((i) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
+          <Grid container spacing={{ xs: 2, md: 2.5 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
                 <Skeleton
                   variant="rounded"
                   height={340}
@@ -188,9 +196,9 @@ export default function NewsSection() {
 
         {/* Cards */}
         {newsItems.length > 0 && (
-          <Grid container spacing={{ xs: 3, md: 4 }}>
+          <Grid container spacing={{ xs: 2, md: 2.5 }}>
             {newsItems.map((item) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.id}>
                 <Card
                   elevation={0}
                   sx={{
@@ -272,29 +280,36 @@ export default function NewsSection() {
                         color={categoryColor[item.category] ?? "default"}
                         sx={{
                           position: "absolute",
-                          top: 12,
-                          left: 12,
+                          top: 10,
+                          left: 10,
                           fontWeight: 700,
-                          fontSize: "0.7rem",
+                          fontSize: "0.65rem",
+                          height: 22,
                         }}
                       />
                     </Box>
 
                     <CardContent
-                      sx={{ flex: 1, display: "flex", flexDirection: "column" }}
+                      sx={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        p: 2.25,
+                        "&:last-child": { pb: 2.25 },
+                      }}
                     >
                       <Stack
                         direction="row"
                         spacing={0.75}
                         sx={{
                           color: "text.secondary",
-                          mb: 1,
+                          mb: 0.75,
                           alignItems: "center",
                         }}
                       >
-                        <Calendar size={14} />
+                        <Calendar size={13} />
                         <Typography
-                          sx={{ fontSize: "0.75rem", fontWeight: 500 }}
+                          sx={{ fontSize: "0.7rem", fontWeight: 500 }}
                         >
                           {item.date}
                         </Typography>
@@ -304,15 +319,16 @@ export default function NewsSection() {
                         className="news-title"
                         sx={{
                           fontWeight: 700,
-                          fontSize: "1rem",
+                          fontSize: "0.92rem",
                           lineHeight: 1.4,
                           color: "text.primary",
-                          mb: 1,
+                          mb: 0.75,
                           transition: "color 0.2s ease",
                           display: "-webkit-box",
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: "vertical",
                           overflow: "hidden",
+                          minHeight: "2.55rem",
                         }}
                       >
                         {item.title}
@@ -320,9 +336,9 @@ export default function NewsSection() {
 
                       <Typography
                         sx={{
-                          fontSize: "0.85rem",
+                          fontSize: "0.8rem",
                           color: "text.secondary",
-                          lineHeight: 1.6,
+                          lineHeight: 1.55,
                           display: "-webkit-box",
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: "vertical",
