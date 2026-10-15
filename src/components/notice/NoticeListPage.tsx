@@ -111,7 +111,7 @@ export default function NoticeListPage({
     setActionTarget({ notice: null as unknown as Notice, anchor: null });
   };
 
-  const basePath = "/alumni/notices";
+  const basePath = "/alumni/explore/notices";
   const visibleItems = isAdmin
     ? items
     : items.filter((n: any) => n.status === "PUBLISHED");

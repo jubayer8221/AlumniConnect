@@ -218,7 +218,7 @@ export default function HeaderProfileDialog({
           </ListItemButton> */}
 
           <ListItemButton
-            onClick={() => go("/alumni/notices")}
+            onClick={() => go("/alumni/explore/notices")}
             sx={{ py: 1.1, px: 2, gap: 1.5 }}
           >
             <ListItemIcon sx={{ minWidth: 0, color: "text.secondary" }}>
@@ -231,7 +231,7 @@ export default function HeaderProfileDialog({
           </ListItemButton>
 
           <ListItemButton
-            onClick={() => go("/alumni/events")}
+            onClick={() => go("/alumni/explore/events")}
             sx={{ py: 1.1, px: 2, gap: 1.5 }}
           >
             <ListItemIcon sx={{ minWidth: 0, color: "text.secondary" }}>
@@ -244,7 +244,7 @@ export default function HeaderProfileDialog({
           </ListItemButton>
 
           <ListItemButton
-            onClick={() => go("/alumni/news")}
+            onClick={() => go("/alumni/explore/news")}
             sx={{ py: 1.1, px: 2, gap: 1.5 }}
           >
             <ListItemIcon sx={{ minWidth: 0, color: "text.secondary" }}>

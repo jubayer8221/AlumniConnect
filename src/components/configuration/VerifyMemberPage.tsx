@@ -92,48 +92,52 @@ export default function VerifyMemberPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ pb: 6 }}>
-      <CommonPageHeader
-        title="Verify Member"
-        // subtitle="Review and verify alumni profiles to grant full network access."
-        breadcrumbs={[
-          { label: "Home", path: "/dashboard" },
-          { label: "Configuration" },
-          { label: "Verify Member" },
-        ]}
-      />
-
-      <Card
-        elevation={0}
+    <Box sx={{ pb: 6 }}>
+      <Box
         sx={{
-          p: 2.5,
-          mb: 3,
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
+          py: 2,
           display: "flex",
-          flexWrap: "wrap",
+          justifyContent: "space-between",
           alignItems: "center",
           gap: 2,
+          flexWrap: { xs: "wrap", md: "nowrap" },
         }}
       >
-        <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: 280 } }}>
-          <CommonSearchField
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by name or email..."
-            fullWidth
-          />
-        </Box>
-        <CommonButton
-          startIcon={<Search size={17} />}
-          onClick={handleSearch}
-          sx={{ px: 3, py: 1.25 }}
+        <CommonPageHeader
+          title="Verify Member"
+          // subtitle="Review and verify alumni profiles to grant full network access."
+          breadcrumbs={[
+            { label: "Home", path: "/dashboard" },
+            { label: "Configuration" },
+            { label: "Verify Member" },
+          ]}
+        />
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: { xs: "100%", md: "auto" },
+          }}
         >
-          Search
-        </CommonButton>
-      </Card>
+          <Box sx={{ flex: 1, minWidth: { xs: 0, sm: 280 } }}>
+            <CommonSearchField
+              value={search}
+              onChange={setSearch}
+              placeholder="Search by name or email..."
+              fullWidth
+            />
+          </Box>
+          <CommonButton
+            startIcon={<Search size={17} />}
+            onClick={handleSearch}
+            sx={{ px: 3, flexShrink: 0 }}
+          >
+            Search
+          </CommonButton>
+        </Box>
+      </Box>
 
       <Card
         elevation={0}
@@ -280,6 +284,6 @@ export default function VerifyMemberPage() {
         onCancel={() => setConfirmTarget(null)}
         color="primary"
       />
-    </Container>
+    </Box>
   );
 }

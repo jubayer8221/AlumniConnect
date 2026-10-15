@@ -60,13 +60,31 @@ const FALLBACK_SLIDE = {
 };
 
 const fadeIn = keyframes`
-  from {
-    opacity: 0.2;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0.2; }
+  to   { opacity: 1; }
 `;
+
+/* ============================================================
+   Shared text shadows — reused everywhere in the hero
+   ============================================================ */
+const TEXT_SHADOW = {
+  // Strong shadow for the huge title — previous version
+  title: `
+    0 2px 2px rgba(var(--rgb-black), 0.25),
+    0 5px 10px rgba(var(--rgb-black), 0.35),
+    0 10px 24px rgba(var(--rgb-black), 0.25)
+  `,
+  // Lighter shadow for body/subtitle text
+  body: `
+    0 1px 2px rgba(var(--rgb-black), 0.45),
+    0 3px 8px rgba(var(--rgb-black), 0.35)
+  `,
+  // Small shadow for chips and stats
+  small: `
+    0 1px 2px rgba(var(--rgb-black), 0.4),
+    0 2px 6px rgba(var(--rgb-black), 0.25)
+  `,
+} as const;
 
 export default function HeroSection() {
   const navigate = useNavigate();
@@ -111,43 +129,50 @@ export default function HeroSection() {
 
   useEffect(() => {
     if (paused || reducedMotion || heroSlides.length < 2) return;
-
     const timer = window.setInterval(next, AUTOPLAY_MS);
-
     return () => window.clearInterval(timer);
   }, [paused, reducedMotion, heroSlides.length, next]);
 
   const slides = heroSlides.length > 0 ? heroSlides : [FALLBACK_SLIDE];
   const slide = slides[current];
 
+  /* ============================================================
+     Title — bubble outline on ALL words (fill + stroke + shadow)
+     ============================================================ */
   const titleNode = useMemo(() => {
     if (!slide?.title) return null;
 
+    const baseTextStyle = {
+      color: "var(--color-off-white)",
+      WebkitTextStroke: "1.5px var(--color-gray900)",
+      paintOrder: "stroke fill",
+      textShadow: TEXT_SHADOW.title,
+      letterSpacing: "-0.02em",
+    };
+
     const highlightStyle = {
-      background: "var(--color-category-warm)",
-      // background:
-      //   "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
+      color: "var(--color-category-warm)",
+      WebkitTextStroke: "1.5px var(--color-gray900)",
+      paintOrder: "stroke fill",
+      textShadow: TEXT_SHADOW.title,
+      letterSpacing: "-0.02em",
     };
 
     const HIGHLIGHT_WORDS = ["memories", "opportunities", "gatherings"];
-
     const parts = slide.title.split(/(memories|opportunities|gatherings)/gi);
 
     return (
       <>
         {parts.map((part, i) => {
           const isHighlight = HIGHLIGHT_WORDS.some(
-            (w) => w.toLowerCase() === part.toLowerCase(),
+            (word) => word.toLowerCase() === part.toLowerCase(),
           );
-
-          return isHighlight ? (
-            <Box key={i} component="span" sx={highlightStyle}>
-              {part}
-            </Box>
-          ) : (
-            <Box key={i} component="span">
+          return (
+            <Box
+              key={i}
+              component="span"
+              sx={isHighlight ? highlightStyle : baseTextStyle}
+            >
               {part}
             </Box>
           );
@@ -175,20 +200,13 @@ export default function HeroSection() {
         alignItems: "center",
         color: "var(--color-surface)",
         overflow: "hidden",
-        background:
-          "linear-gradient( 90deg, var(--color-primary) 0%, var(--color-primary) 35%, transparent 50%)",
-        // background:
-        //   "linear-gradient(90deg, var(--color-primary) 50%, transparent 100%)",
+        background: "var(--color-primary)",
         pt: { xs: 12, md: 16 },
         pb: { xs: 14, md: 14 },
       }}
     >
       {/* ============================================================
           Background layer
-          - image spans full width (sharp)
-          - dark overlay on the LEFT, fading to transparent on the right
-          - very light blur on the left so text is readable, image
-            stays largely visible
          ============================================================ */}
       <Box
         aria-hidden="true"
@@ -197,9 +215,9 @@ export default function HeroSection() {
           inset: 0,
           overflow: "hidden",
           zIndex: -1,
+          background: "var(--color-primary)",
         }}
       >
-        {/* Base image */}
         <Box
           key={slide.slideID}
           component="img"
@@ -220,63 +238,60 @@ export default function HeroSection() {
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            opacity: 0.55,
+            objectPosition: "center",
+            opacity: 1,
             animation: `${fadeIn} 800ms ease both`,
             "@media (prefers-reduced-motion: reduce)": { animation: "none" },
           }}
         />
 
-        {/* ── Left-only dark overlay (this is the main effect now) ── */}
+        {/* Left-dark overlay so text is readable */}
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background: `
+              linear-gradient(
+                90deg,
+                rgba(var(--rgb-primary), 0.96) 0%,
+                rgba(var(--rgb-primary), 0.88) 22%,
+                rgba(var(--rgb-primary), 0.72) 38%,
+                rgba(var(--rgb-primary), 0.42) 55%,
+                rgba(var(--rgb-primary), 0.12) 75%,
+                transparent 100%
+              )
+            `,
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Brand tint */}
         <Box
           sx={{
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(90deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0.05) 75%, transparent 90%)",
+              "linear-gradient(135deg, var(--color-primary) 0%, transparent 65%)",
+            opacity: 0.15,
             pointerEvents: "none",
           }}
         />
 
-        {/* ── Very light blur, only on the left, so text edges stay clean ── */}
+        {/* Radial glow */}
         <Box
           sx={{
             position: "absolute",
             inset: 0,
-            backdropFilter: "blur(3px)",
-            WebkitBackdropFilter: "blur(3px)",
-            maskImage:
-              "linear-gradient(90deg, black 0%, black 25%, transparent 60%)",
-            WebkitMaskImage:
-              "linear-gradient(90deg, black 0%, black 25%, transparent 60%)",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* ── Brand color wash ── */}
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(135deg, var(--color-primary) 0%, var(--color-dark-forest-surface) 60%, #090d16 100%)",
-            opacity: 0.3,
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* ── Radial light glows ── */}
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.30) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.20) 0%, transparent 60%)",
+            background: `
+              radial-gradient(ellipse at 20% 30%, rgba(var(--rgb-primary), 0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 70%, rgba(var(--rgb-category-orange), 0.12) 0%, transparent 60%)
+            `,
             pointerEvents: "none",
           }}
         />
       </Box>
 
-      {/* Previous and next arrows */}
+      {/* Arrows */}
       {heroSlides.length > 1 && (
         <>
           <IconButton
@@ -286,7 +301,6 @@ export default function HeroSection() {
           >
             <ChevronLeft size={24} />
           </IconButton>
-
           <IconButton
             onClick={next}
             aria-label="Next slide"
@@ -297,14 +311,12 @@ export default function HeroSection() {
         </>
       )}
 
-      {/* Static content layer */}
+      {/* ============================================================
+          Main content
+         ============================================================ */}
       <Container
         maxWidth="lg"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          width: "100%",
-        }}
+        sx={{ position: "relative", zIndex: 1, width: "100%" }}
       >
         <Grid container spacing={6} sx={{ alignItems: "center" }}>
           <Grid size={{ xs: 12, md: 10 }}>
@@ -319,7 +331,7 @@ export default function HeroSection() {
               }}
             >
               <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
-                {/* Badge area */}
+                {/* ---------- Badge ---------- */}
                 <Box
                   sx={{
                     minHeight: 58,
@@ -341,6 +353,8 @@ export default function HeroSection() {
                         bgcolor: "rgba(var(--rgb-white), 0.12)",
                         border: "1px solid rgba(var(--rgb-white), 0.2)",
                         backdropFilter: "blur(10px)",
+                        boxShadow:
+                          "0 4px 12px rgba(var(--rgb-black), 0.25), 0 8px 24px rgba(var(--rgb-black), 0.15)",
                       }}
                     >
                       <Box
@@ -356,9 +370,11 @@ export default function HeroSection() {
                       <Typography
                         sx={{
                           fontSize: "0.8rem",
-                          fontWeight: 600,
+                          fontWeight: 700,
                           letterSpacing: "0.04em",
                           textTransform: "uppercase",
+                          color: "var(--color-white)",
+                          textShadow: TEXT_SHADOW.small,
                         }}
                       >
                         {slide.badge}
@@ -367,7 +383,7 @@ export default function HeroSection() {
                   ) : null}
                 </Box>
 
-                {/* Fixed title area */}
+                {/* ---------- Title ---------- */}
                 <Box
                   sx={{
                     minHeight: { xs: 120, sm: 140, md: 160 },
@@ -382,39 +398,37 @@ export default function HeroSection() {
                     sx={{
                       width: "100%",
                       fontSize: {
-                        xs: "2.25rem",
-                        sm: "3.25rem",
-                        md: "4rem",
+                        xs: "2.5rem",
+                        sm: "3.5rem",
+                        md: "4.5rem",
                       },
-                      fontWeight: 800,
+                      fontWeight: 900,
                       lineHeight: 1.15,
-                      letterSpacing: "-0.03em",
+                      letterSpacing: "-0.02em",
                       overflowWrap: "break-word",
                       wordBreak: "break-word",
                       m: 0,
+                      fontFamily:
+                        '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
                     }}
                   >
                     {titleNode}
                   </Typography>
                 </Box>
 
-                {/* Subtitle area */}
-                <Box
-                  sx={{
-                    minHeight: { xs: 90, md: 100 },
-                    pt: 1,
-                    mb: 5,
-                  }}
-                >
+                {/* ---------- Subtitle ---------- */}
+                <Box sx={{ minHeight: { xs: 90, md: 100 }, pt: 1, mb: 5 }}>
                   {slide.subtitle ? (
                     <Typography
                       sx={{
                         fontSize: { xs: "1rem", md: "1.2rem" },
                         lineHeight: 1.7,
-                        color: "rgba(var(--rgb-white), 0.82)",
+                        color: "rgba(var(--rgb-white), 0.92)",
                         maxWidth: 720,
                         mx: { xs: "auto", md: 0 },
                         overflowWrap: "break-word",
+                        fontWeight: 500,
+                        textShadow: TEXT_SHADOW.body,
                       }}
                     >
                       {slide.subtitle}
@@ -422,17 +436,14 @@ export default function HeroSection() {
                   ) : null}
                 </Box>
 
-                {/* Buttons */}
+                {/* ---------- Buttons ---------- */}
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
                   spacing={2}
                   sx={{
                     minHeight: 64,
                     alignItems: "stretch",
-                    justifyContent: {
-                      xs: "center",
-                      md: "flex-start",
-                    },
+                    justifyContent: { xs: "center", md: "flex-start" },
                     mb: 5,
                     "& .MuiButton-root": {
                       minHeight: 56,
@@ -454,12 +465,16 @@ export default function HeroSection() {
                       py: 1.5,
                       borderRadius: 2.5,
                       fontSize: "1rem",
-                      boxShadow: "0 12px 30px rgba(var(--rgb-black), 0.15)",
+                      boxShadow:
+                        "0 12px 30px rgba(var(--rgb-black), 0.25), 0 4px 10px rgba(var(--rgb-black), 0.15)",
                       "&:hover": {
                         bgcolor: "var(--color-gray50)",
                         transform: "translateY(-2px)",
+                        boxShadow:
+                          "0 16px 40px rgba(var(--rgb-black), 0.3), 0 6px 14px rgba(var(--rgb-black), 0.18)",
                       },
-                      transition: "background-color 0.2s ease",
+                      transition:
+                        "background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
                     }}
                   >
                     Join Alumni Network
@@ -475,26 +490,33 @@ export default function HeroSection() {
                     }
                     sx={{
                       color: "var(--color-surface)",
-                      borderColor: "rgba(var(--rgb-white), 0.3)",
+                      borderColor: "rgba(var(--rgb-white), 0.35)",
                       textTransform: "none",
-                      fontWeight: 600,
+                      fontWeight: 700,
                       px: 4,
                       py: 1.5,
                       borderRadius: 2.5,
                       fontSize: "1rem",
                       backdropFilter: "blur(8px)",
-                      bgcolor: "rgba(var(--rgb-white), 0.06)",
+                      bgcolor: "rgba(var(--rgb-white), 0.08)",
+                      boxShadow:
+                        "0 8px 24px rgba(var(--rgb-black), 0.2), inset 0 1px 0 rgba(var(--rgb-white), 0.15)",
                       "&:hover": {
-                        borderColor: "rgba(var(--rgb-white), 0.6)",
-                        bgcolor: "rgba(var(--rgb-white), 0.12)",
+                        borderColor: "rgba(var(--rgb-white), 0.7)",
+                        bgcolor: "rgba(var(--rgb-white), 0.15)",
+                        boxShadow:
+                          "0 12px 32px rgba(var(--rgb-black), 0.28), inset 0 1px 0 rgba(var(--rgb-white), 0.2)",
+                        transform: "translateY(-2px)",
                       },
+                      transition:
+                        "background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
                     }}
                   >
                     Explore Events
                   </Button>
                 </Stack>
 
-                {/* Stats section */}
+                {/* ---------- Stats ---------- */}
                 <Box sx={{ minHeight: 56 }}>
                   {heroStats.length > 0 && (
                     <Stack
@@ -503,10 +525,7 @@ export default function HeroSection() {
                       sx={{
                         flexWrap: "wrap",
                         rowGap: 2,
-                        justifyContent: {
-                          xs: "center",
-                          md: "flex-start",
-                        },
+                        justifyContent: { xs: "center", md: "flex-start" },
                       }}
                     >
                       {heroStats.map((stat) => (
@@ -524,13 +543,15 @@ export default function HeroSection() {
                               height: 46,
                               flexShrink: 0,
                               borderRadius: 2.5,
-                              bgcolor: "rgba(var(--rgb-white), 0.1)",
-                              border: "1px solid rgba(var(--rgb-white), 0.18)",
+                              bgcolor: "rgba(var(--rgb-white), 0.12)",
+                              border: "1px solid rgba(var(--rgb-white), 0.22)",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               color: "var(--color-accent)",
                               backdropFilter: "blur(8px)",
+                              boxShadow:
+                                "0 6px 16px rgba(var(--rgb-black), 0.25), inset 0 1px 0 rgba(var(--rgb-white), 0.15)",
                             }}
                           >
                             {getIcon(stat.iconKey)}
@@ -542,15 +563,18 @@ export default function HeroSection() {
                                 fontSize: "1.4rem",
                                 fontWeight: 800,
                                 lineHeight: 1.1,
+                                color: "var(--color-white)",
+                                textShadow: TEXT_SHADOW.small,
                               }}
                             >
                               {stat.value}
                             </Typography>
-
                             <Typography
                               sx={{
                                 fontSize: "0.8rem",
-                                color: "rgba(var(--rgb-white), 0.68)",
+                                color: "rgba(var(--rgb-white), 0.85)",
+                                fontWeight: 500,
+                                textShadow: TEXT_SHADOW.small,
                               }}
                             >
                               {stat.label}
@@ -567,7 +591,7 @@ export default function HeroSection() {
         </Grid>
       </Container>
 
-      {/* Accessible navigation dots */}
+      {/* ---------- Dots ---------- */}
       {heroSlides.length > 1 && (
         <Stack
           direction="row"
@@ -594,9 +618,7 @@ export default function HeroSection() {
                 p: 0,
                 borderRadius: 999,
                 bgcolor: "transparent",
-                "&:hover": {
-                  bgcolor: "rgba(var(--rgb-white), 0.12)",
-                },
+                "&:hover": { bgcolor: "rgba(var(--rgb-white), 0.12)" },
                 "& span": {
                   display: "block",
                   width: current === index ? 32 : 10,
@@ -633,8 +655,10 @@ const arrowSx = (side: "left" | "right") => ({
   backdropFilter: "blur(8px)",
   zIndex: 2,
   p: 1.5,
+  boxShadow: "0 6px 16px rgba(var(--rgb-black), 0.25)",
   "&:hover": {
     bgcolor: "rgba(var(--rgb-white), 0.25)",
     color: "var(--color-accent)",
+    boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.35)",
   },
 });

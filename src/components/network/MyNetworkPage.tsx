@@ -186,7 +186,7 @@ export default function MyNetworkPage() {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ pb: 6 }}>
+    <Box>
       <CommonPageHeader
         title="My Network"
         subtitle="Connect with fellow alumni, manage requests, and grow your circle."
@@ -255,7 +255,7 @@ export default function MyNetworkPage() {
                       size="small"
                       startIcon={<MessageSquare size={16} />}
                       onClick={() =>
-                        navigate(`/alumni/messages?to=${c.otherUserID}`)
+                        navigate(`/alumni/network/messages?to=${c.otherUserID}`)
                       }
                       sx={{
                         textTransform: "none",
@@ -435,6 +435,6 @@ export default function MyNetworkPage() {
           )}
         </>
       )}
-    </Container>
+    </Box>
   );
 }

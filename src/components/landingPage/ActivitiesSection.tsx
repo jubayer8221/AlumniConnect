@@ -1,93 +1,83 @@
 import {
   Box,
+  Button,
   Card,
+  CardActionArea,
   CardContent,
   Container,
   Grid,
   Typography,
 } from "@mui/material";
-import { ArrowUpRight, Bell, BookOpen, Users } from "lucide-react";
-
-const ACTIVITIES = [
-  {
-    icon: <Bell size={18} />,
-    category: "Announcement",
-    date: "Oct 08, 2026",
-    title: "Winter Reunion 2026 Registration Opens",
-    excerpt:
-      "Registration is now open for the biggest alumni gathering of the year. Early birds get priority seating and a special welcome kit.",
-    color: "var(--color-primary)",
-    image:
-      "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    icon: <BookOpen size={18} />,
-    category: "Workshop",
-    date: "Oct 02, 2026",
-    title: "Career Mentorship Program Kicks Off",
-    excerpt:
-      "120 mentors across IT, banking, and healthcare have signed up. Students can now request one-on-one sessions through the portal.",
-    color: "var(--color-category-orange)",
-    image:
-      "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    icon: <Users size={18} />,
-    category: "Community",
-    date: "Sep 25, 2026",
-    title: "New Chapter Launched in Dhaka",
-    excerpt:
-      "The Dhaka chapter opened with 80 founding members. Monthly meetups begin this November — sign up to be part of the founding circle.",
-    color: "var(--color-info)",
-    image:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80",
-  },
-];
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ACTIVITIES } from "@/data/activities";
 
 export default function ActivitiesSection() {
   return (
-    <Box sx={{ py: 6, bgcolor: "background.default" }}>
+    <Box
+      sx={{
+        py: { xs: 8, md: 12 },
+        bgcolor: "background.default",
+      }}
+    >
       <Container maxWidth="lg">
-        <Box sx={{ textAlign: "center", mb: 6 }}>
-          <Typography
-            sx={{
-              fontSize: "0.8rem",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "primary.main",
-              mb: 1.5,
-            }}
-          >
-            From The Desk
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: { xs: "2rem", md: "2rem" },
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              textTransform: "uppercase",
+        {/* ---------- Header ---------- */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "flex-end" },
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+            mb: 6,
+          }}
+        >
+          <Box>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: "1.75rem", md: "2.25rem" },
+                letterSpacing: "-0.02em",
+                color: "text.primary",
+              }}
+            >
+              From The Desk
+            </Typography>
+            <Typography
+              sx={{
+                color: "primary.main",
+                fontWeight: 700,
+                fontSize: "0.8rem",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                // mb: 1,
+              }}
+            >
+              Our Day-to-Day Activities
+            </Typography>
+          </Box>
 
-              mb: 1.5,
-            }}
-          >
-            Our Day-to-Day Activities
-          </Typography>
-          {/* <Typography
+          <Button
+            component={Link}
+            to="/activities"
+            endIcon={<ArrowRight size={18} />}
             sx={{
-              color: "text.secondary",
-              maxWidth: 560,
-              mx: "auto",
-              lineHeight: 1.7,
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.8rem",
+              letterSpacing: "0.1em",
+              color: "primary.main",
             }}
           >
-            News, announcements, and updates straight from the alumni office.
-          </Typography> */}
+            View All
+          </Button>
         </Box>
 
+        {/* ---------- Cards ---------- */}
         <Grid container spacing={3}>
           {ACTIVITIES.map((post) => (
-            <Grid key={post.title} size={{ xs: 12, md: 4 }}>
+            <Grid key={post.id} size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
                   height: "100%",
@@ -99,118 +89,142 @@ export default function ActivitiesSection() {
                   display: "flex",
                   flexDirection: "column",
                   transition: "all 0.25s ease",
-                  cursor: "pointer",
                   "&:hover": {
                     transform: "translateY(-6px)",
                     boxShadow: "0 20px 40px rgba(var(--rgb-black), 0.08)",
+                    borderColor: "primary.main",
                     "& .post-image": { transform: "scale(1.06)" },
+                    "& .post-title": { color: "primary.dark" },
                   },
                 }}
               >
-                <Box
+                <CardActionArea
+                  component={Link}
+                  to={`/activities/${post.id}`}
                   sx={{
-                    position: "relative",
-                    height: 200,
-                    overflow: "hidden",
-                    bgcolor: "var(--color-border)",
-                  }}
-                >
-                  <Box
-                    className="post-image"
-                    component="img"
-                    src={post.image}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    sx={{
-                      display: "block",
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      transition: "transform 0.5s ease",
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 12,
-                      left: 12,
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 1.5,
-                      bgcolor: "rgba(var(--rgb-white), 0.95)",
-                      backdropFilter: "blur(8px)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.75,
-                      color: post.color,
-                    }}
-                  >
-                    {post.icon}
-                    <Typography
-                      sx={{
-                        fontSize: "0.7rem",
-                        fontWeight: 700,
-                        letterSpacing: "0.03em",
-                      }}
-                    >
-                      {post.category}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <CardContent
-                  sx={{
-                    p: 3,
-                    flexGrow: 1,
+                    flex: 1,
                     display: "flex",
                     flexDirection: "column",
+                    alignItems: "stretch",
                   }}
                 >
-                  <Typography
-                    sx={{
-                      fontSize: "0.75rem",
-                      color: "text.secondary",
-                      mb: 1,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {post.date}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "1.05rem",
-                      fontWeight: 700,
-                      lineHeight: 1.4,
-                      mb: 1.5,
-                    }}
-                  >
-                    {post.title}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "0.87rem",
-                      color: "text.secondary",
-                      lineHeight: 1.65,
-                      flexGrow: 1,
-                    }}
-                  >
-                    {post.excerpt}
-                  </Typography>
+                  {/* Image */}
                   <Box
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 2,
-                      color: "primary.main",
-                      fontWeight: 600,
-                      fontSize: "0.85rem",
+                      position: "relative",
+                      height: 200,
+                      overflow: "hidden",
+                      bgcolor: "action.hover",
                     }}
                   >
-                    Read More <ArrowUpRight size={14} />
+                    <Box
+                      className="post-image"
+                      component="img"
+                      src={post.image}
+                      alt={post.title}
+                      loading="lazy"
+                      decoding="async"
+                      sx={{
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        transition: "transform 0.5s ease",
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 12,
+                        left: 12,
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1.5,
+                        bgcolor: "rgba(var(--rgb-white), 0.95)",
+                        backdropFilter: "blur(8px)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.75,
+                        color: post.color,
+                      }}
+                    >
+                      {post.icon}
+                      <Typography
+                        sx={{
+                          fontSize: "0.7rem",
+                          fontWeight: 700,
+                          letterSpacing: "0.03em",
+                        }}
+                      >
+                        {post.category}
+                      </Typography>
+                    </Box>
                   </Box>
-                </CardContent>
+
+                  <CardContent
+                    sx={{
+                      p: 3,
+                      flexGrow: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "0.75rem",
+                        color: "text.secondary",
+                        mb: 1,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {post.date}
+                    </Typography>
+
+                    {/* ★ Title — primary.main */}
+                    <Typography
+                      className="post-title"
+                      sx={{
+                        fontSize: "1.05rem",
+                        fontWeight: 700,
+                        lineHeight: 1.4,
+                        mb: 1.5,
+                        color: "primary.main",
+                        transition: "color 0.2s ease",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {post.title}
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        fontSize: "0.87rem",
+                        color: "text.secondary",
+                        lineHeight: 1.65,
+                        flexGrow: 1,
+                      }}
+                    >
+                      {post.excerpt}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        mt: 2,
+                        color: "primary.main",
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      Read More <ArrowUpRight size={14} />
+                    </Box>
+                  </CardContent>
+                </CardActionArea>
               </Card>
             </Grid>
           ))}

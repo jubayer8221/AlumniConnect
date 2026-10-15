@@ -66,7 +66,7 @@ export const useJobs = () => {
 
   /* ---------- GET /api/Job/GetFeaturedJobs ---------- */
   const fetchFeaturedJobs = useCallback(
-    async (limit = 3) => {
+    async (limit = 4) => {
       setLoading(true);
       try {
         const res = await api.get<JobItem[]>("/Job/GetFeaturedJobs", {

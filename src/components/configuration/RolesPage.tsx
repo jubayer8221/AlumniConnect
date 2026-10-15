@@ -114,7 +114,7 @@ export default function RolesPage() {
     role.roleCode === "ADMIN" || role.roleCode === "ALUMNI";
 
   return (
-    <Container maxWidth="lg" sx={{ pb: 6 }}>
+    <Box sx={{ pb: 6 }}>
       <CommonPageHeader
         title="Roles"
         subtitle="Create and manage access roles used across the platform."
@@ -251,6 +251,6 @@ export default function RolesPage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </Container>
+    </Box>
   );
 }

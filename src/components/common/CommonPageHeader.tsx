@@ -18,7 +18,7 @@ export default function CommonPageHeader({
   actions,
 }: CommonPageHeaderProps) {
   return (
-    <Box sx={{ mb: { xs: 2, md: 3 } }}>
+    <Box sx={{ mb: 2 }}>
       <Box
         sx={{
           display: "flex",

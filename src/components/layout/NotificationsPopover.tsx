@@ -75,7 +75,7 @@ export default function NotificationsPopover({
   const handleViewAll = () => {
     localStorage.setItem(STORAGE_KEY, new Date().toISOString());
     onClose();
-    navigate("alumni/notices");
+    navigate("/alumni/explore/notices");
   };
 
   return (

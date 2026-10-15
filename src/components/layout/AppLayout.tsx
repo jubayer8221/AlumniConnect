@@ -17,7 +17,7 @@ function AuthenticatedContent() {
         component="main"
         sx={{
           flexGrow: 1,
-          py: 2,
+          p: 2,
           maxWidth: "100%",
           overflowX: "hidden",
           bgcolor: "background.default",

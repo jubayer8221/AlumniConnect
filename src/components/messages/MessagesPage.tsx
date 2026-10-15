@@ -117,8 +117,8 @@ export default function MessagesPage() {
   const isMobileThreadOpen = Boolean(activePartnerID);
 
   return (
-    <Container
-      maxWidth="xl"
+    <Box
+      // maxWidth="xl"
       sx={{
         height: { xs: "auto", md: "calc(100dvh - 150px)" },
         display: "flex",
@@ -516,6 +516,6 @@ export default function MessagesPage() {
           )}
         </Box>
       </Card>
-    </Container>
+    </Box>
   );
 }

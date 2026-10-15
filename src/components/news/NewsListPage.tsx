@@ -84,7 +84,7 @@ export default function NewsListPage() {
         {canManageNews && <Button
           variant="contained"
           startIcon={<Plus size={18} />}
-          onClick={() => navigate("/alumni/news/create")}
+          onClick={() => navigate("/alumni/explore/news/create")}
           sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2 }}
         >
           Add News Article
@@ -179,7 +179,7 @@ export default function NewsListPage() {
                       <IconButton
                         size="small"
                         onClick={() =>
-                          navigate(`/alumni/news/edit/${news.NewsID}`)
+                          navigate(`/alumni/explore/news/edit/${news.NewsID}`)
                         }
                       >
                         <Pencil size={16} />

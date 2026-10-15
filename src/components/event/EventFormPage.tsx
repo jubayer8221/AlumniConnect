@@ -207,7 +207,7 @@ export default function EventFormPage() {
           severity: "error",
         }),
       );
-      navigate("/alumni/events", { replace: true });
+      navigate("/alumni/explore/events", { replace: true });
     }
   }, [user, canManage, dispatch, navigate]);
 
@@ -273,7 +273,7 @@ export default function EventFormPage() {
             severity: "success",
           }),
         );
-        navigate(`/alumni/events/${id}`);
+        navigate(`/alumni/explore/events/${id}`);
       } else {
         await createEvent(payload);
         dispatch(
@@ -282,7 +282,7 @@ export default function EventFormPage() {
             severity: "success",
           }),
         );
-        navigate("/alumni/events");
+        navigate("/alumni/explore/events");
       }
     } catch (err) {
       dispatch(
@@ -302,7 +302,7 @@ export default function EventFormPage() {
         title={isEdit ? "Edit Event" : "Create Event"}
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Events", path: "/alumni/events" },
+          { label: "Events", path: "/alumni/explore/events" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={

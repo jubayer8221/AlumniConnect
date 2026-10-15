@@ -143,7 +143,7 @@ export default function GalleryPhotoFormPage() {
         }),
       );
 
-      navigate("/alumni/landing");
+      navigate("/alumni/configuration/landing-page");
     } catch (err) {
       dispatch(
         showToast({
@@ -167,7 +167,7 @@ export default function GalleryPhotoFormPage() {
         }
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Landing Content", path: "/alumni/landing" },
+          { label: "Landing Content", path: "/alumni/configuration/landing-page" },
           { label: isEdit ? "Edit Photo" : "New Photo" },
         ]}
         actions={
@@ -260,7 +260,7 @@ export default function GalleryPhotoFormPage() {
           <CommonButton
             variant="outlined"
             startIcon={<ArrowLeft size={18} />}
-            onClick={() => navigate("/alumni/landing")}
+            onClick={() => navigate("/alumni/configuration/landing-page")}
           >
             Cancel
           </CommonButton>

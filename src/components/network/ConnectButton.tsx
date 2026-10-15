@@ -130,7 +130,7 @@ export default function ConnectButton({
         <Button
           variant="contained"
           startIcon={<MessageSquare size={18} />}
-          onClick={() => navigate(`/alumni/messages?to=${otherUserID}`)}
+          onClick={() => navigate(`/alumni/network/messages?to=${otherUserID}`)}
           sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2 }}
         >
           Message

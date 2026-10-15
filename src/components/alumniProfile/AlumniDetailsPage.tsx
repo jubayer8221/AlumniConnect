@@ -168,10 +168,10 @@ export default function AlumniDetailsPage() {
       !selectedAlumni || String(selectedAlumni.alumniID) !== String(profileId);
 
     if (isStale) {
-      void fetchAlumniById(profileId).catch(() => undefined);
+      fetchAlumniById(profileId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileId]);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -181,13 +181,7 @@ export default function AlumniDetailsPage() {
         selectedAlumni.personalInformation.fullName,
       );
     return () => clearBreadcrumbLabel(location.pathname);
-  }, [
-    clearBreadcrumbLabel,
-    id,
-    location.pathname,
-    selectedAlumni,
-    setBreadcrumbLabel,
-  ]);
+  }, []);
 
   if (loading && !selectedAlumni) return <AlumniProfileSkeleton />;
   if (!selectedAlumni)
@@ -336,7 +330,7 @@ export default function AlumniDetailsPage() {
         title="Alumni Profile"
         breadcrumbs={[
           { label: "Home", path: isAdmin ? "/dashboard" : "/alumni/dashboard" },
-          { label: "Alumni", path: "/alumni/directory" },
+          { label: "Alumni", path: "/alumni/network/directory" },
           { label: p.fullName },
         ]}
         actions={

@@ -96,10 +96,10 @@ export default function JobBoardPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ pb: 6 }}>
+    <Box sx={{ pb: 4 }}>
       <CommonPageHeader
         title="Job Board"
-        subtitle={`${totalCount} job posting${totalCount === 1 ? "" : "s"} total`}
+        // subtitle={`${totalCount} job posting${totalCount === 1 ? "" : "s"} total`}
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
           { label: "Job Board" },
@@ -107,7 +107,7 @@ export default function JobBoardPage() {
         actions={
           <CommonButton
             startIcon={<Plus size={18} />}
-            onClick={() => navigate("/alumni/job-board/new")}
+            onClick={() => navigate("/alumni/explore/job-board/new")}
           >
             Post Job
           </CommonButton>
@@ -245,7 +245,7 @@ export default function JobBoardPage() {
                       <IconButton
                         size="small"
                         onClick={() =>
-                          navigate(`/alumni/job-board/${job.jobID}/edit`)
+                          navigate(`/alumni/explore/job-board/${job.jobID}/edit`)
                         }
                       >
                         <Pencil size={16} />
@@ -299,6 +299,6 @@ export default function JobBoardPage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </Container>
+    </Box>
   );
 }

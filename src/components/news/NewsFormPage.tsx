@@ -185,7 +185,7 @@ export default function NewsFormPage() {
         }),
       );
 
-      navigate("/alumni/news");
+      navigate("/alumni/explore/news");
     } catch (err) {
       dispatch(
         showToast({
@@ -207,7 +207,7 @@ export default function NewsFormPage() {
         }
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "News", path: "/alumni/news" },
+          { label: "News", path: "/alumni/explore/news" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={

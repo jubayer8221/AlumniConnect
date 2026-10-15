@@ -46,6 +46,8 @@ const NAV: NavItem[] = [
   { label: "About", type: "route", to: "/about" },
   { label: "Events", type: "route", to: "/events" },
   { label: "News", type: "route", to: "/news" },
+  { label: "Gallery", type: "route", to: "/gallery" },
+  { label: "Jobs", type: "route", to: "/jobs" },
 ];
 
 /* Shared styles so "Sign In" matches the other nav links exactly */
@@ -182,6 +184,21 @@ export default function LandingHeader() {
 
   return (
     <>
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: { xs: 8, md: 16 },
+          zIndex: (theme) => theme.zIndex.appBar - 1,
+          // bgcolor: "rgba(var(--rgb-white), 0.72)",
+          bgcolor: "transparent",
+          backdropFilter: "blur(14px) saturate(100%)",
+          WebkitBackdropFilter: "blur(14px) saturate(180%)",
+          pointerEvents: "none",
+        }}
+      />
       <AppBar
         position="fixed"
         elevation={0}
@@ -194,6 +211,7 @@ export default function LandingHeader() {
           borderRadius: 3,
           color: "text.primary",
           bgcolor: "rgba(var(--rgb-white), 0.92)",
+
           backdropFilter: "blur(14px) saturate(180%)",
           WebkitBackdropFilter: "blur(14px) saturate(180%)",
           border: "1px solid",

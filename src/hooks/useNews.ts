@@ -42,7 +42,7 @@ export interface CreateUpdateNewsPayload {
   IsActive?: boolean;
 }
 
-/* ---------- query params for GET /News/GetNews ---------- */
+/* query params for GET /News/GetNews */
 export interface FetchNewsParams {
   search?: string;
   categoryID?: string;
@@ -121,11 +121,8 @@ export const useNews = () => {
         const id = res.data?.newsID;
         if (!id) throw new Error("Server did not return a NewsID.");
 
-        // Refetch the saved article so the store reflects the DB truth
-        // (CreatedAt / UpdatedAt / Status are all server-derived).
         const fresh = await api.get<NewsItem>(`/News/GetNewsByID/${id}`);
         const item = fresh.data;
-
         if (payload.NewsID) {
           dispatch(updateNewsItem(item));
         } else {

@@ -45,7 +45,7 @@ export default function EventListPage() {
   const navigate = useNavigate();
   const { authUser: user } = useAuth();
   const isAdmin = hasAdminAccess(user?.role);
-  const basePath = isAdmin ? "/alumni/events" : "/events";
+  const basePath = isAdmin ? "/alumni/explore/events" : "/events";
   const homePath = isAdmin ? "/alumni/dashboard" : "/dashboard";
 
   const {

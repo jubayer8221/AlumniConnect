@@ -163,7 +163,7 @@ export default function JobFormPage() {
           severity: "success",
         }),
       );
-      navigate("/alumni/job-board");
+      navigate("/alumni/explore/job-board");
     } catch (err) {
       dispatch(
         showToast({
@@ -189,7 +189,7 @@ export default function JobFormPage() {
         }
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Job Board", path: "/alumni/job-board" },
+          { label: "Job Board", path: "/alumni/explore/job-board" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={

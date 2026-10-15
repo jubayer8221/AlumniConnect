@@ -312,7 +312,7 @@ export default function AdminDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("/alumni/events")}
+                  onClick={() => navigate("/alumni/explore/events")}
                   sx={{ color: "var(--color-chart-pink)", fontWeight: 600 }}
                 >
                   View All
@@ -332,7 +332,7 @@ export default function AdminDashboardPage() {
                           borderRadius: 2,
                           cursor: "pointer",
                         }}
-                        onClick={() => navigate(`/alumni/events/${evt.id}`)}
+                        onClick={() => navigate(`/alumni/explore/events/${evt.id}`)}
                       >
                         <ListItemAvatar>
                           <Avatar
@@ -406,7 +406,7 @@ export default function AdminDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("/alumni/notices")}
+                  onClick={() => navigate("/alumni/explore/notices")}
                   sx={{ color: "var(--color-warning)", fontWeight: 600 }}
                 >
                   View All
@@ -426,7 +426,7 @@ export default function AdminDashboardPage() {
                           borderRadius: 2,
                           cursor: "pointer",
                         }}
-                        onClick={() => navigate(`/alumni/notices/${notice.id}`)}
+                        onClick={() => navigate(`/alumni/explore/notices/${notice.id}`)}
                       >
                         <ListItemAvatar>
                           <Avatar

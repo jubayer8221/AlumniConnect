@@ -130,7 +130,7 @@ export default function MentorshipBanner() {
               </Button>
               <Button
                 variant="outlined"
-                onClick={() => navigate("/alumni/mentorship")}
+                onClick={() => navigate("/alumni/network/mentorship")}
                 sx={{
                   textTransform: "none",
                   fontWeight: 700,

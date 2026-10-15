@@ -15,12 +15,52 @@ import {
   Phone,
   Twitter,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { appConfig } from "@/config/appConfig";
 import { useAuth } from "@/hooks/useAuth";
 
+/** Shared style for text links in the footer. */
+const footerLinkSx = {
+  fontSize: "0.85rem",
+  color: "rgba(var(--rgb-white), 0.6)",
+  textDecoration: "none",
+  transition: "color 0.2s",
+  "&:hover": { color: "var(--color-accent)" },
+} as const;
+
 export default function LandingFooter() {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const exploreLinks = [
+    { label: "Home", to: "/" },
+    { label: "Programs", to: "/#programs" },
+    { label: "Events", to: "/events" },
+    { label: "Gallery", to: "/gallery" },
+    { label: "Activities", to: "/#activities" },
+  ];
+
+  const alumniLinks = isAuthenticated
+    ? [
+        { label: "Messages", to: "/alumni/network/messages" },
+        { label: "Directory", to: "/alumni/network/directory" },
+        { label: "Mentorship", to: "/alumni/network/mentorship" },
+        { label: "Chapters", to: "/alumni/chapters" },
+      ]
+    : [
+        { label: "Sign In", to: "/login" },
+        { label: "Register", to: "/login" },
+        { label: "Directory", to: "/alumni/network/directory" },
+        { label: "Mentorship", to: "/alumni/network/mentorship" },
+        { label: "Chapters", to: "/alumni/chapters" },
+      ];
+
+  const legalLinks = [
+    { label: "Privacy", to: "/privacy" },
+    { label: "Terms", to: "/terms" },
+    { label: "Cookies", to: "/cookies" },
+  ];
+
   return (
     <Box
       sx={{
@@ -122,24 +162,12 @@ export default function LandingFooter() {
               Explore
             </Typography>
             <Stack spacing={1.25}>
-              {[
-                { label: "Home", to: "/" },
-                { label: "Programs", to: "/#programs" },
-                { label: "Events", to: "/events" },
-                { label: "Gallery", to: "/gallery" },
-                { label: "Activities", to: "/#activities" },
-              ].map(({ label, to }) => (
+              {exploreLinks.map(({ label, to }) => (
                 <Typography
                   key={label}
                   component={Link}
                   to={to}
-                  sx={{
-                    fontSize: "0.85rem",
-                    color: "rgba(var(--rgb-white), 0.6)",
-                    textDecoration: "none",
-                    transition: "color 0.2s",
-                    "&:hover": { color: "var(--color-accent)" },
-                  }}
+                  sx={footerLinkSx}
                 >
                   {label}
                 </Typography>
@@ -152,21 +180,14 @@ export default function LandingFooter() {
               Alumni
             </Typography>
             <Stack spacing={1.25}>
-              {(isAuthenticated
-                ? ["Directory", "Mentorship", "Chapters"]
-                : ["Sign In", "Register", "Directory", "Mentorship", "Chapters"]
-              ).map((link) => (
+              {alumniLinks.map(({ label, to }) => (
                 <Typography
-                  key={link}
-                  sx={{
-                    fontSize: "0.85rem",
-                    color: "rgba(var(--rgb-white), 0.6)",
-                    cursor: "pointer",
-                    transition: "color 0.2s",
-                    "&:hover": { color: "var(--color-accent)" },
-                  }}
+                  key={label}
+                  component={Link}
+                  to={to}
+                  sx={footerLinkSx}
                 >
-                  {link}
+                  {label}
                 </Typography>
               ))}
             </Stack>
@@ -196,9 +217,14 @@ export default function LandingFooter() {
               <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
                 <Mail size={18} color="var(--color-accent)" />
                 <Typography
+                  component="a"
+                  href={`mailto:${appConfig.contactEmail}`}
                   sx={{
                     fontSize: "0.85rem",
                     color: "rgba(var(--rgb-white), 0.6)",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                    "&:hover": { color: "var(--color-accent)" },
                   }}
                 >
                   {appConfig.contactEmail}
@@ -207,9 +233,14 @@ export default function LandingFooter() {
               <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
                 <Phone size={18} color="var(--color-accent)" />
                 <Typography
+                  component="a"
+                  href={`tel:${appConfig.contactPhone.replace(/\s+/g, "")}`}
                   sx={{
                     fontSize: "0.85rem",
                     color: "rgba(var(--rgb-white), 0.6)",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                    "&:hover": { color: "var(--color-accent)" },
                   }}
                 >
                   {appConfig.contactPhone}
@@ -237,17 +268,20 @@ export default function LandingFooter() {
             reserved.
           </Typography>
           <Stack direction="row" spacing={3}>
-            {["Privacy", "Terms", "Cookies"].map((item) => (
+            {legalLinks.map(({ label, to }) => (
               <Typography
-                key={item}
+                key={label}
+                component={Link}
+                to={to}
                 sx={{
                   fontSize: "0.78rem",
                   color: "rgba(var(--rgb-white), 0.72)",
-                  cursor: "pointer",
+                  textDecoration: "none",
+                  transition: "color 0.2s",
                   "&:hover": { color: "var(--color-accent)" },
                 }}
               >
-                {item}
+                {label}
               </Typography>
             ))}
           </Stack>
