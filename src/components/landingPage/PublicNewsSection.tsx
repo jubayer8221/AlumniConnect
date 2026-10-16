@@ -10,12 +10,14 @@ import {
   Chip,
   Stack,
   Skeleton,
+  alpha,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Newspaper } from "lucide-react";
 import { useEffect } from "react";
 import { useNews } from "@/hooks/useNews";
 import { slugify } from "@/utils/slugify";
+import SectionHeader from "../common/SectionHeader";
 
 /* ---------- shared type ---------- */
 export interface NewsItem {
@@ -115,53 +117,21 @@ export default function NewsSection() {
       sx={{ py: 6, bgcolor: "background.default" }}
     >
       <Container maxWidth="lg">
-        {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            justifyContent: "space-between",
-            alignItems: { xs: "flex-start", sm: "flex-end" },
-            gap: 2,
-            mb: { xs: 2, md: 2 },
-          }}
-        >
-          <Box>
-            <Typography
-              sx={{
-                fontSize: { xs: "2rem", md: "2rem" },
-                fontWeight: 800,
-                letterSpacing: "-0.02em",
-                textTransform: "uppercase",
-                mb: 1,
-              }}
+        <SectionHeader
+          title="Latest Updates"
+          subtitle="News"
+          // align="center"
+          // titleBorder
+          action={
+            <Button
+              component={Link}
+              to="/news"
+              endIcon={<ArrowRight size={16} />}
             >
-              Latest Updates
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                color: "primary.main",
-                mb: 1,
-              }}
-            >
-              News
-            </Typography>
-          </Box>
-
-          <Button
-            component={Link}
-            to="/news"
-            endIcon={<ArrowRight size={16} />}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            View all
-          </Button>
-        </Box>
-
+              View all
+            </Button>
+          }
+        />
         {/* Loading */}
         {loading && newsItems.length === 0 && (
           <Grid container spacing={{ xs: 2, md: 2.5 }}>
@@ -182,6 +152,7 @@ export default function NewsSection() {
           <Box
             sx={{
               py: 8,
+              justifyContent: "center",
               textAlign: "center",
               color: "text.secondary",
               border: "1px dashed",
@@ -189,7 +160,22 @@ export default function NewsSection() {
               borderRadius: 3,
             }}
           >
-            <Newspaper size={32} style={{ marginBottom: 8 }} />
+            <Box
+              sx={{
+                width: 60,
+                height: 60,
+                borderRadius: "50%",
+                bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                color: "primary.main",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mb: 2,
+              }}
+            >
+              {/* <Briefcase size={28} /> */}
+              <Newspaper size={32} style={{ marginBottom: 8 }} />
+            </Box>
             <Typography>No news yet. Check back soon.</Typography>
           </Box>
         )}

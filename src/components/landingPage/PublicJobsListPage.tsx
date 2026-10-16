@@ -56,7 +56,7 @@ const typeColor: Record<string, string> = {
 const getTypeColor = (type?: string | null) =>
   (type && typeColor[type]) || "var(--color-primary)";
 
-const PAGE_SIZE_OPTIONS = [9, 18, 36] as const;
+const PAGE_SIZE_OPTIONS = [9, 12, 16, 24, 36] as const;
 
 export default function PublicJobsListPage() {
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ export default function PublicJobsListPage() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(9);
+  const [pageSize, setPageSize] = useState<number>(12);
 
   useEffect(() => {
     // Public endpoint — 100 covers most small-to-medium deployments.
@@ -257,9 +257,9 @@ export default function PublicJobsListPage() {
 
           {/* ---------- Loading ---------- */}
           {loading && allJobs.length === 0 && (
-            <Grid container spacing={3}>
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid container spacing={{ xs: 3, sm: 3, md: 2.5, lg: 2 }}>
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <Skeleton
                     variant="rounded"
                     height={360}
@@ -309,11 +309,15 @@ export default function PublicJobsListPage() {
 
           {/* ---------- Cards ---------- */}
           {filtered.length > 0 && (
-            <Grid container spacing={{ xs: 3, md: 4 }}>
+            <Grid
+              container
+              spacing={{ xs: 3, sm: 3, md: 2.5, lg: 2 }}
+              sx={{ alignItems: "stretch" }}
+            >
               {paged.map((job) => {
                 const badgeColor = getTypeColor(job.employmentType);
                 return (
-                  <Grid key={job.jobID} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Grid key={job.jobID} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                     <Card
                       elevation={0}
                       sx={{
@@ -360,11 +364,11 @@ export default function PublicJobsListPage() {
                       >
                         <CardContent
                           sx={{
-                            p: 3,
+                            p: { xs: 3, lg: 2 },
                             flex: 1,
                             display: "flex",
                             flexDirection: "column",
-                            "&:last-child": { pb: 3 },
+                            "&:last-child": { pb: { xs: 3, lg: 2 } },
                           }}
                         >
                           <Stack
@@ -407,7 +411,7 @@ export default function PublicJobsListPage() {
                             className="job-title"
                             sx={{
                               fontWeight: 800,
-                              fontSize: "1.05rem",
+                              fontSize: { xs: "1.05rem", lg: "0.95rem" },
                               lineHeight: 1.35,
                               mb: 1,
                               color: "text.primary",
@@ -505,7 +509,7 @@ export default function PublicJobsListPage() {
                         </CardContent>
                       </CardActionArea>
 
-                      <Box sx={{ px: 3, pb: 3 }}>
+                      <Box sx={{ px: { xs: 3, lg: 2 }, pb: { xs: 3, lg: 2 } }}>
                         <Button
                           component={Link}
                           to={`/jobs/${job.jobID}`}

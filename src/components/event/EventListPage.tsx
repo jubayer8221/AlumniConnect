@@ -45,7 +45,9 @@ export default function EventListPage() {
   const navigate = useNavigate();
   const { authUser: user } = useAuth();
   const isAdmin = hasAdminAccess(user?.role);
-  const basePath = isAdmin ? "/alumni/explore/events" : "/events";
+  const basePath = isAdmin
+    ? "/alumni/explore/events"
+    : "/alumni/explore/events";
   const homePath = isAdmin ? "/alumni/dashboard" : "/dashboard";
 
   const {
@@ -266,7 +268,7 @@ export default function EventListPage() {
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
                       color: "text.secondary",
-                      minHeight: "2.5rem", // ~2 lines
+                      minHeight: "2.5rem",
                     }}
                   >
                     {evt.description}

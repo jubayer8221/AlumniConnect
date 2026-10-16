@@ -19,6 +19,7 @@ import {
   MessageSquare,
   UserCheck,
   Compass,
+  ImageIcon,
 } from "lucide-react";
 
 export interface NavChild {
@@ -149,6 +150,11 @@ const exploreItem: NavItem = {
       path: "/alumni/explore/news",
       icon: <Newspaper size={16} />,
     },
+    {
+      label: "Gallery",
+      path: "/alumni/explore/gallery",
+      icon: <ImageIcon size={20} />,
+    },
   ],
 };
 
@@ -165,6 +171,7 @@ export const adminNav: NavItem[] = [
   accountItem,
   networkItem,
   exploreItem,
+
   {
     label: "Reports",
     path: "/reports",

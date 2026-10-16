@@ -4,13 +4,13 @@ import LandingHeader from "./LandingHeader";
 import HeroSection from "./HeroSection";
 import DeferredSection from "./DeferredSection";
 
-const AboutUsSection = lazy(() => import("./AboutUs"));
+const AboutUsSection = lazy(() => import("./about/AboutUs"));
 const ProgramsSection = lazy(() => import("./ProgramsSection"));
-const EventsSection = lazy(() => import("./event/EventsSection"));
+const PublicEventsSection = lazy(() => import("./event/PublicEventsSection"));
 const NewsSection = lazy(() => import("./PublicNewsSection"));
 const ActivitiesSection = lazy(() => import("./ActivitiesSection"));
 const FeaturedSlider = lazy(() => import("./FeaturedSlider"));
-const MomentsGallery = lazy(() => import("./MomentsGallery"));
+const MomentsGallery = lazy(() => import("./PublicGallerySection"));
 const JoinNetworkSection = lazy(() => import("./JoinNetworkSection"));
 const LandingFooter = lazy(() => import("./LandingFooter"));
 const MentorshipBanner = lazy(() => import("./MentorshipBanner"));
@@ -35,14 +35,14 @@ export default function LandingPage() {
           <ProgramsSection />
         </DeferredSection>
 
+        {/* 5. Upcoming events and reunions */}
+        <DeferredSection id="events" minHeight={500}>
+          <PublicEventsSection />
+        </DeferredSection>
+
         {/* 4. Community activities */}
         <DeferredSection id="activities" minHeight={520}>
           <ActivitiesSection />
-        </DeferredSection>
-
-        {/* 5. Upcoming events and reunions */}
-        <DeferredSection id="events" minHeight={500}>
-          <EventsSection />
         </DeferredSection>
 
         {/* 6. Featured alumni or highlights */}

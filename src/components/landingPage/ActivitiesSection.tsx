@@ -11,6 +11,7 @@ import {
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ACTIVITIES } from "@/data/activities";
+import SectionHeader from "../common/SectionHeader";
 
 export default function ActivitiesSection() {
   return (
@@ -22,57 +23,22 @@ export default function ActivitiesSection() {
     >
       <Container maxWidth="lg">
         {/* ---------- Header ---------- */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: { xs: "flex-start", md: "flex-end" },
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-            mb: 6,
-          }}
-        >
-          <Box>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 800,
-                fontSize: { xs: "1.75rem", md: "2.25rem" },
-                letterSpacing: "-0.02em",
-                color: "text.primary",
-              }}
-            >
-              From The Desk
-            </Typography>
-            <Typography
-              sx={{
-                color: "primary.main",
-                fontWeight: 700,
-                fontSize: "0.8rem",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                // mb: 1,
-              }}
-            >
-              Our Day-to-Day Activities
-            </Typography>
-          </Box>
 
-          <Button
-            component={Link}
-            to="/activities"
-            endIcon={<ArrowRight size={18} />}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: "0.8rem",
-              letterSpacing: "0.1em",
-              color: "primary.main",
-            }}
-          >
-            View All
-          </Button>
-        </Box>
+        <SectionHeader
+          title="From The Desk"
+          subtitle="Our Day-to-Day Activities"
+          // align="center"
+          // titleBorder
+          action={
+            <Button
+              component={Link}
+              to="/activities"
+              endIcon={<ArrowRight size={16} />}
+            >
+              View all
+            </Button>
+          }
+        />
 
         {/* ---------- Cards ---------- */}
         <Grid container spacing={3}>

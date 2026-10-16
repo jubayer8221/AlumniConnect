@@ -11,12 +11,13 @@ import {
   Skeleton,
 } from "@mui/material";
 import { ArrowRight, CalendarDays, Clock, MapPin } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
 import { formatTime } from "@/utils/dateUtils";
 import type { EventItem } from "@/types/event";
 import EventDetailsDialog from "./EventDetailsDialog";
+import SectionHeader from "@/components/common/SectionHeader";
 
 const typeColors: Record<string, string> = {
   Reunion: "var(--color-primary)",
@@ -44,7 +45,7 @@ const getDayMonth = (iso: string) => {
 
 const EVENTS_PER_ROW = 4;
 
-export default function EventsSection() {
+export default function PublicEventsSection() {
   const navigate = useNavigate();
   const { items, loading, error, fetchEvents } = useEvents();
   const [selected, setSelected] = useState<EventItem | null>(null);
@@ -67,55 +68,22 @@ export default function EventsSection() {
       }}
     >
       <Container maxWidth="lg">
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: { xs: "flex-start", md: "flex-end" },
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-            mb: 6,
-          }}
-        >
-          <Box>
-            <Typography
-              sx={{
-                fontSize: { xs: "2rem", md: "2rem" },
-                fontWeight: 800,
-                letterSpacing: "-0.02em",
-                textTransform: "uppercase",
-                mb: 1,
-                textAlign: "center",
-              }}
+        {/* ---------- Header ---------- */}
+        <SectionHeader
+          title="Upcoming Events"
+          subtitle="Events"
+          // align="center"
+          // titleBorder
+          action={
+            <Button
+              component={Link}
+              to="/events"
+              endIcon={<ArrowRight size={16} />}
             >
-              Upcoming Events
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                color: "primary.main",
-                mb: 1.5,
-              }}
-            >
-              Events
-            </Typography>
-          </Box>
-          <Button
-            endIcon={<ArrowRight size={18} />}
-            onClick={() => navigate("/events")}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              color: "primary.main",
-              py: 1,
-            }}
-          >
-            View All
-          </Button>
-        </Box>
+              View all
+            </Button>
+          }
+        />
 
         {loading && events.length === 0 && (
           <Grid container spacing={{ xs: 2, md: 2.5 }}>

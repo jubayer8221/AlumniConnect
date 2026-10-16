@@ -38,14 +38,33 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   building: Building2,
 };
 
-export function getIcon(key: string, size = 18) {
+export function getIcon(key: string, size = 18, strokeWidth = 2.25) {
   const Icon = ICONS[key] ?? Star;
-  return <Icon size={size} />;
+  return <Icon size={size} strokeWidth={strokeWidth} />;
 }
 
 export const ICON_KEYS = Object.keys(ICONS);
 
 const AUTOPLAY_MS = 6000;
+
+const HERO_MIN_HEIGHT = { xs: 620, sm: 620, md: 620 } as const;
+
+/* Fixed heights for the text blocks above the CTA buttons.
+   Values are chosen to fit the maximum clamped line count at each breakpoint,
+   so the button row is always in the same vertical position per breakpoint. */
+const TITLE_MIN_HEIGHT = {
+  xs: 110, // 3 lines @ 1.85rem
+  sm: 155, // 3 lines @ 2.75rem
+  md: 210, // 3 lines @ 3.75rem
+  lg: 250, // 3 lines @ 4.5rem
+} as const;
+
+const SUBTITLE_MIN_HEIGHT = {
+  xs: 80, // 3 lines @ 0.95rem
+  sm: 88, // 3 lines @ 1.05rem
+  md: 100, // 3 lines @ 1.2rem
+  lg: 100, // 3 lines @ 1.2rem
+} as const;
 
 const FALLBACK_SLIDE = {
   slideID: "default",
@@ -64,27 +83,23 @@ const fadeIn = keyframes`
   to   { opacity: 1; }
 `;
 
-/* ============================================================
-   Shared text shadows — reused everywhere in the hero
-   ============================================================ */
 const TEXT_SHADOW = {
-  // Strong shadow for the huge title — previous version
   title: `
     0 2px 2px rgba(var(--rgb-black), 0.25),
     0 5px 10px rgba(var(--rgb-black), 0.35),
     0 10px 24px rgba(var(--rgb-black), 0.25)
   `,
-  // Lighter shadow for body/subtitle text
   body: `
     0 1px 2px rgba(var(--rgb-black), 0.45),
     0 3px 8px rgba(var(--rgb-black), 0.35)
   `,
-  // Small shadow for chips and stats
   small: `
     0 1px 2px rgba(var(--rgb-black), 0.4),
     0 2px 6px rgba(var(--rgb-black), 0.25)
   `,
 } as const;
+
+const ACCENT = "var(--color-accent, #f59e0b)";
 
 export default function HeroSection() {
   const navigate = useNavigate();
@@ -136,9 +151,6 @@ export default function HeroSection() {
   const slides = heroSlides.length > 0 ? heroSlides : [FALLBACK_SLIDE];
   const slide = slides[current];
 
-  /* ============================================================
-     Title — bubble outline on ALL words (fill + stroke + shadow)
-     ============================================================ */
   const titleNode = useMemo(() => {
     if (!slide?.title) return null;
 
@@ -195,14 +207,14 @@ export default function HeroSection() {
       sx={{
         position: "relative",
         isolation: "isolate",
-        minHeight: { xs: "auto", md: "80vh" },
+        minHeight: HERO_MIN_HEIGHT,
         display: "flex",
         alignItems: "center",
         color: "var(--color-surface)",
         overflow: "hidden",
         background: "var(--color-primary)",
-        pt: { xs: 12, md: 16 },
-        pb: { xs: 14, md: 14 },
+        pt: 16,
+        pb: { xs: 11, sm: 12, md: 14 },
       }}
     >
       {/* ============================================================
@@ -245,27 +257,35 @@ export default function HeroSection() {
           }}
         />
 
-        {/* Left-dark overlay so text is readable */}
         <Box
           sx={{
             position: "absolute",
             inset: 0,
-            background: `
-              linear-gradient(
-                90deg,
-                rgba(var(--rgb-primary), 0.96) 0%,
-                rgba(var(--rgb-primary), 0.88) 22%,
-                rgba(var(--rgb-primary), 0.72) 38%,
-                rgba(var(--rgb-primary), 0.42) 55%,
-                rgba(var(--rgb-primary), 0.12) 75%,
-                transparent 100%
-              )
-            `,
+            background: {
+              xs: `
+                linear-gradient(
+                  180deg,
+                  rgba(var(--rgb-primary), 0.85) 0%,
+                  rgba(var(--rgb-primary), 0.78) 40%,
+                  rgba(var(--rgb-primary), 0.85) 100%
+                )
+              `,
+              md: `
+                linear-gradient(
+                  90deg,
+                  rgba(var(--rgb-primary), 0.96) 0%,
+                  rgba(var(--rgb-primary), 0.88) 22%,
+                  rgba(var(--rgb-primary), 0.72) 38%,
+                  rgba(var(--rgb-primary), 0.42) 55%,
+                  rgba(var(--rgb-primary), 0.12) 75%,
+                  transparent 100%
+                )
+              `,
+            },
             pointerEvents: "none",
           }}
         />
 
-        {/* Brand tint */}
         <Box
           sx={{
             position: "absolute",
@@ -277,7 +297,6 @@ export default function HeroSection() {
           }}
         />
 
-        {/* Radial glow */}
         <Box
           sx={{
             position: "absolute",
@@ -291,7 +310,6 @@ export default function HeroSection() {
         />
       </Box>
 
-      {/* Arrows */}
       {heroSlides.length > 1 && (
         <>
           <IconButton
@@ -316,9 +334,18 @@ export default function HeroSection() {
          ============================================================ */}
       <Container
         maxWidth="lg"
-        sx={{ position: "relative", zIndex: 1, width: "100%" }}
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          px: { xs: 7, sm: 6, md: 3 },
+        }}
       >
-        <Grid container spacing={6} sx={{ alignItems: "center" }}>
+        <Grid
+          container
+          spacing={{ xs: 4, md: 6 }}
+          sx={{ alignItems: "center" }}
+        >
           <Grid size={{ xs: 12, md: 10 }}>
             <Box
               key={slide.slideID}
@@ -334,11 +361,11 @@ export default function HeroSection() {
                 {/* ---------- Badge ---------- */}
                 <Box
                   sx={{
-                    minHeight: 58,
+                    minHeight: { xs: 44, md: 58 },
                     display: "flex",
                     alignItems: "flex-start",
                     justifyContent: { xs: "center", md: "flex-start" },
-                    mb: 3,
+                    mb: { xs: 2, md: 3 },
                   }}
                 >
                   {slide.badge ? (
@@ -347,11 +374,11 @@ export default function HeroSection() {
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 1,
-                        px: 2,
-                        py: 0.75,
+                        px: { xs: 1.5, md: 2 },
+                        py: { xs: 0.5, md: 0.75 },
                         borderRadius: 999,
-                        bgcolor: "rgba(var(--rgb-white), 0.12)",
-                        border: "1px solid rgba(var(--rgb-white), 0.2)",
+                        bgcolor: "rgba(var(--rgb-white), 0.14)",
+                        border: "1px solid rgba(var(--rgb-white), 0.24)",
                         backdropFilter: "blur(10px)",
                         boxShadow:
                           "0 4px 12px rgba(var(--rgb-black), 0.25), 0 8px 24px rgba(var(--rgb-black), 0.15)",
@@ -359,17 +386,17 @@ export default function HeroSection() {
                     >
                       <Box
                         sx={{
-                          width: 8,
-                          height: 8,
+                          width: 7,
+                          height: 7,
                           flexShrink: 0,
                           borderRadius: "50%",
-                          bgcolor: "var(--color-accent)",
-                          boxShadow: "0 0 12px var(--color-accent)",
+                          bgcolor: ACCENT,
+                          boxShadow: `0 0 12px ${ACCENT}`,
                         }}
                       />
                       <Typography
                         sx={{
-                          fontSize: "0.8rem",
+                          fontSize: { xs: "0.7rem", md: "0.8rem" },
                           fontWeight: 700,
                           letterSpacing: "0.04em",
                           textTransform: "uppercase",
@@ -383,14 +410,18 @@ export default function HeroSection() {
                   ) : null}
                 </Box>
 
-                {/* ---------- Title ---------- */}
+                {/* ---------- Title ----------
+                    Fixed min-height at every breakpoint so short titles
+                    don't shrink the block and long titles don't push
+                    the buttons down. Clamped to 3 lines so overflow can
+                    never exceed the reserved space. */}
                 <Box
                   sx={{
-                    minHeight: { xs: 120, sm: 140, md: 160 },
+                    minHeight: TITLE_MIN_HEIGHT,
                     display: "flex",
                     alignItems: "flex-start",
                     justifyContent: { xs: "center", md: "flex-start" },
-                    mb: 2.5,
+                    mb: { xs: 2, md: 2.5 },
                   }}
                 >
                   <Typography
@@ -398,9 +429,10 @@ export default function HeroSection() {
                     sx={{
                       width: "100%",
                       fontSize: {
-                        xs: "2.5rem",
-                        sm: "3.5rem",
-                        md: "4.5rem",
+                        xs: "1.85rem",
+                        sm: "2.75rem",
+                        md: "3.75rem",
+                        lg: "4.5rem",
                       },
                       fontWeight: 900,
                       lineHeight: 1.15,
@@ -410,25 +442,46 @@ export default function HeroSection() {
                       m: 0,
                       fontFamily:
                         '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                      /* Clamp to 3 lines */
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
                     }}
                   >
                     {titleNode}
                   </Typography>
                 </Box>
 
-                {/* ---------- Subtitle ---------- */}
-                <Box sx={{ minHeight: { xs: 90, md: 100 }, pt: 1, mb: 5 }}>
+                {/* ---------- Subtitle ----------
+                    Same idea: fixed min-height + 3-line clamp. */}
+                <Box
+                  sx={{
+                    minHeight: SUBTITLE_MIN_HEIGHT,
+                    pt: { xs: 0.5, md: 1 },
+                    mb: { xs: 3.5, md: 5 },
+                  }}
+                >
                   {slide.subtitle ? (
                     <Typography
                       sx={{
-                        fontSize: { xs: "1rem", md: "1.2rem" },
-                        lineHeight: 1.7,
-                        color: "rgba(var(--rgb-white), 0.92)",
-                        maxWidth: 720,
+                        fontSize: {
+                          xs: "0.95rem",
+                          sm: "1.05rem",
+                          md: "1.2rem",
+                        },
+                        lineHeight: 1.65,
+                        color: "rgba(var(--rgb-white), 1)",
+                        maxWidth: { xs: "100%", md: 720 },
                         mx: { xs: "auto", md: 0 },
                         overflowWrap: "break-word",
                         fontWeight: 500,
                         textShadow: TEXT_SHADOW.body,
+                        /* Clamp to 3 lines */
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
                       }}
                     >
                       {slide.subtitle}
@@ -439,15 +492,15 @@ export default function HeroSection() {
                 {/* ---------- Buttons ---------- */}
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
+                  spacing={{ xs: 1.5, sm: 2 }}
                   sx={{
-                    minHeight: 64,
                     alignItems: "stretch",
                     justifyContent: { xs: "center", md: "flex-start" },
-                    mb: 5,
+                    mb: { xs: 4, md: 5 },
                     "& .MuiButton-root": {
-                      minHeight: 56,
+                      minHeight: { xs: 48, sm: 56 },
                       whiteSpace: "nowrap",
+                      width: { xs: "100%", sm: "auto" },
                     },
                   }}
                 >
@@ -461,10 +514,10 @@ export default function HeroSection() {
                       color: "var(--color-primary)",
                       textTransform: "none",
                       fontWeight: 700,
-                      px: 4,
+                      px: { xs: 3, md: 4 },
                       py: 1.5,
                       borderRadius: 2.5,
-                      fontSize: "1rem",
+                      fontSize: { xs: "0.95rem", md: "1rem" },
                       boxShadow:
                         "0 12px 30px rgba(var(--rgb-black), 0.25), 0 4px 10px rgba(var(--rgb-black), 0.15)",
                       "&:hover": {
@@ -493,10 +546,10 @@ export default function HeroSection() {
                       borderColor: "rgba(var(--rgb-white), 0.35)",
                       textTransform: "none",
                       fontWeight: 700,
-                      px: 4,
+                      px: { xs: 3, md: 4 },
                       py: 1.5,
                       borderRadius: 2.5,
-                      fontSize: "1rem",
+                      fontSize: { xs: "0.95rem", md: "1rem" },
                       backdropFilter: "blur(8px)",
                       bgcolor: "rgba(var(--rgb-white), 0.08)",
                       boxShadow:
@@ -517,15 +570,16 @@ export default function HeroSection() {
                 </Stack>
 
                 {/* ---------- Stats ---------- */}
-                <Box sx={{ minHeight: 56 }}>
+                <Box sx={{ minHeight: { xs: "auto", md: 64 } }}>
                   {heroStats.length > 0 && (
                     <Stack
                       direction="row"
-                      spacing={{ xs: 2.5, sm: 5 }}
+                      spacing={{ xs: 1.5, sm: 2, md: 3 }}
                       sx={{
                         flexWrap: "wrap",
                         rowGap: 2,
                         justifyContent: { xs: "center", md: "flex-start" },
+                        alignItems: "center",
                       }}
                     >
                       {heroStats.map((stat) => (
@@ -534,47 +588,82 @@ export default function HeroSection() {
                           sx={{
                             display: "flex",
                             alignItems: "center",
-                            gap: 1.5,
+                            gap: { xs: 1.25, md: 1.75 },
+                            py: 1,
+                            px: { xs: 1.5, md: 2 },
+                            borderRadius: 3,
+                            bgcolor:
+                              "rgba(var(--rgb-white, 255, 255, 255), 0.06)",
+                            backdropFilter: "blur(12px)",
+                            WebkitBackdropFilter: "blur(12px)",
+                            border:
+                              "1px solid rgba(var(--rgb-white, 255, 255, 255), 0.12)",
+                            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                            "&:hover": {
+                              transform: "translateY(-3px)",
+                              bgcolor:
+                                "rgba(var(--rgb-white, 255, 255, 255), 0.1)",
+                              borderColor:
+                                "rgba(var(--rgb-white, 255, 255, 255), 0.25)",
+                              boxShadow: "0 12px 32px rgba(0, 0, 0, 0.2)",
+                            },
                           }}
                         >
+                          {/* Icon Badge */}
                           <Box
                             sx={{
-                              width: 46,
-                              height: 46,
+                              width: { xs: 40, md: 44 },
+                              height: { xs: 40, md: 44 },
                               flexShrink: 0,
                               borderRadius: 2.5,
-                              bgcolor: "rgba(var(--rgb-white), 0.12)",
-                              border: "1px solid rgba(var(--rgb-white), 0.22)",
+                              bgcolor: "primary.main",
+                              color: "primary.contrastText",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              color: "var(--color-accent)",
-                              backdropFilter: "blur(8px)",
-                              boxShadow:
-                                "0 6px 16px rgba(var(--rgb-black), 0.25), inset 0 1px 0 rgba(var(--rgb-white), 0.15)",
+                              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+                              "& svg": {
+                                width: { xs: 18, md: 20 },
+                                height: { xs: 18, md: 20 },
+                                strokeWidth: 2.2,
+                                display: "block",
+                              },
                             }}
                           >
-                            {getIcon(stat.iconKey)}
+                            {getIcon(stat.iconKey, 20, 2.2)}
                           </Box>
 
-                          <Box sx={{ textAlign: "left" }}>
+                          {/* Text Content */}
+                          <Box sx={{ textAlign: "left", minWidth: 0 }}>
                             <Typography
                               sx={{
-                                fontSize: "1.4rem",
+                                fontSize: { xs: "1.2rem", md: "1.45rem" },
                                 fontWeight: 800,
                                 lineHeight: 1.1,
-                                color: "var(--color-white)",
-                                textShadow: TEXT_SHADOW.small,
+                                letterSpacing: "-0.02em",
+                                color: "var(--color-white, #ffffff)",
+                                textShadow:
+                                  TEXT_SHADOW?.small ??
+                                  "0 1px 3px rgba(0,0,0,0.5)",
                               }}
                             >
                               {stat.value}
                             </Typography>
                             <Typography
                               sx={{
-                                fontSize: "0.8rem",
-                                color: "rgba(var(--rgb-white), 0.85)",
+                                fontSize: { xs: "0.75rem", md: "0.825rem" },
                                 fontWeight: 500,
-                                textShadow: TEXT_SHADOW.small,
+                                lineHeight: 1.2,
+                                mt: 0.25,
+                                color:
+                                  "rgba(var(--rgb-white, 255, 255, 255), 0.85)",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                textShadow:
+                                  TEXT_SHADOW?.small ??
+                                  "0 1px 2px rgba(0,0,0,0.4)",
                               }}
                             >
                               {stat.label}
@@ -595,10 +684,10 @@ export default function HeroSection() {
       {heroSlides.length > 1 && (
         <Stack
           direction="row"
-          spacing={1}
+          spacing={{ xs: 0.5, md: 1 }}
           sx={{
             position: "absolute",
-            bottom: 30,
+            bottom: { xs: 18, md: 30 },
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 2,
@@ -625,9 +714,7 @@ export default function HeroSection() {
                   height: 10,
                   borderRadius: 999,
                   bgcolor:
-                    current === index
-                      ? "var(--color-accent)"
-                      : "rgba(var(--rgb-white), 0.55)",
+                    current === index ? ACCENT : "rgba(var(--rgb-white), 0.55)",
                   transition: "width 0.3s ease, background-color 0.3s ease",
                 },
                 "@media (prefers-reduced-motion: reduce)": {
@@ -644,21 +731,26 @@ export default function HeroSection() {
   );
 }
 
+/* Arrows at a fixed pixel offset from the top — not 50% — so their
+   vertical position is independent of content height. */
 const arrowSx = (side: "left" | "right") => ({
   position: "absolute" as const,
-  [side]: { xs: 10, md: 30 },
-  top: "50%",
+  [side]: { xs: 8, sm: 12, md: 24 },
+  top: { xs: 320, sm: 340, md: 360 },
   transform: "translateY(-50%)",
-  bgcolor: "rgba(var(--rgb-white), 0.12)",
+  bgcolor: "rgba(var(--rgb-white), 0.14)",
   color: "var(--color-surface)",
   border: "1px solid rgba(var(--rgb-white), 0.25)",
   backdropFilter: "blur(8px)",
   zIndex: 2,
-  p: 1.5,
+  width: { xs: 40, sm: 44, md: 48 },
+  height: { xs: 40, sm: 44, md: 48 },
+  p: 0,
   boxShadow: "0 6px 16px rgba(var(--rgb-black), 0.25)",
+  transition: "background-color 0.2s ease, color 0.2s ease",
   "&:hover": {
     bgcolor: "rgba(var(--rgb-white), 0.25)",
-    color: "var(--color-accent)",
+    color: ACCENT,
     boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.35)",
   },
 });

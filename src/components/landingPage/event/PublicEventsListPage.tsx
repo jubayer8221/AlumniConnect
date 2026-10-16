@@ -40,7 +40,7 @@ import EventDetailsDialog from "./EventDetailsDialog";
 import CommonBanner from "@/components/common/CommonBanner";
 import { CommonButton } from "@/components/common";
 
-const PAGE_SIZE_OPTIONS = [9, 18, 36] as const;
+const PAGE_SIZE_OPTIONS = [9, 12, 16, 24, 36] as const;
 
 export default function PublicEventsListPage() {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ export default function PublicEventsListPage() {
   const [selected, setSelected] = useState<EventItem | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(9);
+  const [pageSize, setPageSize] = useState<number>(12);
 
   useEffect(() => {
     void fetchEvents({ pageNumber: 1, pageSize: 100 });
@@ -169,17 +169,6 @@ export default function PublicEventsListPage() {
               >
                 Upcoming Events
               </Typography>
-              {/* <Typography
-                sx={{
-                  color: "text.secondary",
-                  fontSize: "0.9rem",
-                  maxWidth: 560,
-                }}
-              >
-                {filtered.length} {filtered.length === 1 ? "event" : "events"}{" "}
-                available
-                {search ? ` for "${search}"` : ""}.
-              </Typography> */}
             </Box>
 
             <Box
@@ -241,9 +230,9 @@ export default function PublicEventsListPage() {
 
           {/* ============ Loading ============ */}
           {loading && allEvents.length === 0 && (
-            <Grid container spacing={3}>
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid container spacing={{ xs: 3, sm: 3, md: 2.5, lg: 2 }}>
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <Skeleton
                     variant="rounded"
                     height={360}
@@ -296,9 +285,13 @@ export default function PublicEventsListPage() {
 
           {/* ============ Cards ============ */}
           {filtered.length > 0 && (
-            <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
+            <Grid
+              container
+              spacing={{ xs: 3, sm: 3, md: 2.5, lg: 2 }}
+              sx={{ alignItems: "stretch" }}
+            >
               {paged.map((evt: EventItem) => (
-                <Grid key={evt.id} size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid key={evt.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <Card
                     sx={{
                       height: "100%",
@@ -327,7 +320,7 @@ export default function PublicEventsListPage() {
                       <Box
                         sx={{
                           width: "100%",
-                          height: 180,
+                          height: { xs: 180, lg: 160 },
                           flexShrink: 0,
                           bgcolor: "action.hover",
                         }}
@@ -350,7 +343,7 @@ export default function PublicEventsListPage() {
 
                       <CardContent
                         sx={{
-                          p: 3,
+                          p: { xs: 3, lg: 2.5 },
                           flex: 1,
                           display: "flex",
                           flexDirection: "column",

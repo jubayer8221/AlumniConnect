@@ -23,7 +23,17 @@ import ToastContainer from "@/components/common/Toast";
 
 import { useAppSelector } from "./hooks/useAppDispatch";
 import LandingPage from "./components/landingPage/LandingPage";
+import MomentsGallery from "./components/LandingContent/MomentsGallery";
 
+const PrivacyPolicyPage = lazy(
+  () => import("@/components/landingPage/PrivacyPolicyPage"),
+);
+const TermsOfServicePage = lazy(
+  () => import("@/components/landingPage/TermsOfServicePage"),
+);
+const CookiePolicyPage = lazy(
+  () => import("@/components/landingPage/CookiePolicyPage"),
+);
 const NotFoundPage = lazy(() => import("@/components/common/NotFoundPage"));
 const ForgotPasswordPage = lazy(
   () => import("./components/login/ForgotPasswordPage"),
@@ -200,6 +210,10 @@ function AppRoutes() {
         <Route path="/jobs" element={<PublicJobsListPage />} />
         <Route path="/jobs/:id" element={<PublicJobDetailsPage />} />
 
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
+        <Route path="/cookies" element={<CookiePolicyPage />} />
+
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/signup" element={<SignUpPage />} />
@@ -304,12 +318,13 @@ function AppRoutes() {
             path="/alumni/configuration/landing-page"
             element={<LandingContentPage />}
           />
+          <Route path="/alumni/explore/gallery" element={<MomentsGallery />} />
           <Route
-            path="/alumni/configuration/landing-page/gallery/new"
+            path="/alumni/explore/gallery/new"
             element={<GalleryPhotoFormPage />}
           />
           <Route
-            path="/alumni/configuration/landing-page/gallery/:id"
+            path="/alumni/explore/gallery/:id"
             element={<GalleryPhotoFormPage />}
           />
           <Route
@@ -360,7 +375,10 @@ function AppRoutes() {
           />
 
           {/* Event create / edit */}
-          <Route path="/alumni/explore/events/new" element={<EventFormPage />} />
+          <Route
+            path="/alumni/explore/events/new"
+            element={<EventFormPage />}
+          />
           <Route
             path="/alumni/explore/events/create"
             element={<Navigate to="/alumni/explore/events/new" replace />}
@@ -371,12 +389,24 @@ function AppRoutes() {
           />
 
           {/* News create / edit */}
-          <Route path="/alumni/explore/news/create" element={<NewsFormPage />} />
-          <Route path="/alumni/explore/news/edit/:id" element={<NewsFormPage />} />
+          <Route
+            path="/alumni/explore/news/create"
+            element={<NewsFormPage />}
+          />
+          <Route
+            path="/alumni/explore/news/edit/:id"
+            element={<NewsFormPage />}
+          />
 
           {/* Notices admin */}
-          <Route path="/alumni/explore/notices/create" element={<NoticeFormPage />} />
-          <Route path="/alumni/explore/notices/:id/edit" element={<NoticeFormPage />} />
+          <Route
+            path="/alumni/explore/notices/create"
+            element={<NoticeFormPage />}
+          />
+          <Route
+            path="/alumni/explore/notices/:id/edit"
+            element={<NoticeFormPage />}
+          />
 
           <Route path="/reports" element={<ReportsPage />} />
           <Route

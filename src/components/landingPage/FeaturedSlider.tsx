@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Container, IconButton, Stack, Typography } from "@mui/material";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import SectionHeader from "@/components/common/SectionHeader";
 
 interface Slide {
   id: string;
@@ -22,7 +23,7 @@ const SLIDES: Slide[] = [
     quote:
       "The academy shaped who I am today. Every reunion reminds me that the bonds we formed here are stronger than time.",
     photo:
-      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: "2",
@@ -33,7 +34,7 @@ const SLIDES: Slide[] = [
     quote:
       "Giving back to the community that raised me is the greatest privilege. Our alumni network makes that possible.",
     photo:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: "3",
@@ -44,7 +45,7 @@ const SLIDES: Slide[] = [
     quote:
       "I still remember the corridors we walked. Now I walk hospital corridors healing people. This school is where it started.",
     photo:
-      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: "4",
@@ -55,7 +56,7 @@ const SLIDES: Slide[] = [
     quote:
       "Every startup I've built traces back to a spark I first felt in a classroom at Victoria Academy.",
     photo:
-      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80",
   },
 ];
 
@@ -79,56 +80,30 @@ export default function FeaturedSlider() {
 
   return (
     <Box
+      component="section"
       sx={{
-        py: 6,
+        py: { xs: 5, md: 6 },
         bgcolor: "background.default",
+        position: "relative",
       }}
     >
       <Container maxWidth="lg">
-        {/* Section heading */}
-        <Box sx={{ textAlign: "center", mb: 6 }}>
-          <Typography
-            sx={{
-              fontSize: "0.8rem",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "primary.main",
-              // mb: 1,
-            }}
-          >
-            Featured Voices
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: { xs: "2rem", md: "2rem" },
-              fontWeight: 800,
-              letterSpacing: "0.02em",
-              textTransform: "uppercase",
-              // mb: 1,
-            }}
-          >
-            Stories From Our Alumni
-          </Typography>
-          {/* <Typography
-            sx={{
-              color: "text.secondary",
-              maxWidth: 520,
-              mx: "auto",
-              lineHeight: 1.7,
-            }}
-          >
-            Every graduate carries a piece of this institution into the world.
-            Here are a few of their stories.
-          </Typography> */}
-        </Box>
+        <SectionHeader
+          align="center"
+          subtitle="Featured Voices"
+          subtitlePosition="above"
+          title="Stories From Our Alumni"
+          titleColor="primary.main"
+          sx={{ mb: { xs: 4, md: 6 } }}
+        />
 
-        {/* Slider */}
+        {/* Slider Wrapper */}
         <Box
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           sx={{ position: "relative" }}
         >
+          {/* Main Card Container */}
           <Box
             sx={{
               position: "relative",
@@ -140,6 +115,7 @@ export default function FeaturedSlider() {
               bgcolor: "background.paper",
             }}
           >
+            {/* Carousel Track */}
             <Box
               sx={{
                 display: "flex",
@@ -156,43 +132,74 @@ export default function FeaturedSlider() {
                     gridTemplateColumns: { xs: "1fr", md: "1fr 1.4fr" },
                   }}
                 >
-                  {/* Photo */}
+                  {/* Photo Container (Restored to minHeight: 320 / 420) */}
                   <Box
                     sx={{
                       position: "relative",
-                      minHeight: { xs: 300, md: 420 },
-                      // minWidth: { xs: 300, md: 320 },
-                      "&::after": {
-                        content: '""',
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(135deg, rgba(var(--rgb-primary), 0.15) 0%, transparent 50%)",
-                      },
+                      minHeight: { xs: 320, md: 420 },
+                      overflow: "hidden",
+                      bgcolor: "action.hover",
                     }}
                   >
                     <Box
                       component="img"
                       src={slide.photo}
-                      alt=""
+                      alt={slide.name}
                       loading="lazy"
                       decoding="async"
                       sx={{
                         position: "absolute",
                         inset: 0,
-                        width: "90%",
+                        width: "100%",
                         height: "100%",
-                        objectFit: "fill",
+                        objectFit: "cover",
+                        objectPosition: "center top",
+                        display: "block",
                       }}
                     />
+
+                    {/* Gradient Overlay */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        background:
+                          "linear-gradient(135deg, rgba(var(--rgb-primary), 0.15) 0%, transparent 50%)",
+                        pointerEvents: "none",
+                      }}
+                    />
+
+                    {/* Batch Badge */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 20,
+                        left: 20,
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: 2,
+                        bgcolor: "rgba(0, 0, 0, 0.55)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        color: "#fff",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {slide.batch}
+                    </Box>
                   </Box>
-                  {/* Quote */}
+
+                  {/* Quote & Details (Restored Padding) */}
                   <Box
                     sx={{
-                      p: { xs: 4, md: 6 },
+                      p: { xs: 3.5, sm: 4, md: 6 },
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
+                      position: "relative",
                     }}
                   >
                     <Quote
@@ -203,9 +210,10 @@ export default function FeaturedSlider() {
                         opacity: 0.4,
                       }}
                     />
+
                     <Typography
                       sx={{
-                        fontSize: { xs: "1.05rem", md: "1.25rem" },
+                        fontSize: { xs: "1rem", md: "1.25rem" },
                         lineHeight: 1.7,
                         fontStyle: "italic",
                         color: "text.primary",
@@ -214,6 +222,7 @@ export default function FeaturedSlider() {
                     >
                       "{slide.quote}"
                     </Typography>
+
                     <Box>
                       <Typography
                         sx={{ fontSize: "1rem", fontWeight: 700, mb: 0.25 }}
@@ -244,7 +253,7 @@ export default function FeaturedSlider() {
             </Box>
           </Box>
 
-          {/* Arrows */}
+          {/* Navigation Arrows */}
           <IconButton
             onClick={prev}
             aria-label="Previous slide"
@@ -257,6 +266,7 @@ export default function FeaturedSlider() {
               border: "1px solid",
               borderColor: "divider",
               boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.1)",
+              zIndex: 4,
               "&:hover": {
                 bgcolor: "primary.main",
                 color: "var(--color-white)",
@@ -265,6 +275,7 @@ export default function FeaturedSlider() {
           >
             <ChevronLeft size={20} />
           </IconButton>
+
           <IconButton
             onClick={next}
             aria-label="Next slide"
@@ -277,6 +288,7 @@ export default function FeaturedSlider() {
               border: "1px solid",
               borderColor: "divider",
               boxShadow: "0 8px 20px rgba(var(--rgb-black), 0.1)",
+              zIndex: 4,
               "&:hover": {
                 bgcolor: "primary.main",
                 color: "var(--color-white)",
@@ -286,7 +298,7 @@ export default function FeaturedSlider() {
             <ChevronRight size={20} />
           </IconButton>
 
-          {/* Dots */}
+          {/* Dots Indicator */}
           <Stack
             direction="row"
             spacing={1}

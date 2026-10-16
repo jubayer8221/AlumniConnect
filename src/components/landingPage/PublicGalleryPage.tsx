@@ -77,7 +77,6 @@ export default function PublicGalleryPage() {
       : null;
 
   /* ---------- Lightbox navigation ---------- */
-  /* The lightbox navigates across ALL photos, not just the current page. */
   const openAt = (idx: number) => setActiveIndex(idx);
   const close = () => setActiveIndex(null);
 
@@ -129,8 +128,8 @@ export default function PublicGalleryPage() {
   return (
     <Box
       sx={{
-        bgcolor: "var(--color-gray900)",
-        color: "var(--color-white)",
+        bgcolor: "background.default",
+        color: "text.primary",
         minHeight: "100vh",
       }}
     >
@@ -161,24 +160,12 @@ export default function PublicGalleryPage() {
             }}
           >
             <Box>
-              {/* <Typography
-                sx={{
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  color: "var(--color-accent)",
-                  mb: 1,
-                }}
-              >
-                All Photos
-              </Typography> */}
               <Typography
                 sx={{
                   fontSize: { xs: "1.75rem", md: "2.25rem" },
                   fontWeight: 800,
                   letterSpacing: "-0.02em",
-                  color: "var(--color-white)",
+                  color: "text.primary",
                   mb: 0.5,
                 }}
               >
@@ -219,7 +206,7 @@ export default function PublicGalleryPage() {
                   key={i}
                   variant="rounded"
                   sx={{
-                    bgcolor: "rgba(var(--rgb-white), 0.06)",
+                    bgcolor: "action.hover",
                     borderRadius: 2.5,
                   }}
                 />
@@ -234,17 +221,17 @@ export default function PublicGalleryPage() {
                 py: 10,
                 textAlign: "center",
                 border: "1px dashed",
-                borderColor: "rgba(var(--rgb-white), 0.2)",
+                borderColor: "divider",
                 borderRadius: 3,
               }}
             >
-              <Typography sx={{ color: "rgba(var(--rgb-white), 0.65)" }}>
+              <Typography sx={{ color: "text.secondary" }}>
                 No photos yet. Check back soon.
               </Typography>
             </Box>
           )}
 
-          {/* ---------- Grid ---------- */}
+          {/* ---------- Grid with Dense Flow ---------- */}
           {paged.length > 0 && (
             <Box
               sx={{
@@ -254,38 +241,49 @@ export default function PublicGalleryPage() {
                   sm: "repeat(3, 1fr)",
                   md: "repeat(4, 1fr)",
                 },
+                gridAutoFlow: "dense",
                 gap: { xs: 1.5, md: 2 },
                 gridAutoRows: { xs: 140, md: 180 },
               }}
             >
               {paged.map((photo, idx) => {
-                /* The lightbox index is global across all photos, not the slice. */
                 const globalIdx = startIdx + idx;
+                const safeSpan = photo.span && photo.span <= 2 ? photo.span : 1;
+
                 return (
                   <Box
                     key={photo.photoID}
                     onClick={() => openAt(globalIdx)}
                     sx={{
-                      gridColumn: { md: `span ${photo.span ?? 1}` },
-                      gridRow: { md: `span ${photo.span === 2 ? 2 : 1}` },
+                      gridColumn: {
+                        xs: "span 1",
+                        md: `span ${safeSpan}`,
+                      },
+                      gridRow: {
+                        xs: "span 1",
+                        md: safeSpan === 2 ? "span 2" : "span 1",
+                      },
                       position: "relative",
                       borderRadius: 2.5,
                       overflow: "hidden",
                       cursor: "pointer",
+                      bgcolor: "action.hover",
+                      border: "1px solid",
+                      borderColor: "divider",
                       transition: "all 0.4s ease",
                       "&::after": {
                         content: '""',
                         position: "absolute",
                         inset: 0,
                         background:
-                          "linear-gradient(to top, rgba(var(--rgb-black), 0.65) 0%, transparent 55%)",
-                        opacity: 0.7,
+                          "linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, transparent 55%)",
+                        opacity: 0.6,
                         transition: "opacity 0.3s",
                       },
                       "&:hover": {
                         transform: "scale(1.02)",
-                        boxShadow: "0 20px 40px rgba(var(--rgb-black), 0.35)",
-                        "&::after": { opacity: 1 },
+                        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+                        "&::after": { opacity: 0.9 },
                       },
                     }}
                   >
@@ -295,6 +293,10 @@ export default function PublicGalleryPage() {
                       alt={photo.caption ?? ""}
                       loading="lazy"
                       decoding="async"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80";
+                      }}
                       sx={{
                         position: "absolute",
                         inset: 0,
@@ -312,9 +314,13 @@ export default function PublicGalleryPage() {
                           right: 12,
                           fontSize: "0.8rem",
                           fontWeight: 600,
-                          color: "var(--color-white)",
+                          color: "#fff",
                           zIndex: 2,
-                          textShadow: "0 1px 4px rgba(var(--rgb-black), 0.6)",
+                          textShadow: "0 1px 4px rgba(0, 0, 0, 0.6)",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
                         }}
                       >
                         {photo.caption}
@@ -335,10 +341,9 @@ export default function PublicGalleryPage() {
                 mt: 6,
                 pt: 3,
                 borderTop: "1px solid",
-                borderColor: "rgba(var(--rgb-white), 0.12)",
+                borderColor: "divider",
               }}
             >
-              {/* Info + page-size row */}
               <Box
                 sx={{
                   display: "flex",
@@ -352,20 +357,20 @@ export default function PublicGalleryPage() {
                 <Typography
                   sx={{
                     fontSize: "0.875rem",
-                    color: "rgba(var(--rgb-white), 0.7)",
+                    color: "text.secondary",
                   }}
                 >
                   Showing{" "}
                   <Box
                     component="span"
-                    sx={{ fontWeight: 700, color: "var(--color-white)" }}
+                    sx={{ fontWeight: 700, color: "text.primary" }}
                   >
                     {totalCount === 0 ? 0 : startIdx + 1}–{endIdx}
                   </Box>{" "}
                   of{" "}
                   <Box
                     component="span"
-                    sx={{ fontWeight: 700, color: "var(--color-white)" }}
+                    sx={{ fontWeight: 700, color: "text.primary" }}
                   >
                     {totalCount}
                   </Box>{" "}
@@ -380,7 +385,7 @@ export default function PublicGalleryPage() {
                   <Typography
                     sx={{
                       fontSize: "0.875rem",
-                      color: "rgba(var(--rgb-white), 0.7)",
+                      color: "text.secondary",
                     }}
                   >
                     Per page:
@@ -391,26 +396,26 @@ export default function PublicGalleryPage() {
                     onChange={(e) => setPageSize(Number(e.target.value))}
                     sx={{
                       minWidth: 80,
-                      color: "var(--color-white)",
-                      bgcolor: "rgba(var(--rgb-white), 0.04)",
+                      color: "text.primary",
+                      bgcolor: "background.paper",
                       "& .MuiOutlinedInput-notchedOutline": {
                         borderRadius: 2,
-                        borderColor: "rgba(var(--rgb-white), 0.2)",
+                        borderColor: "divider",
                       },
                       "&:hover .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "rgba(var(--rgb-white), 0.4)",
+                        borderColor: "text.secondary",
                       },
                       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "var(--color-accent)",
+                        borderColor: "primary.main",
                       },
                       "& .MuiSvgIcon-root": {
-                        color: "rgba(var(--rgb-white), 0.7)",
+                        color: "text.secondary",
                       },
                     }}
                     MenuProps={{
                       slotProps: {
                         paper: {
-                          sx: { bgcolor: "var(--color-gray900)" },
+                          sx: { bgcolor: "background.paper" },
                         },
                       },
                     }}
@@ -419,7 +424,7 @@ export default function PublicGalleryPage() {
                       <MenuItem
                         key={size}
                         value={size}
-                        sx={{ color: "var(--color-white)" }}
+                        sx={{ color: "text.primary" }}
                       >
                         {size}
                       </MenuItem>
@@ -441,24 +446,6 @@ export default function PublicGalleryPage() {
                     showLastButton
                     siblingCount={1}
                     boundaryCount={1}
-                    sx={{
-                      "& .MuiPaginationItem-root": {
-                        fontWeight: 600,
-                        borderRadius: 2,
-                        color: "var(--color-white)",
-                        borderColor: "rgba(var(--rgb-white), 0.2)",
-                        "&:hover": {
-                          bgcolor: "rgba(var(--rgb-white), 0.08)",
-                        },
-                      },
-                      "& .MuiPaginationItem-root.Mui-selected": {
-                        bgcolor: "var(--color-primary)",
-                        color: "var(--color-white)",
-                        "&:hover": {
-                          bgcolor: "var(--color-primary-hover)",
-                        },
-                      },
-                    }}
                   />
                 </Box>
               )}
@@ -478,20 +465,21 @@ export default function PublicGalleryPage() {
         slotProps={{
           paper: {
             sx: {
-              bgcolor: "rgba(0,0,0,0.92)",
+              bgcolor: "background.paper",
               backgroundImage: "none",
-              boxShadow: "none",
+              boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
               borderRadius: 3,
               overflow: "hidden",
               position: "relative",
               m: 2,
+              p: { xs: 2, md: 3 },
             },
           },
           backdrop: {
             sx: {
-              bgcolor: "rgba(0,0,0,0.85)",
-              backdropFilter: "blur(6px)",
-              WebkitBackdropFilter: "blur(6px)",
+              bgcolor: "rgba(0,0,0,0.8)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
             },
           },
         }}
@@ -501,20 +489,19 @@ export default function PublicGalleryPage() {
             {/* Header bar */}
             <Box
               sx={{
-                px: 2.5,
-                py: 2,
+                pb: 2,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: 2,
                 borderBottom: "1px solid",
-                borderColor: "rgba(var(--rgb-white), 0.1)",
+                borderColor: "divider",
               }}
             >
               <Box sx={{ minWidth: 0 }}>
                 <Typography
                   sx={{
-                    color: "var(--color-white)",
+                    color: "text.primary",
                     fontWeight: 700,
                     fontSize: "0.95rem",
                     overflow: "hidden",
@@ -526,7 +513,7 @@ export default function PublicGalleryPage() {
                 </Typography>
                 <Typography
                   sx={{
-                    color: "rgba(var(--rgb-white), 0.6)",
+                    color: "text.secondary",
                     fontSize: "0.75rem",
                   }}
                 >
@@ -537,18 +524,18 @@ export default function PublicGalleryPage() {
               <IconButton
                 onClick={close}
                 aria-label="Close"
+                size="small"
                 sx={{
                   flexShrink: 0,
-                  color: "var(--color-white)",
-                  bgcolor: "rgba(var(--rgb-white), 0.1)",
-                  border: "1px solid rgba(var(--rgb-white), 0.15)",
+                  color: "text.secondary",
+                  bgcolor: "action.hover",
                   "&:hover": {
-                    bgcolor: "rgba(var(--rgb-white), 0.2)",
-                    color: "var(--color-accent)",
+                    bgcolor: "action.selected",
+                    color: "text.primary",
                   },
                 }}
               >
-                <X size={20} />
+                <X size={18} />
               </IconButton>
             </Box>
 
@@ -559,10 +546,12 @@ export default function PublicGalleryPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                bgcolor: "rgba(0,0,0,0.4)",
+                bgcolor: "action.hover",
                 minHeight: { xs: 300, md: 520 },
                 maxHeight: "75vh",
-                p: { xs: 2, md: 3 },
+                p: { xs: 1, md: 2 },
+                mt: 2,
+                borderRadius: 2,
               }}
             >
               {photos.length > 1 && (
@@ -574,12 +563,13 @@ export default function PublicGalleryPage() {
                     left: { xs: 8, md: 16 },
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "var(--color-white)",
-                    bgcolor: "rgba(var(--rgb-black), 0.5)",
-                    border: "1px solid rgba(var(--rgb-white), 0.15)",
+                    color: "text.primary",
+                    bgcolor: "background.paper",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    border: "1px solid",
+                    borderColor: "divider",
                     "&:hover": {
-                      bgcolor: "rgba(var(--rgb-black), 0.8)",
-                      color: "var(--color-accent)",
+                      bgcolor: "action.hover",
                     },
                   }}
                 >
@@ -609,12 +599,13 @@ export default function PublicGalleryPage() {
                     right: { xs: 8, md: 16 },
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "var(--color-white)",
-                    bgcolor: "rgba(var(--rgb-black), 0.5)",
-                    border: "1px solid rgba(var(--rgb-white), 0.15)",
+                    color: "text.primary",
+                    bgcolor: "background.paper",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    border: "1px solid",
+                    borderColor: "divider",
                     "&:hover": {
-                      bgcolor: "rgba(var(--rgb-black), 0.8)",
-                      color: "var(--color-accent)",
+                      bgcolor: "action.hover",
                     },
                   }}
                 >
@@ -625,18 +616,10 @@ export default function PublicGalleryPage() {
 
             {/* Caption footer */}
             {active.caption && (
-              <Box
-                sx={{
-                  px: 3,
-                  py: 2,
-                  borderTop: "1px solid",
-                  borderColor: "rgba(var(--rgb-white), 0.1)",
-                }}
-              >
+              <Box sx={{ mt: 2, textAlign: "center" }}>
                 <Typography
                   sx={{
-                    color: "var(--color-white)",
-                    textAlign: "center",
+                    color: "text.secondary",
                     fontSize: "0.9rem",
                     lineHeight: 1.5,
                   }}

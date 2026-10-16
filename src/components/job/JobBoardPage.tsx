@@ -50,10 +50,10 @@ export default function JobBoardPage() {
   const [deleteTarget, setDeleteTarget] = useState<JobItem | null>(null);
 
   useEffect(() => {
-    void fetchJobs({
+    fetchJobs({
       search: appliedSearch || undefined,
-      pageNumber,
-      pageSize,
+      // pageNumber,
+      // pageSize,
     }).catch((reason: unknown) => {
       dispatch(
         showToast({
@@ -64,7 +64,7 @@ export default function JobBoardPage() {
       );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedSearch, pageNumber, pageSize, searchRequest]);
+  }, []);
 
   const handleSearch = () => {
     setPage(1);
@@ -245,7 +245,9 @@ export default function JobBoardPage() {
                       <IconButton
                         size="small"
                         onClick={() =>
-                          navigate(`/alumni/explore/job-board/${job.jobID}/edit`)
+                          navigate(
+                            `/alumni/explore/job-board/${job.jobID}/edit`,
+                          )
                         }
                       >
                         <Pencil size={16} />
@@ -282,7 +284,7 @@ export default function JobBoardPage() {
           count={totalCount}
           page={pageNumber - 1}
           rowsPerPage={pageSize}
-          rowsPerPageOptions={[10, 25, 50]}
+          rowsPerPageOptions={[10, 20, 50]}
           onPageChange={(_, nextPage) => setPage(nextPage + 1)}
           onRowsPerPageChange={(event) => {
             setPageSize(Number(event.target.value));

@@ -67,7 +67,7 @@ const formatDate = (iso?: string | null) => {
   });
 };
 
-const PAGE_SIZE_OPTIONS = [9, 18, 36] as const;
+const PAGE_SIZE_OPTIONS = [9, 12, 16, 24, 36] as const;
 
 export default function PublicNewsListPage() {
   const navigate = useNavigate();
@@ -75,7 +75,7 @@ export default function PublicNewsListPage() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(9);
+  const [pageSize, setPageSize] = useState<number>(12);
 
   useEffect(() => {
     void fetchAllNews({ status: "Published", pageNumber: 1, pageSize: 200 });
@@ -197,17 +197,6 @@ export default function PublicNewsListPage() {
               >
                 News & Updates
               </Typography>
-              {/* <Typography
-                sx={{
-                  color: "text.secondary",
-                  fontSize: "0.9rem",
-                  maxWidth: 560,
-                }}
-              >
-                {filtered.length}{" "}
-                {filtered.length === 1 ? "article" : "articles"} available
-                {search ? ` for "${search}"` : ""}.
-              </Typography> */}
             </Box>
 
             <Box
@@ -269,9 +258,9 @@ export default function PublicNewsListPage() {
 
           {/* ============ Loading ============ */}
           {loading && items.length === 0 && (
-            <Grid container spacing={3}>
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Grid container spacing={{ xs: 3, sm: 3, md: 2.5, lg: 2 }}>
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <Skeleton
                     variant="rounded"
                     height={380}
@@ -321,9 +310,13 @@ export default function PublicNewsListPage() {
 
           {/* ============ Cards ============ */}
           {filtered.length > 0 && (
-            <Grid container spacing={{ xs: 3, md: 4 }}>
+            <Grid
+              container
+              spacing={{ xs: 3, sm: 3, md: 2.5, lg: 2 }}
+              sx={{ alignItems: "stretch" }}
+            >
               {paged.map((item) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.NewsID}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.NewsID}>
                   <Card
                     elevation={0}
                     sx={{
@@ -420,8 +413,8 @@ export default function PublicNewsListPage() {
                           flex: 1,
                           display: "flex",
                           flexDirection: "column",
-                          p: 2.5,
-                          "&:last-child": { pb: 2.5 },
+                          p: { xs: 2.5, lg: 2 },
+                          "&:last-child": { pb: { xs: 2.5, lg: 2 } },
                         }}
                       >
                         <Stack
@@ -445,7 +438,7 @@ export default function PublicNewsListPage() {
                           className="news-title"
                           sx={{
                             fontWeight: 700,
-                            fontSize: "1rem",
+                            fontSize: { xs: "1rem", lg: "0.95rem" },
                             lineHeight: 1.4,
                             color: "text.primary",
                             mb: 1,
@@ -478,7 +471,9 @@ export default function PublicNewsListPage() {
                       </CardContent>
                     </CardActionArea>
 
-                    <Box sx={{ px: 2.5, pb: 2.5 }}>
+                    <Box
+                      sx={{ px: { xs: 2.5, lg: 2 }, pb: { xs: 2.5, lg: 2 } }}
+                    >
                       <Button
                         component={Link}
                         to={`/news/${item.NewsID}/${slugify(item.Title)}`}
@@ -520,7 +515,6 @@ export default function PublicNewsListPage() {
                 borderColor: "divider",
               }}
             >
-              {/* Info + page-size row */}
               <Box
                 sx={{
                   display: "flex",
@@ -579,7 +573,6 @@ export default function PublicNewsListPage() {
                 </Stack>
               </Box>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <Box
                   sx={{

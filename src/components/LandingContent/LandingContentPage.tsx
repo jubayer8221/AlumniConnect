@@ -105,7 +105,7 @@ export default function LandingContentPage() {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => navigate("/alumni/configuration/landing-page/gallery/new")}
+            onClick={() => navigate("/alumni/explore/gallery/new")}
             sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2 }}
           >
             Add Gallery Photo
@@ -373,7 +373,7 @@ export default function LandingContentPage() {
                         <IconButton
                           size="small"
                           onClick={() =>
-                            navigate(`/alumni/configuration/landing-page/gallery/${photo.photoID}`)
+                            navigate(`/alumni/explore/gallery/${photo.photoID}`)
                           }
                         >
                           <Pencil size={16} />

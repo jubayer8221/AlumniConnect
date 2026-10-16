@@ -10,9 +10,10 @@ import {
   Skeleton,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLanding } from "@/hooks/useLanding";
-import { getIcon } from "./HeroSection";
+import { getIcon } from "../HeroSection";
+import SectionHeader from "@/components/common/SectionHeader";
 
 export default function AboutUsSection() {
   const { aboutStats, loading, fetchLandingContent } = useLanding();
@@ -26,7 +27,7 @@ export default function AboutUsSection() {
       component="section"
       id="about"
       sx={{
-        py: 6,
+        py: { xs: 6, sm: 8, md: 10 },
         bgcolor: "background.default",
         position: "relative",
         overflow: "hidden",
@@ -35,61 +36,59 @@ export default function AboutUsSection() {
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
         <Grid
           container
-          spacing={{ xs: 6, md: 8 }}
+          spacing={{ xs: 4, sm: 6, md: 8 }}
           sx={{ alignItems: "center" }}
         >
+          {/* Left Column: Text & Content */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Typography
-              sx={{
-                fontSize: "0.8rem",
+            {/* Reusable Section Header */}
+            <SectionHeader
+              align="left"
+              subtitle="About Us"
+              subtitlePosition="above"
+              title={
+                <>
+                  Connecting Alumni <br />
+                  <Box
+                    component="span"
+                    sx={{
+                      background: (t) =>
+                        `linear-gradient(135deg, ${t.palette.primary.main} 0%, ${
+                          t.palette.secondary?.main || t.palette.primary.dark
+                        } 100%)`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    Building Legacy
+                  </Box>
+                </>
+              }
+              titleColor="text.primary"
+              subtitleSx={{
+                fontSize: { xs: "0.75rem", md: "0.8rem" },
                 fontWeight: 700,
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 color: "primary.main",
                 mb: 1.5,
               }}
-            >
-              About Us
-            </Typography>
-
-            <Typography
-              // variant="h3"
-              component="h2"
-              sx={{
-                fontSize: { xs: "2rem", md: "2rem" },
+              titleSx={{
+                fontSize: { xs: "1.65rem", sm: "2rem", md: "2.25rem" },
                 fontWeight: 800,
-                letterSpacing: "0.02em",
+                letterSpacing: "-0.02em",
                 textTransform: "uppercase",
-                mb: 1,
-
-                // fontWeight: 800,
-                // fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
-                // letterSpacing: "-0.03em",
-                lineHeight: 1.15,
-                // mb: 3,
-                color: "text.primary",
+                lineHeight: { xs: 1.2, md: 1.15 },
               }}
-            >
-              Reconnecting alumni, <br />
-              <Box
-                component="span"
-                sx={{
-                  background: (t) =>
-                    `linear-gradient(135deg, ${t.palette.primary.main} 0%, ${t.palette.secondary?.main || t.palette.primary.dark} 100%)`,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                building a lifetime network.
-              </Box>
-            </Typography>
+              sx={{ mb: 2 }}
+            />
 
             <Typography
               sx={{
                 color: "text.secondary",
-                fontSize: { xs: "1rem", md: "1.05rem" },
-                lineHeight: 1.75,
-                mb: 2.5,
+                fontSize: { xs: "0.925rem", sm: "1rem", md: "1.05rem" },
+                lineHeight: 1.7,
+                mb: 2,
               }}
             >
               The Alumni Association exists to keep our community connected long
@@ -101,9 +100,9 @@ export default function AboutUsSection() {
             <Typography
               sx={{
                 color: "text.secondary",
-                fontSize: { xs: "1rem", md: "1.05rem" },
-                lineHeight: 1.75,
-                mb: 4,
+                fontSize: { xs: "0.925rem", sm: "1rem", md: "1.05rem" },
+                lineHeight: 1.7,
+                mb: { xs: 3, md: 4 },
               }}
             >
               Whether you graduated last year or decades ago, there's a place
@@ -115,6 +114,7 @@ export default function AboutUsSection() {
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
               useFlexGap
+              sx={{ width: "100%" }}
             >
               <Button
                 component={Link}
@@ -126,8 +126,9 @@ export default function AboutUsSection() {
                   textTransform: "none",
                   fontWeight: 700,
                   px: 3.5,
-                  py: 1.5,
+                  py: { xs: 1.25, sm: 1.5 },
                   borderRadius: 2.5,
+                  width: { xs: "100%", sm: "auto" },
                   boxShadow: (t) => `0 8px 20px ${t.palette.primary.main}30`,
                   "&:hover": {
                     transform: "translateY(-2px)",
@@ -146,9 +147,10 @@ export default function AboutUsSection() {
                   textTransform: "none",
                   fontWeight: 600,
                   px: 3.5,
-                  py: 1.5,
+                  py: { xs: 1.25, sm: 1.5 },
                   borderRadius: 2.5,
                   borderWidth: "2px",
+                  width: { xs: "100%", sm: "auto" },
                   "&:hover": {
                     borderWidth: "2px",
                     bgcolor: "action.hover",
@@ -160,32 +162,33 @@ export default function AboutUsSection() {
             </Stack>
           </Grid>
 
-          {/* Right: Modern Stat Cards Grid */}
+          {/* Right Column: 2x2 Responsive Stat Cards Grid on Mobile */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Grid container spacing={2.5}>
+            <Grid container spacing={{ xs: 1.5, sm: 2.5 }}>
               {loading && aboutStats.length === 0
                 ? [0, 1, 2, 3].map((i) => (
-                    <Grid size={{ xs: 12, sm: 6 }} key={i}>
+                    <Grid size={{ xs: 6, sm: 6 }} key={i}>
                       <Skeleton
                         variant="rounded"
-                        height={140}
+                        height={130}
                         sx={{ borderRadius: 4 }}
                       />
                     </Grid>
                   ))
                 : aboutStats.map((s) => (
-                    <Grid size={{ xs: 12, sm: 6 }} key={s.statID}>
+                    <Grid size={{ xs: 6, sm: 6 }} key={s.statID}>
                       <Paper
                         elevation={0}
                         sx={{
-                          p: 3,
+                          p: { xs: 2, sm: 3 },
                           borderRadius: 4,
                           bgcolor: "background.paper",
                           border: "1px solid",
                           borderColor: "divider",
                           height: "100%",
-                          position: "relative",
-                          overflow: "hidden",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
                           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                           "&:hover": {
                             borderColor: "primary.main",
@@ -193,20 +196,21 @@ export default function AboutUsSection() {
                             boxShadow: (t) =>
                               `0 16px 32px ${t.palette.text.primary}0D`,
                             "& .stat-icon-box": {
-                              transform: "scale(1.1) rotate(5deg)",
+                              transform: "scale(1.08) rotate(5deg)",
                               bgcolor: "primary.main",
                               color: "primary.contrastText",
                             },
                           },
                         }}
                       >
-                        {/* Row 1: Icon on left, Value centered */}
+                        {/* Top Row: Icon + Large Stat Value */}
                         <Box
                           sx={{
                             display: "flex",
                             alignItems: "center",
-                            position: "relative",
-                            mb: 1.5,
+                            justifyContent: "space-between",
+                            mb: 2,
+                            gap: 1,
                           }}
                         >
                           <Box
@@ -215,25 +219,25 @@ export default function AboutUsSection() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: 48,
-                              height: 48,
+                              width: { xs: 36, sm: 48 },
+                              height: { xs: 36, sm: 48 },
                               borderRadius: 3,
                               bgcolor: (t) => `${t.palette.primary.main}12`,
                               color: "primary.main",
                               flexShrink: 0,
                               transition: "all 0.3s ease",
-                              zIndex: 1,
                             }}
                           >
-                            {getIcon(s.iconKey, 24)}
+                            {getIcon(s.iconKey, 20)}
                           </Box>
+
                           <Typography
                             sx={{
-                              position: "absolute",
-                              left: 0,
-                              right: 0,
-                              textAlign: "center",
-                              fontSize: { xs: "1.8rem", md: "2.1rem" },
+                              fontSize: {
+                                xs: "1.45rem",
+                                sm: "2rem",
+                                md: "2.1rem",
+                              },
                               fontWeight: 800,
                               color: "text.primary",
                               lineHeight: 1,
@@ -244,19 +248,19 @@ export default function AboutUsSection() {
                           </Typography>
                         </Box>
 
-                        {/* Row 2: Title / Label */}
+                        {/* Bottom Row: Label */}
                         <Typography
                           sx={{
-                            fontSize: "1rem",
-                            // fontWeight: 500,
+                            fontSize: {
+                              xs: "0.725rem",
+                              sm: "0.875rem",
+                              md: "0.925rem",
+                            },
                             color: "primary.main",
-                            // color: "text.secondary",
-                            lineHeight: 1.4,
-                            // fontSize: { xs: "2rem", md: "2rem" },
                             fontWeight: 800,
-                            letterSpacing: "-0.02em",
+                            letterSpacing: "0.02em",
                             textTransform: "uppercase",
-                            mb: 1,
+                            lineHeight: 1.3,
                           }}
                         >
                           {s.label}
