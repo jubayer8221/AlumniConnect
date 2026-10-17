@@ -86,25 +86,25 @@ export default function AlumniDashboardPage() {
     {
       label: "View Profile",
       icon: <UserCircle size={20} />,
-      path: `/alumni/${selectedAlumni.alumniID}`,
+      path: `/alumni/profile-details/${selectedAlumni.alumniID}`,
       color: "var(--color-chart-indigo)",
     },
     {
       label: "Edit Profile",
       icon: <Pencil size={20} />,
-      path: "/alumni/profile-setup",
+      path: "/alumni/profile-details/edit",
       color: "var(--color-chart-pink)",
     },
     {
       label: "Alumni Directory",
       icon: <Users size={20} />,
-      path: "/alumni/directory",
+      path: "/alumni/network/directory",
       color: "var(--color-info)",
     },
     {
       label: "Upcoming Events",
       icon: <CalendarDays size={20} />,
-      path: "/alumni/events",
+      path: "/alumni/explore/events",
       color: "var(--color-chart-emerald)",
     },
   ];
@@ -362,7 +362,7 @@ export default function AlumniDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("/alumni/events")}
+                  onClick={() => navigate("/alumni/explore/events")}
                   sx={{ color: "var(--color-chart-pink)", fontWeight: 600 }}
                 >
                   View All
@@ -385,7 +385,7 @@ export default function AlumniDashboardPage() {
                             borderRadius: 2,
                             "&:hover": { bgcolor: "rgba(var(--rgb-chart-pink), 0.05)" },
                           }}
-                          onClick={() => navigate(`/alumni/events/${evt.id}`)}
+                          onClick={() => navigate(`/alumni/explore/events/${evt.id}`)}
                         >
                           <ListItemIcon sx={{ color: "var(--color-chart-pink)", minWidth: 40 }}>
                             <CalendarDays size={20} />
@@ -435,7 +435,7 @@ export default function AlumniDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("/alumni/notices")}
+                  onClick={() => navigate("/alumni/explore/notices")}
                   sx={{ color: "var(--color-warning)", fontWeight: 600 }}
                 >
                   View All
@@ -464,7 +464,7 @@ export default function AlumniDashboardPage() {
                             },
                           }}
                           onClick={() =>
-                            navigate(`/alumni/notices/${notice.id}`)
+                            navigate(`/alumni/explore/notices/${notice.id}`)
                           }
                         >
                           <Box

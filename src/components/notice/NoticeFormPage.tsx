@@ -114,7 +114,7 @@ export default function NoticeFormPage() {
             severity: "success",
           }),
         );
-        navigate(`/alumni/notices/${id}`);
+        navigate(`/alumni/explore/notices/${id}`);
       } catch (error) {
         dispatch(showToast({
           message: typeof error === "string" ? error : error instanceof Error ? error.message : "Unable to update notice",
@@ -130,7 +130,7 @@ export default function NoticeFormPage() {
             severity: "success",
           }),
         );
-        navigate("/alumni/notices");
+        navigate("/alumni/explore/notices");
       } catch (error) {
         dispatch(showToast({
           message: typeof error === "string" ? error : error instanceof Error ? error.message : "Unable to create notice",
@@ -148,7 +148,7 @@ export default function NoticeFormPage() {
         title={isEdit ? "Edit Notice" : "Create Notice"}
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Notices", path: "alumni/notices" },
+          { label: "Notices", path: "/alumni/explore/notices" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={

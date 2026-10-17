@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Grid,
@@ -39,11 +39,16 @@ import {
   CommonCheckbox,
   CommonButton,
   CommonEmptyState,
-  CommonAvatar,
   CommonFileUpload,
 } from "@/components/common";
 import AlumniProfileSkeleton from "@/components/alumniProfile/AlumniProfileSkeleton";
+import AlumniProfileCard from "@/components/alumniProfile/AlumniProfileCard";
+import {
+  calculateProfileCompletion,
+  getMissingProfileFields,
+} from "@/utils/profileCompletion";
 import type {
+  AlumniProfileFullModel,
   CreateUpdateAlumniRequest,
   FamilyMember,
   EducationEntry,
@@ -102,6 +107,7 @@ const alumniProfileEditSchema = yup.object({
   facultyId: yup.string().default(""),
   facultyName: yup.string().default(""),
   profilePhoto: yup.string().default(""),
+  coverPhoto: yup.string().default(""),
   admissionYear: yup.mixed<string | number>().optional().nullable(),
   graduationYear: yup.mixed<string | number>().optional().nullable(),
   graduationSemester: yup.string().default(""),
@@ -331,6 +337,7 @@ function buildPayload(
       dateOfBirth: data.dateOfBirth || null,
       bloodGroup: data.bloodGroup || null,
       profilePhoto: data.profilePhoto || null,
+      coverPhoto: data.coverPhoto || null,
       bio: data.bio || null,
     },
     contactInformation: {
@@ -500,8 +507,16 @@ export default function ProfileSetupPage() {
 
   const sameAsPresentAddress = watch("sameAsPresentAddress");
   const profilePhoto = watch("profilePhoto");
+  const coverPhoto = watch("coverPhoto");
+  const fullName = watch("fullName");
+  const gender = watch("gender");
+  const bio = watch("bio");
+  const programName = watch("programName");
+  const departmentName = watch("departmentName");
+  const graduationYear = watch("graduationYear");
+  const batch = watch("batch");
 
-  // Fetch profile only if not already loaded
+  /* ---------- Load own profile ---------- */
   useEffect(() => {
     if (!user?.alumniId) return;
     if (!selectedAlumni || String(selectedAlumni.alumniID) !== user.alumniId) {
@@ -564,6 +579,7 @@ export default function ProfileSetupPage() {
       facultyId: e?.facultyID ? String(e.facultyID) : "",
       facultyName: e?.facultyName ?? "",
       profilePhoto: p.profilePhoto ?? "",
+      coverPhoto: p.coverPhoto ?? "",
       admissionYear: e?.admissionYear as never,
       graduationYear: e?.graduationYear as never,
       graduationSemester: e?.graduationSemester ?? "",
@@ -661,11 +677,7 @@ export default function ProfileSetupPage() {
       p.map((j) => (j.id === jid ? { ...j, [field]: value } : j)),
     );
 
-  // ============================================================
-  // Photo upload handler
-  // ============================================================
   const handlePhotoSelect = async (preview: string, file: File) => {
-    // Show the base64 preview immediately
     setValue("profilePhoto" as never, preview as never);
     setUploading(true);
     try {
@@ -678,10 +690,31 @@ export default function ProfileSetupPage() {
           severity: "error",
         }),
       );
-      // Roll back to the previous value on failure
       setValue(
         "profilePhoto" as never,
         (selectedAlumni?.personalInformation.profilePhoto ?? "") as never,
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCoverSelect = async (preview: string, file: File) => {
+    setValue("coverPhoto" as never, preview as never);
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setValue("coverPhoto" as never, url as never);
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Failed to upload cover photo"),
+          severity: "error",
+        }),
+      );
+      setValue(
+        "coverPhoto" as never,
+        (selectedAlumni?.personalInformation.coverPhoto ?? "") as never,
       );
     } finally {
       setUploading(false);
@@ -721,6 +754,11 @@ export default function ProfileSetupPage() {
         jobExperiences,
       );
       await createUpdateAlumni(payload);
+
+      if (user?.alumniId) {
+        await fetchAlumniById(user.alumniId).catch(() => undefined);
+      }
+
       dispatch(
         showToast({
           message: "Profile updated successfully",
@@ -737,77 +775,103 @@ export default function ProfileSetupPage() {
     }
   };
 
-  if (loading && !selectedAlumni) return <AlumniProfileSkeleton />;
-  if (!selectedAlumni) return <CommonEmptyState title="Profile not found" />;
+  /* ============================================================
+     Preview alumni object — merges selectedAlumni with live form
+     values so the card reflects what the user is typing/uploading.
+     ============================================================ */
+  const previewAlumni: AlumniProfileFullModel | null = useMemo(() => {
+    if (!selectedAlumni) return null;
+    const firstEdu = selectedAlumni.academicInformation[0];
 
-  const a = selectedAlumni;
+    return {
+      ...selectedAlumni,
+      personalInformation: {
+        ...selectedAlumni.personalInformation,
+        fullName: fullName ?? selectedAlumni.personalInformation.fullName,
+        gender: gender || selectedAlumni.personalInformation.gender,
+        profilePhoto:
+          profilePhoto || selectedAlumni.personalInformation.profilePhoto,
+        coverPhoto: coverPhoto || selectedAlumni.personalInformation.coverPhoto,
+        bio: bio || selectedAlumni.personalInformation.bio,
+      },
+      academicInformation: [
+        {
+          ...(firstEdu ?? {
+            alumniEducationID: 0,
+            studentID: null,
+            registrationNumber: null,
+            rollNumber: null,
+            programID: null,
+            departmentID: null,
+            facultyID: null,
+            facultyName: null,
+            admissionYear: null,
+            graduationSemester: null,
+            secondarySchoolName: null,
+            isVisible: true,
+          }),
+          programName: programName || firstEdu?.programName || null,
+          departmentName: departmentName || firstEdu?.departmentName || null,
+          graduationYear:
+            Number(graduationYear) || firstEdu?.graduationYear || null,
+          batch: batch || firstEdu?.batch || null,
+        },
+        ...selectedAlumni.academicInformation.slice(1),
+      ],
+    } as AlumniProfileFullModel;
+  }, [
+    selectedAlumni,
+    fullName,
+    gender,
+    profilePhoto,
+    coverPhoto,
+    bio,
+    programName,
+    departmentName,
+    graduationYear,
+    batch,
+  ]);
+
+  const previewCompletion = previewAlumni
+    ? calculateProfileCompletion(previewAlumni)
+    : 0;
+  const previewMissing = previewAlumni
+    ? getMissingProfileFields(previewAlumni)
+    : [];
+
+  if (loading && !selectedAlumni) return <AlumniProfileSkeleton />;
+  if (!selectedAlumni || !previewAlumni)
+    return <CommonEmptyState title="Profile not found" />;
 
   return (
     <Box>
       <CommonPageHeader
         title="Profile Setup"
-        subtitle="Complete your profile with personal, academic, and professional details"
+        // subtitle="Complete your profile with personal, academic, and professional details"
         breadcrumbs={[
           { label: "Home", path: "/alumni/dashboard" },
-          { label: "Profile", path: "/alumni/profile" },
+          { label: "Profile", path: "/alumni/profile-details" },
           { label: "Profile Setup" },
         ]}
         actions={
           <CommonButton
             variant="outlined"
             startIcon={<ArrowLeft size={18} />}
-            onClick={() => navigate("/alumni/profile")}
+            onClick={() => navigate("/alumni/profile-details")}
           >
             Back
           </CommonButton>
         }
       />
 
-      {/* Banner */}
-      <Card
-        sx={{
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          mb: 3,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          sx={{
-            height: 80,
-            background:
-              "linear-gradient(135deg, var(--color-chart-indigo) 0%, var(--color-chart-purple) 50%, var(--color-chart-pink) 100%)",
-          }}
-        />
-        <CardContent sx={{ p: 2.5, pt: 0, mt: -4 }}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 2,
-              alignItems: { sm: "flex-end" },
-            }}
-          >
-            <CommonAvatar
-              src={
-                profilePhoto || a.personalInformation.profilePhoto || undefined
-              }
-              name={a.personalInformation.fullName}
-              size={72}
-              sx={{ border: "3px solid white" }}
-            />
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {a.personalInformation.fullName}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {a.alumniCode}
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+      {/* ---------- Live preview — same card as AlumniDetailsPage ---------- */}
+      <AlumniProfileCard
+        alumni={previewAlumni}
+        completion={previewCompletion}
+        missing={previewMissing}
+        isOwner
+        isAdmin={false}
+      />
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* ============ Personal Information ============ */}
@@ -868,7 +932,23 @@ export default function ProfileSetupPage() {
                   placeholder="Select"
                 />
               </Grid>
+
               <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Cover Photo
+                </Typography>
+                <CommonFileUpload
+                  variant="cover"
+                  label={uploading ? "Uploading..." : "Upload Cover Photo"}
+                  currentFile={coverPhoto || undefined}
+                  onFileSelect={handleCoverSelect}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Profile Photo
+                </Typography>
                 <CommonFileUpload
                   label={uploading ? "Uploading..." : "Profile Photo"}
                   currentFile={profilePhoto || undefined}
@@ -1554,7 +1634,7 @@ export default function ProfileSetupPage() {
           sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mb: 3 }}
         >
           <Button
-            onClick={() => navigate("/alumni/profile")}
+            onClick={() => navigate("/alumni/profile-details")}
             startIcon={<ArrowLeft size={18} />}
             sx={{ textTransform: "none" }}
           >
@@ -1565,7 +1645,7 @@ export default function ProfileSetupPage() {
             loading={formState.isSubmitting || uploading}
             startIcon={<Save size={18} />}
           >
-            Save Profile
+            Save
           </CommonButton>
         </Box>
       </form>

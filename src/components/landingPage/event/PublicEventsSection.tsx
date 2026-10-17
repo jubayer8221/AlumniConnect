@@ -11,12 +11,13 @@ import {
   Skeleton,
 } from "@mui/material";
 import { ArrowRight, CalendarDays, Clock, MapPin } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
 import { formatTime } from "@/utils/dateUtils";
 import type { EventItem } from "@/types/event";
 import EventDetailsDialog from "./EventDetailsDialog";
+import SectionHeader from "@/components/common/SectionHeader";
 
 const typeColors: Record<string, string> = {
   Reunion: "var(--color-primary)",
@@ -30,7 +31,8 @@ const typeColors: Record<string, string> = {
   Other: "var(--color-chart-slate)",
 };
 
-const getColor = (type?: string) => (type && typeColors[type]) || "var(--color-primary)";
+const getColor = (type?: string) =>
+  (type && typeColors[type]) || "var(--color-primary)";
 
 const getDayMonth = (iso: string) => {
   const d = new Date(iso);
@@ -41,80 +43,55 @@ const getDayMonth = (iso: string) => {
   };
 };
 
-export default function EventsSection() {
+const EVENTS_PER_ROW = 4;
+
+export default function PublicEventsSection() {
   const navigate = useNavigate();
   const { items, loading, error, fetchEvents } = useEvents();
   const [selected, setSelected] = useState<EventItem | null>(null);
 
   useEffect(() => {
-    void fetchEvents({ pageNumber: 1, pageSize: 3, upcomingOnly: true });
+    void fetchEvents({
+      pageNumber: 1,
+      pageSize: EVENTS_PER_ROW,
+      upcomingOnly: true,
+    });
   }, [fetchEvents]);
 
-  const events = (items ?? []).slice(0, 3);
+  const events = (items ?? []).slice(0, EVENTS_PER_ROW);
 
   return (
-    <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "var(--color-light-surface-green)" }}>
+    <Box
+      sx={{
+        py: 6,
+        bgcolor: "var(--color-light-surface-green)",
+      }}
+    >
       <Container maxWidth="lg">
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: { xs: "flex-start", md: "flex-end" },
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-            mb: 6,
-          }}
-        >
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                color: "primary.main",
-                mb: 1.5,
-              }}
+        {/* ---------- Header ---------- */}
+        <SectionHeader
+          title="Upcoming Events"
+          subtitle="Events"
+          // align="center"
+          // titleBorder
+          action={
+            <Button
+              component={Link}
+              to="/events"
+              endIcon={<ArrowRight size={16} />}
             >
-              Upcoming Events
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: { xs: "2rem", md: "2.5rem" },
-                fontWeight: 800,
-                letterSpacing: "-0.02em",
-                mb: 1,
-              }}
-            >
-              Events
-            </Typography>
-            {/* <Typography
-              sx={{ color: "text.secondary", maxWidth: 520, lineHeight: 1.7 }}
-            >
-              Stay connected with everything happening in the alumni community.
-            </Typography> */}
-          </Box>
-          <Button
-            endIcon={<ArrowRight size={18} />}
-            onClick={() => navigate("/events")}
-            sx={{
-              textTransform: "none",
-              fontWeight: 600,
-              color: "primary.main",
-              pb: 3,
-            }}
-          >
-            View All Events
-          </Button>
-        </Box>
+              View all
+            </Button>
+          }
+        />
 
         {loading && events.length === 0 && (
-          <Grid container spacing={3}>
-            {[0, 1, 2].map((i) => (
-              <Grid key={i} size={{ xs: 12, md: 4 }}>
+          <Grid container spacing={{ xs: 2, md: 2.5 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
                 <Skeleton
                   variant="rounded"
-                  height={360}
+                  height={340}
                   sx={{ borderRadius: 3 }}
                 />
               </Grid>
@@ -144,13 +121,17 @@ export default function EventsSection() {
         )}
 
         {events.length > 0 && (
-          <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
+          <Grid
+            container
+            spacing={{ xs: 2, md: 2.5 }}
+            sx={{ alignItems: "stretch" }}
+          >
             {events.map((event) => {
               const color = getColor(event.eventType);
               const { day, month } = getDayMonth(event.date);
 
               return (
-                <Grid key={event.id} size={{ xs: 12, md: 4 }}>
+                <Grid key={event.id} size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card
                     sx={{
                       height: "100%",
@@ -181,7 +162,7 @@ export default function EventsSection() {
                       <Box
                         sx={{
                           position: "relative",
-                          height: 180,
+                          height: 150,
                           flexShrink: 0,
                         }}
                       >
@@ -204,10 +185,10 @@ export default function EventsSection() {
                         <Box
                           sx={{
                             position: "absolute",
-                            left: 16,
-                            bottom: -20,
-                            width: 64,
-                            height: 64,
+                            left: 12,
+                            bottom: -18,
+                            width: 56,
+                            height: 56,
                             borderRadius: 2,
                             background: `linear-gradient(135deg, ${color} 0%, color-mix(in srgb, ${color} 80%, transparent) 100%)`,
                             color: "var(--color-white)",
@@ -221,7 +202,7 @@ export default function EventsSection() {
                         >
                           <Typography
                             sx={{
-                              fontSize: "1.25rem",
+                              fontSize: "1.1rem",
                               fontWeight: 800,
                               lineHeight: 1,
                             }}
@@ -230,7 +211,7 @@ export default function EventsSection() {
                           </Typography>
                           <Typography
                             sx={{
-                              fontSize: "0.65rem",
+                              fontSize: "0.6rem",
                               fontWeight: 700,
                               letterSpacing: "0.05em",
                             }}
@@ -242,9 +223,9 @@ export default function EventsSection() {
 
                       <CardContent
                         sx={{
-                          pt: 4,
-                          px: 3,
-                          pb: 3,
+                          pt: 3.5,
+                          px: 2.25,
+                          pb: 2.25,
                           flex: 1,
                           display: "flex",
                           flexDirection: "column",
@@ -259,22 +240,23 @@ export default function EventsSection() {
                               bgcolor: color + "15",
                               color,
                               fontWeight: 600,
-                              fontSize: "0.7rem",
+                              fontSize: "0.65rem",
+                              height: 22,
                               mb: 1,
                             }}
                           />
                         )}
                         <Typography
                           sx={{
-                            fontSize: "1rem",
+                            fontSize: "0.95rem",
                             fontWeight: 700,
-                            mb: 1.5,
+                            mb: 1.25,
                             lineHeight: 1.35,
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
-                            minHeight: "2.7rem",
+                            minHeight: "2.6rem",
                           }}
                         >
                           {event.title}
@@ -284,8 +266,8 @@ export default function EventsSection() {
                           sx={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: 1,
-                            mb: 2,
+                            gap: 0.75,
+                            mb: 1.75,
                             flex: 1,
                           }}
                         >
@@ -293,13 +275,13 @@ export default function EventsSection() {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 1,
+                              gap: 0.75,
                             }}
                           >
-                            <Clock size={14} color="var(--color-gray500)" />
+                            <Clock size={13} color="var(--color-gray500)" />
                             <Typography
                               sx={{
-                                fontSize: "0.8rem",
+                                fontSize: "0.75rem",
                                 color: "text.secondary",
                               }}
                             >
@@ -311,13 +293,13 @@ export default function EventsSection() {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 1,
+                              gap: 0.75,
                             }}
                           >
-                            <MapPin size={14} color="var(--color-gray500)" />
+                            <MapPin size={13} color="var(--color-gray500)" />
                             <Typography
                               sx={{
-                                fontSize: "0.8rem",
+                                fontSize: "0.75rem",
                                 color: "text.secondary",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -333,19 +315,19 @@ export default function EventsSection() {
                         <Box
                           sx={{
                             mt: "auto",
-                            py: 1,
+                            py: 0.85,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            gap: 0.75,
-                            fontSize: "0.875rem",
+                            gap: 0.5,
+                            fontSize: "0.8rem",
                             fontWeight: 600,
                             border: "1px solid",
                             borderColor: "divider",
                             borderRadius: 2,
                           }}
                         >
-                          View Details <ArrowRight size={16} />
+                          View Details <ArrowRight size={14} />
                         </Box>
                       </CardContent>
                     </CardActionArea>

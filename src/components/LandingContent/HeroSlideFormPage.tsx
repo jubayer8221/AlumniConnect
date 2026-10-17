@@ -147,7 +147,7 @@ export default function HeroSlideFormPage() {
         }),
       );
 
-      navigate("/alumni/landing");
+      navigate("/alumni/configuration/landing-page");
     } catch (err) {
       dispatch(
         showToast({
@@ -171,7 +171,7 @@ export default function HeroSlideFormPage() {
         }
         breadcrumbs={[
           { label: "Home", path: "/dashboard" },
-          { label: "Landing Content", path: "/alumni/landing" },
+          { label: "Landing Content", path: "/alumni/configuration/landing-page" },
           { label: isEdit ? "Edit" : "Create" },
         ]}
         actions={
@@ -290,7 +290,7 @@ export default function HeroSlideFormPage() {
           <CommonButton
             variant="outlined"
             startIcon={<ArrowLeft size={18} />}
-            onClick={() => navigate("/alumni/landing")}
+            onClick={() => navigate("/alumni/configuration/landing-page")}
           >
             Cancel
           </CommonButton>
@@ -299,7 +299,7 @@ export default function HeroSlideFormPage() {
             loading={formState.isSubmitting}
             startIcon={<Save size={18} />}
           >
-            {isEdit ? "Update Slide" : "Create Slide"}
+            {isEdit ? "Update" : "Save"}
           </CommonButton>
         </Box>
       </form>

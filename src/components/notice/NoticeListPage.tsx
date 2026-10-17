@@ -111,10 +111,10 @@ export default function NoticeListPage({
     setActionTarget({ notice: null as unknown as Notice, anchor: null });
   };
 
-  const basePath = "/alumni/notices";
+  const basePath = "/alumni/explore/notices";
   const visibleItems = isAdmin
     ? items
-    : items.filter((n) => n.status === "PUBLISHED");
+    : items.filter((n: any) => n.status === "PUBLISHED");
 
   return (
     <Box>
@@ -131,7 +131,7 @@ export default function NoticeListPage({
               startIcon={<Plus size={18} />}
               onClick={() => navigate(`${basePath}/create`)}
             >
-              Create Notice
+              Create
             </CommonButton>
           ) : undefined
         }
@@ -150,7 +150,11 @@ export default function NoticeListPage({
         </Box>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
         <CommonLoading fullHeight={false} />

@@ -12,6 +12,8 @@ interface CommonFileUploadProps {
   label?: string;
   currentFile?: string;
   previewSize?: number;
+  /** "circle" (default) → square avatar. "cover" → 16:6 banner. */
+  variant?: "circle" | "cover";
 }
 
 export default function CommonFileUpload({
@@ -20,6 +22,7 @@ export default function CommonFileUpload({
   label = "Upload Photo",
   currentFile,
   previewSize = 260,
+  variant = "circle",
 }: CommonFileUploadProps) {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,20 +33,39 @@ export default function CommonFileUpload({
     reader.readAsDataURL(file);
   };
 
+  const isCover = variant === "cover";
+
   return (
     <Box>
       {currentFile && (
-        <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
+        <Box
+          sx={{
+            mb: 2,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
           <img
             src={currentFile}
             alt="Preview"
-            style={{
-              width: previewSize,
-              height: previewSize,
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "1px solid rgba(var(--rgb-black), 0.08)",
-            }}
+            style={
+              isCover
+                ? {
+                    width: "100%",
+                    maxWidth: 640,
+                    aspectRatio: "16 / 6",
+                    borderRadius: 12,
+                    objectFit: "cover",
+                    border: "1px solid rgba(var(--rgb-black), 0.08)",
+                  }
+                : {
+                    width: previewSize,
+                    height: previewSize,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "1px solid rgba(var(--rgb-black), 0.08)",
+                  }
+            }
           />
         </Box>
       )}
@@ -53,7 +75,7 @@ export default function CommonFileUpload({
         startIcon={<UploadCloud size={18} />}
         fullWidth
         sx={{
-          minHeight: 180,
+          minHeight: isCover ? 120 : 180,
           flexDirection: "column",
           gap: 1,
           borderStyle: "dashed",

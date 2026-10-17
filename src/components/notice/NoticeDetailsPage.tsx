@@ -33,7 +33,7 @@ export default function NoticeDetailsPage({
   const { role } = useAuth();
   const isAdmin = adminView || hasAdminAccess(role);
   const { selectedNotice, loading, fetchNoticeById } = useNotices();
-  const basePath = "/alumni/notices";
+  const basePath = "/alumni/explore/notices";
   const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
   // ★ Fetch only if it's not the one already loaded

@@ -1,6 +1,13 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Provider } from "react-redux";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
 import {
   Box,
   CircularProgress,
@@ -12,13 +19,28 @@ import { createAppTheme } from "@/store/theme";
 import { colors } from "@/theme/colors";
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import { hasAdminAccess } from "@/utils/authUtils";
-import NotFoundPage from "@/components/common/NotFoundPage";
 import ToastContainer from "@/components/common/Toast";
 
 import { useAppSelector } from "./hooks/useAppDispatch";
 import LandingPage from "./components/landingPage/LandingPage";
-import ForgotPasswordPage from "./components/login/ForgotPasswordPage";
-import ResetPasswordPage from "./components/login/ResetPasswordPage";
+import MomentsGallery from "./components/LandingContent/MomentsGallery";
+
+const PrivacyPolicyPage = lazy(
+  () => import("@/components/landingPage/PrivacyPolicyPage"),
+);
+const TermsOfServicePage = lazy(
+  () => import("@/components/landingPage/TermsOfServicePage"),
+);
+const CookiePolicyPage = lazy(
+  () => import("@/components/landingPage/CookiePolicyPage"),
+);
+const NotFoundPage = lazy(() => import("@/components/common/NotFoundPage"));
+const ForgotPasswordPage = lazy(
+  () => import("./components/login/ForgotPasswordPage"),
+);
+const ResetPasswordPage = lazy(
+  () => import("./components/login/ResetPasswordPage"),
+);
 
 const AppLayout = lazy(() => import("@/components/layout/AppLayout"));
 const LoginPage = lazy(() => import("@/components/login/LoginPage"));
@@ -97,6 +119,57 @@ const PublicGalleryPage = lazy(
 const PublicNewsDetailsPage = lazy(
   () => import("./components/landingPage/PublicNewsDetailsPage"),
 );
+const PublicMentorshipPage = lazy(
+  () => import("./components/landingPage/PublicMentorshipPage"),
+);
+const MentorshipPage = lazy(
+  () => import("./components/mentorship/MentorshipPage"),
+);
+const RolesPage = lazy(() => import("./components/configuration/RolesPage"));
+const VerifyMemberPage = lazy(
+  () => import("./components/configuration/VerifyMemberPage"),
+);
+const MyNetworkPage = lazy(() => import("./components/network/MyNetworkPage"));
+const MessagesPage = lazy(() => import("./components/messages/MessagesPage"));
+const JobBoardPage = lazy(() => import("./components/job/JobBoardPage"));
+const JobFormPage = lazy(() => import("./components/job/JobFormPage"));
+const PublicActivitiesPage = lazy(
+  () => import("./components/landingPage/PublicActivitiesPage"),
+);
+const PublicActivityDetailsPage = lazy(
+  () => import("./components/landingPage/PublicActivityDetailsPage"),
+);
+const PublicJobsListPage = lazy(
+  () => import("./components/landingPage/PublicJobsListPage"),
+);
+const PublicJobDetailsPage = lazy(
+  () => import("./components/landingPage/PublicJobDetailsPage"),
+);
+
+function LegacyAlumniProfileRedirect({ edit = false }: { edit?: boolean }) {
+  const { id } = useParams();
+  if (!id) return <Navigate to="/alumni/network/directory" replace />;
+  return (
+    <Navigate
+      to={`/alumni/profile-details/${id}${edit ? "/edit" : ""}`}
+      replace
+    />
+  );
+}
+
+function ScrollToTopOnPathChange() {
+  const { pathname } = useLocation();
+  const previousPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (previousPathname.current !== pathname) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      previousPathname.current = pathname;
+    }
+  }, [pathname]);
+
+  return null;
+}
 
 function AppRoutes() {
   const token = useAppSelector((s) => s.auth.token);
@@ -128,16 +201,22 @@ function AppRoutes() {
         <Route path="/events" element={<PublicEventsListPage />} />
         <Route path="/events/:id" element={<PublicEventDetailsPage />} />
         <Route path="/news" element={<PublicNewsListPage />} />
-        {/* <Route path="/news" element={<PublicNewsListPage />} /> */}
         <Route path="/news/:id" element={<PublicNewsDetailsPage />} />
         <Route path="/news/:id/:slug" element={<PublicNewsDetailsPage />} />
         <Route path="/gallery" element={<PublicGalleryPage />} />
+        <Route path="/mentorship" element={<PublicMentorshipPage />} />
+        <Route path="/activities" element={<PublicActivitiesPage />} />
+        <Route path="/activities/:id" element={<PublicActivityDetailsPage />} />
+        <Route path="/jobs" element={<PublicJobsListPage />} />
+        <Route path="/jobs/:id" element={<PublicJobDetailsPage />} />
+
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
+        <Route path="/cookies" element={<CookiePolicyPage />} />
 
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/signup" element={<SignUpPage />} />
-
-        {/* <Route path="/news/:id" element={<PublicEventDetailsPage />} /> */}
 
         <Route
           path="/login"
@@ -155,46 +234,72 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         >
-          {/* Alumni home / profile */}
           <Route path="/alumni/dashboard" element={<AlumniDashboardPage />} />
-          <Route path="/alumni/profile" element={<AlumniDetailsPage />} />
-          <Route path="/alumni/profile-setup" element={<ProfileSetupPage />} />
+          <Route
+            path="/alumni/profile-details"
+            element={<AlumniDetailsPage />}
+          />
+          <Route
+            path="/alumni/profile-details/edit"
+            element={<ProfileSetupPage />}
+          />
+          <Route
+            path="/alumni/profile-details/:id"
+            element={<AlumniDetailsPage />}
+          />
+          <Route
+            path="/alumni/profile-details/:id/edit"
+            element={<AlumniFormPage />}
+          />
+          <Route
+            path="/alumni/profile"
+            element={<Navigate to="/alumni/profile-details" replace />}
+          />
+          <Route
+            path="/alumni/profile-setup"
+            element={<Navigate to="/alumni/profile-details/edit" replace />}
+          />
           <Route
             path="/alumni/settings-privacy"
             element={<SettingsPrivacyPage />}
           />
-          <Route path="/alumni/directory" element={<AlumniDirectoryPage />} />
+          <Route path="/alumni/settings" element={<SettingsPage />} />
+          <Route
+            path="/alumni/network/directory"
+            element={<AlumniDirectoryPage />}
+          />
+          <Route
+            path="/alumni/network/my-network"
+            element={<MyNetworkPage />}
+          />
+          <Route path="/alumni/network/messages" element={<MessagesPage />} />
+          <Route
+            path="/alumni/network/mentorship"
+            element={<MentorshipPage />}
+          />
           <Route path="/alumni/account" element={<AlumniAccountPage />} />
           <Route path="/alumni/new" element={<AlumniFormPage />} />
           <Route
             path="/alumni/create"
             element={<Navigate to="/alumni/new" replace />}
           />
-          <Route path="/alumni/:id" element={<AlumniDetailsPage />} />
-          <Route path="/alumni/:id/edit" element={<AlumniFormPage />} />
-          <Route path="/alumni/events" element={<EventListPage />} />
-          <Route path="/alumni/events/:id" element={<EventDetailsPage />} />
-          <Route path="/alumni/news" element={<NewsListPage />} />
+          <Route path="/alumni/:id" element={<LegacyAlumniProfileRedirect />} />
           <Route
-            path="/alumni/landing/gallery/new"
-            element={<GalleryPhotoFormPage />}
+            path="/alumni/:id/edit"
+            element={<LegacyAlumniProfileRedirect edit />}
           />
+          <Route path="/alumni/explore/events" element={<EventListPage />} />
           <Route
-            path="/alumni/landing/gallery/:id"
-            element={<GalleryPhotoFormPage />}
+            path="/alumni/explore/events/:id"
+            element={<EventDetailsPage />}
           />
-
-          <Route path="/alumni/landing" element={<LandingContentPage />} />
+          <Route path="/alumni/explore/news" element={<NewsListPage />} />
+          <Route path="/alumni/explore/notices" element={<NoticeListPage />} />
           <Route
-            path="/alumni/landing/slides/new"
-            element={<HeroSlideFormPage />}
+            path="/alumni/explore/notices/:id"
+            element={<NoticeDetailsPage />}
           />
-          <Route
-            path="/alumni/landing/slides/:id"
-            element={<HeroSlideFormPage />}
-          />
-          <Route path="/alumni/notices" element={<NoticeListPage />} />
-          <Route path="/alumni/notices/:id" element={<NoticeDetailsPage />} />
+          <Route path="/alumni/explore/job-board" element={<JobBoardPage />} />
         </Route>
 
         {/* ---------- Admin only ---------- */}
@@ -207,30 +312,101 @@ function AppRoutes() {
         >
           <Route path="/dashboard" element={<AdminDashboardPage />} />
           <Route path="/alumni" element={<AlumniListPage />} />
+
+          {/* Configuration */}
           <Route
-            path="/alumni/user-roles"
+            path="/alumni/configuration/landing-page"
+            element={<LandingContentPage />}
+          />
+          <Route path="/alumni/explore/gallery" element={<MomentsGallery />} />
+          <Route
+            path="/alumni/explore/gallery/new"
+            element={<GalleryPhotoFormPage />}
+          />
+          <Route
+            path="/alumni/explore/gallery/:id"
+            element={<GalleryPhotoFormPage />}
+          />
+          <Route
+            path="/alumni/configuration/landing-page/slides/new"
+            element={<HeroSlideFormPage />}
+          />
+          <Route
+            path="/alumni/configuration/landing-page/slides/:id"
+            element={<HeroSlideFormPage />}
+          />
+          <Route
+            path="/alumni/configuration/user-roles"
             element={
               <ProtectedRoute roles={["ADMIN"]}>
                 <UserRoleManagementPage />
               </ProtectedRoute>
             }
           />
-
-          {/* Event create / edit — admin only */}
-          <Route path="/alumni/events/new" element={<EventFormPage />} />
           <Route
-            path="/alumni/events/create"
-            element={<Navigate to="/alumni/events/new" replace />}
+            path="/alumni/configuration/roles"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <RolesPage />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/alumni/events/:id/edit" element={<EventFormPage />} />
+          <Route
+            path="/alumni/configuration/verify-member"
+            element={
+              <ProtectedRoute roles={["ADMIN", "MODERATOR"]}>
+                <VerifyMemberPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/alumni/user-roles"
+            element={<Navigate to="/alumni/configuration/user-roles" replace />}
+          />
 
-          {/* News creation and editing are admin only. */}
-          <Route path="/alumni/news/create" element={<NewsFormPage />} />
-          <Route path="/alumni/news/edit/:id" element={<NewsFormPage />} />
+          {/* Job Board (admin/moderator) */}
+          <Route
+            path="/alumni/explore/job-board/new"
+            element={<JobFormPage />}
+          />
+          <Route
+            path="/alumni/explore/job-board/:id/edit"
+            element={<JobFormPage />}
+          />
 
-          {/* Notices — admin */}
-          <Route path="/alumni/notices/create" element={<NoticeFormPage />} />
-          <Route path="/alumni/notices/:id/edit" element={<NoticeFormPage />} />
+          {/* Event create / edit */}
+          <Route
+            path="/alumni/explore/events/new"
+            element={<EventFormPage />}
+          />
+          <Route
+            path="/alumni/explore/events/create"
+            element={<Navigate to="/alumni/explore/events/new" replace />}
+          />
+          <Route
+            path="/alumni/explore/events/:id/edit"
+            element={<EventFormPage />}
+          />
+
+          {/* News create / edit */}
+          <Route
+            path="/alumni/explore/news/create"
+            element={<NewsFormPage />}
+          />
+          <Route
+            path="/alumni/explore/news/edit/:id"
+            element={<NewsFormPage />}
+          />
+
+          {/* Notices admin */}
+          <Route
+            path="/alumni/explore/notices/create"
+            element={<NoticeFormPage />}
+          />
+          <Route
+            path="/alumni/explore/notices/:id/edit"
+            element={<NoticeFormPage />}
+          />
 
           <Route path="/reports" element={<ReportsPage />} />
           <Route
@@ -246,7 +422,7 @@ function AppRoutes() {
         {/* ---------- Redirects ---------- */}
         <Route
           path="/profile-setup"
-          element={<Navigate to="/alumni/profile-setup" replace />}
+          element={<Navigate to="/alumni/profile-details/edit" replace />}
         />
         <Route
           path="/settings-privacy"
@@ -275,6 +451,7 @@ function AppTheme() {
     <ThemeProvider theme={createAppTheme(colorMode)}>
       <CssBaseline />
       <BrowserRouter>
+        <ScrollToTopOnPathChange />
         <AppRoutes />
         <ToastContainer />
       </BrowserRouter>

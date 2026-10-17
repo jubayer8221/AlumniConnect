@@ -8,6 +8,11 @@ import authReducer from "./Slice/authSlice";
 import alumniReducer from "@/store/Slice/alumniSlice";
 import newsReducer from "@/store/Slice/newsSlice";
 import landingReducer from "@/store/Slice/landingSlice";
+import mentorReducer from "@/store/Slice/mentorSlice";
+import jobReducer from "@/store/Slice/jobSlice";
+import connectionReducer from "@/store/Slice/connectionSlice";
+import messageReducer from "@/store/Slice/messageSlice";
+import roleReducer from "@/store/Slice/roleSlice";
 
 export const store = configureStore({
   reducer: {
@@ -19,6 +24,11 @@ export const store = configureStore({
     ui: uiReducer,
     news: newsReducer,
     landing: landingReducer,
+    mentor: mentorReducer,
+    job: jobReducer,
+    connection: connectionReducer,
+    message: messageReducer,
+    role: roleReducer,
   },
 });
 

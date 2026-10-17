@@ -212,7 +212,7 @@ export default function SettingsPrivacyPage() {
         subtitle="Manage your profile visibility and contact field preferences."
         breadcrumbs={[
           { label: "Home", path: "/alumni/dashboard" },
-          { label: "Profile", path: "/alumni/profile" },
+          { label: "Profile", path: "/alumni/profile-details" },
           { label: "Settings & Privacy" },
         ]}
       />
@@ -345,7 +345,7 @@ export default function SettingsPrivacyPage() {
             loading={saving}
             startIcon={<Save size={18} />}
           >
-            Save Settings
+            Save
           </CommonButton>
         </Box>
       )}

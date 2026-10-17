@@ -64,7 +64,9 @@ export const useLanding = () => {
           return res.data;
         })
         .catch((err: unknown) => {
-          dispatch(setError(unwrapError(err, "Failed to load landing content")));
+          dispatch(
+            setError(unwrapError(err, "Failed to load landing content")),
+          );
           return null;
         })
         .finally(() => {

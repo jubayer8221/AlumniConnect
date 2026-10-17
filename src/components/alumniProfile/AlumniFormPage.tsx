@@ -7,24 +7,28 @@ import {
   Typography,
   Divider,
   Button,
-  alpha,
   IconButton,
-  Paper,
 } from "@mui/material";
-import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
-import { useForm, useFieldArray } from "react-hook-form";
+import {
+  Save,
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Users,
+  GraduationCap,
+  Briefcase,
+  User,
+  Phone,
+  Globe,
+  FileText,
+} from "lucide-react";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import {
-  Navigate,
-  useNavigate,
-  useParams,
-  useLocation,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
 import { useAlumni } from "@/hooks/useAlumni";
-import { hasAdminAccess } from "@/utils/authUtils";
 import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonPageHeader,
@@ -33,18 +37,28 @@ import {
   CommonDatePicker,
   CommonTextArea,
   CommonCheckbox,
-  CommonFileUpload,
   CommonButton,
-  CommonLoading,
+  CommonEmptyState,
+  CommonFileUpload,
 } from "@/components/common";
-import type { CreateUpdateAlumniRequest, EducationEntry } from "@/types/alumni";
+import AlumniProfileSkeleton from "@/components/alumniProfile/AlumniProfileSkeleton";
+import AlumniProfileCard from "@/components/alumniProfile/AlumniProfileCard";
+import {
+  calculateProfileCompletion,
+  getMissingProfileFields,
+} from "@/utils/profileCompletion";
+import type {
+  CreateUpdateAlumniRequest,
+  FamilyMember,
+  EducationEntry,
+  JobExperience,
+} from "@/types/alumni";
 import { generateUUID } from "@/utils/generateId";
 import { getApiErrorMessage } from "@/utils/apiError";
-import { useBreadcrumbLabels } from "@/components/common/breadcrumbLabelContext";
 import { uploadImage } from "@/services/api/uploadService";
 
 /* ============================================================
-   Form validation — inline Yup schemas
+   Form validation — inline Yup
    ============================================================ */
 const familyMemberSchema = yup.object({
   id: yup.string().optional(),
@@ -54,7 +68,7 @@ const familyMemberSchema = yup.object({
   phone: yup.string().default(""),
 });
 
-const alumniSchema = yup.object({
+const alumniProfileEditSchema = yup.object({
   fullName: yup.string().trim().required("Full name is required"),
   nativeName: yup.string().default(""),
   gender: yup.string().default(""),
@@ -92,6 +106,7 @@ const alumniSchema = yup.object({
   facultyId: yup.string().default(""),
   facultyName: yup.string().default(""),
   profilePhoto: yup.string().default(""),
+  coverPhoto: yup.string().default(""), // ← NEW
   admissionYear: yup.mixed<string | number>().optional().nullable(),
   graduationYear: yup.mixed<string | number>().optional().nullable(),
   graduationSemester: yup.string().default(""),
@@ -109,26 +124,10 @@ const alumniSchema = yup.object({
   bio: yup.string().default(""),
   isMentor: yup.boolean().default(false),
   willingToMentor: yup.boolean().default(false),
-  username: yup.string().default(""),
-  password: yup.string().default(""),
-  status: yup.string().default("ACTIVE"),
-  isVerified: yup.boolean().default(false),
   familyMembers: yup.array().of(familyMemberSchema).default([]),
 });
 
-const alumniCreateSchema = alumniSchema.shape({
-  username: yup
-    .string()
-    .trim()
-    .required("Username is required")
-    .min(3, "Username must be at least 3 characters"),
-  password: yup
-    .string()
-    .required("Password is required")
-    .min(8, "Password must be at least 8 characters"),
-});
-
-type AlumniFormValues = yup.InferType<typeof alumniSchema>;
+type AlumniFormValues = yup.InferType<typeof alumniProfileEditSchema>;
 
 /* ============================================================
    Constants
@@ -186,11 +185,6 @@ const unionOptions = ["", "Ward 1", "Ward 2", "Ward 3", "Other"].map((v) => ({
 const bloodOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
   (v) => ({ label: v, value: v }),
 );
-const statusOptions = [
-  { label: "Active", value: "ACTIVE" },
-  { label: "Inactive", value: "INACTIVE" },
-  { label: "Pending", value: "PENDING" },
-];
 const semesterOptions = [
   { label: "Spring", value: "Spring" },
   { label: "Summer", value: "Summer" },
@@ -242,23 +236,17 @@ const facultyOptions = [
   { label: "Faculty of Architecture", value: "fac-arch" },
   { label: "Faculty of Law", value: "fac-law" },
 ];
-const industryOptions = [
-  "Information Technology",
-  "Finance",
-  "Healthcare",
-  "Construction",
-  "Education",
-  "Media",
-  "Legal",
-  "Telecommunications",
-  "Manufacturing",
-  "Energy",
-  "Consulting",
-  "Environmental",
-  "Agriculture",
-  "Human Resources",
-  "FMCG",
-].map((i) => ({ label: i, value: i }));
+const relationOptions = [
+  "Spouse",
+  "Father",
+  "Mother",
+  "Son",
+  "Daughter",
+  "Brother",
+  "Sister",
+  "Guardian",
+  "Other",
+].map((v) => ({ label: v, value: v }));
 
 const addressFieldMap = {
   address: "presentAddress",
@@ -270,57 +258,91 @@ const addressFieldMap = {
   union: "presentUnion",
 } as const;
 
-const Section = ({
+const createFamilyMember = (): FamilyMember => ({
+  id: generateUUID(),
+  name: "",
+  relation: "",
+  occupation: "",
+  phone: "",
+});
+
+const createJobExperience = (): JobExperience => ({
+  id: generateUUID(),
+  company: "",
+  position: "",
+  startDate: "",
+  endDate: "",
+  location: "",
+  description: "",
+  isCurrent: false,
+});
+
+const sectionCardSx = {
+  borderRadius: 3,
+  border: "1px solid",
+  borderColor: "divider",
+  mb: 3,
+} as const;
+
+function SectionHeader({
+  icon,
   title,
-  children,
 }: {
+  icon: React.ReactNode;
   title: string;
-  children: React.ReactNode;
-}) => (
-  <Card
-    sx={{ borderRadius: 3, border: "1px solid", borderColor: "divider", mb: 3 }}
-  >
-    <CardContent sx={{ p: 3 }}>
-      <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700 }}>
+}) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 32,
+          height: 32,
+          borderRadius: 1.5,
+          bgcolor: "rgba(var(--rgb-chart-indigo), 0.1)",
+          color: "var(--color-chart-indigo)",
+        }}
+      >
+        {icon}
+      </Box>
+      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
         {title}
       </Typography>
-      {children}
-    </CardContent>
-  </Card>
-);
+    </Box>
+  );
+}
 
 /* ============================================================
    Payload builder
    ============================================================ */
 function buildPayload(
   data: AlumniFormValues,
-  educationEntries: EducationEntry[],
-  alumniId?: number,
+  current: CreateUpdateAlumniRequest,
+  family: FamilyMember[],
+  education: EducationEntry[],
+  jobs: JobExperience[],
 ): CreateUpdateAlumniRequest {
   return {
-    alumniID: alumniId ?? null,
-    username: data.username || null,
-    password: data.password || null,
-    status: data.status,
-    isVerified: Boolean(data.isVerified),
+    ...current,
     isMentor: Boolean(data.isMentor),
     willingToMentor: Boolean(data.willingToMentor),
-    isProfilePublic: true,
     personalInformation: {
+      ...current.personalInformation,
       fullName: data.fullName,
       nativeName: data.nativeName || null,
       gender: data.gender || null,
       dateOfBirth: data.dateOfBirth || null,
       bloodGroup: data.bloodGroup || null,
-      maritalStatusID: (data.maritalStatus as string) || null,
       profilePhoto: data.profilePhoto || null,
+      coverPhoto: data.coverPhoto || null, // ← NEW
       bio: data.bio || null,
-      hobby: null,
-      tShirtSize: null,
     },
     contactInformation: {
-      email: data.email || null,
-      phone: data.phone || null,
+      ...current.contactInformation,
+      email: data.email,
+      phone: data.phone,
       alternatePhone: data.alternatePhone || null,
       presentCountry: data.presentCountry || null,
       presentDivision: data.presentDivision || null,
@@ -338,26 +360,29 @@ function buildPayload(
       permanentVillageArea: data.permanentVillageArea || null,
       fullPermanentAddress: data.permanentAddress || null,
     },
-    familyInformation: (data.familyMembers ?? []).map((m) => ({
-      familyMemberID: 0,
-      familyMemberName: m.name,
-      relation: m.relation,
-      occupation: m.occupation || null,
-      phone: m.phone || null,
-      isVisible: true,
-    })),
-    academicInformation: educationEntries.length
-      ? educationEntries.map((e, i) => ({
-          alumniEducationID: 0,
+    familyInformation: family
+      .filter((m) => m.name.trim() && m.relation.trim())
+      .map((m, i) => ({
+        familyMemberID: current.familyInformation[i]?.familyMemberID ?? 0,
+        familyMemberName: m.name,
+        relation: m.relation,
+        occupation: m.occupation || null,
+        phone: m.phone || null,
+        isVisible: current.familyInformation[i]?.isVisible ?? true,
+      })),
+    academicInformation: education.length
+      ? education.map((e, i) => ({
+          alumniEducationID:
+            current.academicInformation[i]?.alumniEducationID ?? 0,
           studentID: i === 0 ? data.studentId || null : null,
           registrationNumber: i === 0 ? data.registrationNumber || null : null,
           rollNumber: i === 0 ? data.rollNumber || null : null,
-          programID: null,
+          programID: current.academicInformation[i]?.programID ?? null,
           programName: e.degree || (i === 0 ? data.programName : "") || null,
-          departmentID: null,
+          departmentID: current.academicInformation[i]?.departmentID ?? null,
           departmentName:
             e.fieldOfStudy || (i === 0 ? data.departmentName : "") || null,
-          facultyID: null,
+          facultyID: current.academicInformation[i]?.facultyID ?? null,
           facultyName: i === 0 ? data.facultyName || null : null,
           admissionYear:
             e.startYear ??
@@ -369,77 +394,102 @@ function buildPayload(
           secondarySchoolName: e.institution || null,
           isVisible: true,
         }))
-      : [
-          {
-            alumniEducationID: 0,
-            studentID: data.studentId || null,
-            registrationNumber: data.registrationNumber || null,
-            rollNumber: data.rollNumber || null,
-            programID: null,
-            programName: data.programName || null,
-            departmentID: null,
-            departmentName: data.departmentName || null,
-            facultyID: null,
-            facultyName: data.facultyName || null,
-            admissionYear: Number(data.admissionYear) || null,
-            graduationYear: Number(data.graduationYear) || null,
-            graduationSemester: data.graduationSemester || null,
-            batch: data.batch || null,
-            secondarySchoolName: null,
-            isVisible: true,
-          },
-        ],
-    jobExperience:
-      data.currentOccupation || data.designation || data.companyName
-        ? [
+      : current.academicInformation.length
+        ? current.academicInformation.map((existing, i) => ({
+            ...existing,
+            studentID: i === 0 ? data.studentId || null : existing.studentID,
+            registrationNumber:
+              i === 0
+                ? data.registrationNumber || null
+                : existing.registrationNumber,
+            programName:
+              i === 0
+                ? data.programName || existing.programName
+                : existing.programName,
+            departmentName:
+              i === 0
+                ? data.departmentName || existing.departmentName
+                : existing.departmentName,
+            admissionYear:
+              i === 0
+                ? Number(data.admissionYear) || existing.admissionYear
+                : existing.admissionYear,
+            graduationYear:
+              i === 0
+                ? Number(data.graduationYear) || existing.graduationYear
+                : existing.graduationYear,
+            batch: i === 0 ? data.batch || existing.batch : existing.batch,
+          }))
+        : [
             {
-              jobExperienceID: 0,
-              companyID: null,
-              companyname: data.companyName || null,
-              designation: data.designation || data.currentOccupation || null,
-              startDate: null,
-              endDate: null,
-              location: data.workLocation || null,
-              city: data.city || null,
-              country: data.country || null,
-              description: null,
-              isCurrent: true,
+              alumniEducationID: 0,
+              studentID: data.studentId || null,
+              registrationNumber: data.registrationNumber || null,
+              rollNumber: null,
+              programID: null,
+              programName: data.programName || null,
+              departmentID: null,
+              departmentName: data.departmentName || null,
+              facultyID: null,
+              facultyName: data.facultyName || null,
+              admissionYear: Number(data.admissionYear) || null,
+              graduationYear: Number(data.graduationYear) || null,
+              graduationSemester: data.graduationSemester || null,
+              batch: data.batch || null,
+              secondarySchoolName: null,
               isVisible: true,
             },
-          ]
-        : [],
+          ],
+    jobExperience: jobs
+      .filter(
+        (j) =>
+          j.company ||
+          j.position ||
+          j.startDate ||
+          j.endDate ||
+          j.location ||
+          j.description,
+      )
+      .map((j, i) => ({
+        jobExperienceID: current.jobExperience[i]?.jobExperienceID ?? 0,
+        companyID: current.jobExperience[i]?.companyID ?? null,
+        companyname: j.company || null,
+        designation: j.position || null,
+        startDate: j.startDate || null,
+        endDate: j.endDate || null,
+        location: j.location || null,
+        city: current.jobExperience[i]?.city ?? null,
+        country: current.jobExperience[i]?.country ?? null,
+        description: j.description || null,
+        isCurrent: Boolean(j.isCurrent),
+        isVisible: current.jobExperience[i]?.isVisible ?? true,
+      })),
     socialInformation: {
-      facebookLink: data.facebookUrl || null,
-      instagramLink: null,
-      twitterLink: null,
+      ...current.socialInformation,
       linkedInLink: data.linkedinUrl || null,
+      facebookLink: data.facebookUrl || null,
       gitHubLink: data.websiteUrl || null,
-    },
-    privacy: {
-      isSocialMediaVisible: true,
-      isFamilyInformationVisible: true,
-      isJobExperienceVisible: true,
-      isContactInformationVisible: true,
-      isAcademicInformationVisible: true,
     },
   };
 }
 
-export default function AlumniFormPage() {
+export default function ProfileSetupPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { id } = useParams();
-  const location = useLocation();
-  const isEdit = !!id;
-  const { role } = useAuth();
+  const { authUser: user } = useAuth();
   const { selectedAlumni, loading, fetchAlumniById, createUpdateAlumni } =
     useAlumni();
-  const { setBreadcrumbLabel, clearBreadcrumbLabel } = useBreadcrumbLabels();
 
-  const [skillsInput, setSkillsInput] = useState("");
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
+    createFamilyMember(),
+  ]);
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>(
     [],
   );
+  const [jobExperiences, setJobExperiences] = useState<JobExperience[]>([
+    createJobExperience(),
+  ]);
+  const [uploading, setUploading] = useState(false);
 
   const {
     control,
@@ -450,67 +500,33 @@ export default function AlumniFormPage() {
     getValues,
     formState,
   } = useForm<AlumniFormValues>({
-    resolver: yupResolver(isEdit ? alumniSchema : alumniCreateSchema) as never,
-    defaultValues: {
-      fullName: "",
-      nativeName: "",
-      gender: "",
-      dateOfBirth: "",
-      bloodGroup: "",
-      maritalStatus: "",
-      email: "",
-      phone: "",
-      alternatePhone: "",
-      presentAddress: "",
-      presentVillageArea: "",
-      presentCountry: "",
-      presentDivision: "",
-      presentDistrict: "",
-      presentThana: "",
-      presentUnion: "",
-      permanentAddress: "",
-      permanentVillageArea: "",
-      permanentCountry: "",
-      permanentDivision: "",
-      permanentDistrict: "",
-      permanentThana: "",
-      permanentUnion: "",
-      sameAsPresentAddress: false,
-      city: "",
-      country: "",
-      studentId: "",
-      registrationNumber: "",
-      programName: "",
-      departmentName: "",
-      facultyId: "",
-      facultyName: "",
-      profilePhoto: "",
-      admissionYear: undefined as never,
-      graduationYear: undefined as never,
-      graduationSemester: "",
-      batch: "",
-      rollNumber: "",
-      currentOccupation: "",
-      designation: "",
-      companyName: "",
-      industry: "",
-      workLocation: "",
-      skills: [],
-      linkedinUrl: "",
-      facebookUrl: "",
-      websiteUrl: "",
-      bio: "",
-      isMentor: false,
-      willingToMentor: false,
-      username: "",
-      password: "",
-      status: "ACTIVE",
-      isVerified: false,
-      familyMembers: [],
-    } as never,
+    resolver: yupResolver(alumniProfileEditSchema) as never,
+    defaultValues: {} as never,
   });
 
   const sameAsPresentAddress = watch("sameAsPresentAddress");
+  const profilePhoto = watch("profilePhoto");
+  const coverPhoto = watch("coverPhoto");
+  const fullName = watch("fullName");
+  const email = watch("email");
+  const phone = watch("phone");
+  const presentDistrict = watch("presentDistrict");
+  const presentCountry = watch("presentCountry");
+  const programName = watch("programName");
+  const departmentName = watch("departmentName");
+  const graduationYear = watch("graduationYear");
+  const batch = watch("batch");
+  const companyName = watch("companyName");
+  const designation = watch("designation");
+  const bio = watch("bio");
+
+  useEffect(() => {
+    if (!user?.alumniId) return;
+    if (!selectedAlumni || String(selectedAlumni.alumniID) !== user.alumniId) {
+      void fetchAlumniById(user.alumniId).catch(() => undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.alumniId]);
 
   useEffect(() => {
     if (sameAsPresentAddress) {
@@ -526,27 +542,11 @@ export default function AlumniFormPage() {
     }
   }, [sameAsPresentAddress, getValues, setValue]);
 
-  const {
-    fields: familyFields,
-    append: appendFamily,
-    remove: removeFamily,
-  } = useFieldArray({
-    control,
-    name: "familyMembers" as never,
-  } as never);
-
   useEffect(() => {
-    if (!isEdit || !id) return;
-    void fetchAlumniById(id).catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEdit, id]);
-
-  useEffect(() => {
-    if (!isEdit || !selectedAlumni) return;
+    if (!selectedAlumni) return;
     const p = selectedAlumni.personalInformation;
     const c = selectedAlumni.contactInformation;
     const e = selectedAlumni.academicInformation[0];
-    const j = selectedAlumni.jobExperience[0];
 
     reset({
       fullName: p.fullName,
@@ -582,16 +582,17 @@ export default function AlumniFormPage() {
       facultyId: e?.facultyID ? String(e.facultyID) : "",
       facultyName: e?.facultyName ?? "",
       profilePhoto: p.profilePhoto ?? "",
+      coverPhoto: p.coverPhoto ?? "", // ← NEW
       admissionYear: e?.admissionYear as never,
       graduationYear: e?.graduationYear as never,
       graduationSemester: e?.graduationSemester ?? "",
       batch: e?.batch ?? "",
       rollNumber: e?.rollNumber ?? "",
-      currentOccupation: j?.designation ?? "",
-      designation: j?.designation ?? "",
-      companyName: j?.companyname ?? "",
+      currentOccupation: "",
+      designation: "",
+      companyName: "",
       industry: "",
-      workLocation: j?.location ?? "",
+      workLocation: "",
       skills: [],
       linkedinUrl: selectedAlumni.socialInformation.linkedInLink ?? "",
       facebookUrl: selectedAlumni.socialInformation.facebookLink ?? "",
@@ -599,66 +600,53 @@ export default function AlumniFormPage() {
       bio: p.bio ?? "",
       isMentor: selectedAlumni.isMentor,
       willingToMentor: selectedAlumni.willingToMentor,
-      username: selectedAlumni.username,
-      password: "",
-      status: selectedAlumni.status,
-      isVerified: selectedAlumni.isVerified,
-      familyMembers: selectedAlumni.familyInformation.map((m) => ({
-        id: String(m.familyMemberID),
-        name: m.familyMemberName,
-        relation: m.relation,
-        occupation: m.occupation ?? "",
-        phone: m.phone ?? "",
-      })),
+      familyMembers: [],
     } as never);
-    setEducationEntries([]);
-  }, [isEdit, selectedAlumni, reset]);
 
-  useEffect(() => {
-    if (!isEdit || !selectedAlumni) return;
-    setBreadcrumbLabel(
-      location.pathname,
-      selectedAlumni.personalInformation.fullName,
+    setFamilyMembers(
+      selectedAlumni.familyInformation.length
+        ? selectedAlumni.familyInformation.map((m) => ({
+            id: String(m.familyMemberID),
+            name: m.familyMemberName,
+            relation: m.relation,
+            occupation: m.occupation ?? "",
+            phone: m.phone ?? "",
+          }))
+        : [createFamilyMember()],
     );
-    return () => clearBreadcrumbLabel(location.pathname);
-  }, [
-    clearBreadcrumbLabel,
-    isEdit,
-    location.pathname,
-    selectedAlumni,
-    setBreadcrumbLabel,
-  ]);
+    setEducationEntries([]);
+    setJobExperiences(
+      selectedAlumni.jobExperience.length
+        ? selectedAlumni.jobExperience.map((j) => ({
+            id: String(j.jobExperienceID),
+            company: j.companyname ?? "",
+            position: j.designation ?? "",
+            startDate: j.startDate ?? "",
+            endDate: j.endDate ?? "",
+            location: j.location ?? "",
+            description: j.description ?? "",
+            isCurrent: j.isCurrent,
+          }))
+        : [createJobExperience()],
+    );
+  }, [selectedAlumni, reset]);
 
-  const onSubmit = async (data: AlumniFormValues) => {
-    try {
-      const payload = buildPayload(
-        data,
-        educationEntries,
-        isEdit && selectedAlumni ? selectedAlumni.alumniID : undefined,
-      );
-      const result = await createUpdateAlumni(payload);
-      dispatch(
-        showToast({
-          message: result?.message ?? "Saved successfully",
-          severity: "success",
-        }),
-      );
-      if (isEdit && id) navigate(`/alumni/${id}`);
-      else if (result?.alumniID) navigate(`/alumni/${result.alumniID}`);
-      else navigate("/alumni");
-    } catch (err) {
-      dispatch(
-        showToast({
-          message: getApiErrorMessage(err, "Unable to save alumni information"),
-          severity: "error",
-        }),
-      );
-    }
-  };
+  const addFamilyMember = () =>
+    setFamilyMembers((p) => [...p, createFamilyMember()]);
+  const removeFamilyMember = (fid: string) =>
+    setFamilyMembers((p) => p.filter((m) => m.id !== fid));
+  const updateFamilyMember = (
+    fid: string,
+    field: keyof FamilyMember,
+    value: string,
+  ) =>
+    setFamilyMembers((p) =>
+      p.map((m) => (m.id === fid ? { ...m, [field]: value } : m)),
+    );
 
   const addEducation = () =>
-    setEducationEntries((prev) => [
-      ...prev,
+    setEducationEntries((p) => [
+      ...p,
       {
         id: generateUUID(),
         degree: "",
@@ -669,773 +657,970 @@ export default function AlumniFormPage() {
         result: "",
       },
     ]);
-  const removeEducation = (eduId: string) =>
-    setEducationEntries((prev) => prev.filter((e) => e.id !== eduId));
+  const removeEducation = (eid: string) =>
+    setEducationEntries((p) => p.filter((e) => e.id !== eid));
   const updateEducation = (
-    eduId: string,
+    eid: string,
     field: keyof EducationEntry,
     value: string | number,
   ) =>
-    setEducationEntries((prev) =>
-      prev.map((e) => (e.id === eduId ? { ...e, [field]: value } : e)),
+    setEducationEntries((p) =>
+      p.map((e) => (e.id === eid ? { ...e, [field]: value } : e)),
     );
 
-  if (loading && isEdit && !selectedAlumni) return <CommonLoading />;
-  if (isEdit && !hasAdminAccess(role) && !selectedAlumni)
-    return <Navigate to="/unauthorized" replace />;
+  const addJob = () => setJobExperiences((p) => [...p, createJobExperience()]);
+  const removeJob = (jid: string) =>
+    setJobExperiences((p) => p.filter((j) => j.id !== jid));
+  const updateJob = (
+    jid: string,
+    field: keyof JobExperience,
+    value: string | boolean,
+  ) =>
+    setJobExperiences((p) =>
+      p.map((j) => (j.id === jid ? { ...j, [field]: value } : j)),
+    );
+
+  const handlePhotoSelect = async (preview: string, file: File) => {
+    setValue("profilePhoto" as never, preview as never);
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setValue("profilePhoto" as never, url as never);
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Failed to upload image"),
+          severity: "error",
+        }),
+      );
+      setValue(
+        "profilePhoto" as never,
+        (selectedAlumni?.personalInformation.profilePhoto ?? "") as never,
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ← NEW: cover upload handler
+  const handleCoverSelect = async (preview: string, file: File) => {
+    setValue("coverPhoto" as never, preview as never);
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setValue("coverPhoto" as never, url as never);
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Failed to upload cover photo"),
+          severity: "error",
+        }),
+      );
+      setValue(
+        "coverPhoto" as never,
+        (selectedAlumni?.personalInformation.coverPhoto ?? "") as never,
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onSubmit = async (data: AlumniFormValues) => {
+    if (!selectedAlumni) return;
+    if (uploading) {
+      dispatch(
+        showToast({
+          message: "Please wait for the photo upload to finish.",
+          severity: "warning",
+        }),
+      );
+      return;
+    }
+    try {
+      const base: CreateUpdateAlumniRequest = {
+        alumniID: selectedAlumni.alumniID,
+        isMentor: selectedAlumni.isMentor,
+        willingToMentor: selectedAlumni.willingToMentor,
+        isProfilePublic: selectedAlumni.isProfilePublic,
+        personalInformation: selectedAlumni.personalInformation,
+        contactInformation: selectedAlumni.contactInformation,
+        familyInformation: selectedAlumni.familyInformation,
+        academicInformation: selectedAlumni.academicInformation,
+        jobExperience: selectedAlumni.jobExperience,
+        socialInformation: selectedAlumni.socialInformation,
+        privacy: selectedAlumni.privacy,
+      };
+      const payload = buildPayload(
+        data,
+        base,
+        familyMembers,
+        educationEntries,
+        jobExperiences,
+      );
+      await createUpdateAlumni(payload);
+      dispatch(
+        showToast({
+          message: "Profile updated successfully",
+          severity: "success",
+        }),
+      );
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Unable to save profile"),
+          severity: "error",
+        }),
+      );
+    }
+  };
+
+  if (loading && !selectedAlumni) return <AlumniProfileSkeleton />;
+  if (!selectedAlumni) return <CommonEmptyState title="Profile not found" />;
+
+  const a = selectedAlumni;
+  const previewAlumni = {
+    ...a,
+    personalInformation: {
+      ...a.personalInformation,
+      fullName: fullName ?? a.personalInformation.fullName,
+      profilePhoto: profilePhoto ?? a.personalInformation.profilePhoto,
+      coverPhoto: coverPhoto ?? a.personalInformation.coverPhoto,
+      bio: bio ?? a.personalInformation.bio,
+    },
+    contactInformation: {
+      ...a.contactInformation,
+      email: email ?? a.contactInformation.email,
+      phone: phone ?? a.contactInformation.phone,
+      presentDistrict: presentDistrict ?? a.contactInformation.presentDistrict,
+      presentCountry: presentCountry ?? a.contactInformation.presentCountry,
+    },
+    academicInformation: a.academicInformation.map((education, index) =>
+      index === 0
+        ? {
+            ...education,
+            programName: programName ?? education.programName,
+            departmentName: departmentName ?? education.departmentName,
+            graduationYear:
+              graduationYear == null || graduationYear === ""
+                ? education.graduationYear
+                : Number(graduationYear) || null,
+            batch: batch ?? education.batch,
+          }
+        : education,
+    ),
+    jobExperience: a.jobExperience.map((job, index) =>
+      index === 0
+        ? {
+            ...job,
+            companyname: companyName ?? job.companyname,
+            designation: designation ?? job.designation,
+          }
+        : job,
+    ),
+  };
+  const previewCompletion = calculateProfileCompletion(previewAlumni);
+  const previewMissing = getMissingProfileFields(previewAlumni);
 
   return (
     <Box>
       <CommonPageHeader
-        title={isEdit ? "Edit Alumni" : "Add New Alumni"}
-        subtitle={
-          isEdit ? "Update alumni information" : "Create a new alumni record"
-        }
+        title="Profile Setup"
+        // subtitle="Complete your profile with personal, academic, and professional details"
         breadcrumbs={[
-          { label: "Home", path: "/dashboard" },
-          { label: "Alumni", path: "/alumni" },
-          { label: isEdit ? "Edit" : "Create" },
+          { label: "Home", path: "/alumni/dashboard" },
+          { label: "Profile", path: "/alumni/profile-details" },
+          { label: "Profile Setup" },
         ]}
         actions={
           <CommonButton
             variant="outlined"
             startIcon={<ArrowLeft size={18} />}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/alumni/profile-details")}
           >
             Back
           </CommonButton>
         }
       />
 
+      <AlumniProfileCard
+        alumni={previewAlumni}
+        completion={previewCompletion}
+        missing={previewMissing}
+        isOwner
+        isAdmin={false}
+      />
+
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Section title="Personal Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonInputField
-                name="fullName"
-                label="Full Name"
-                control={control}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonInputField
-                name="nativeName"
-                label="Native Name"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="gender"
-                label="Gender"
-                control={control}
-                menuItems={genderOptions}
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDatePicker
-                name="dateOfBirth"
-                label="Date of Birth"
-                control={control}
-                maxDate={new Date()}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="bloodGroup"
-                label="Blood Group"
-                control={control}
-                menuItems={bloodOptions}
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="maritalStatus"
-                label="Marital Status"
-                control={control}
-                menuItems={maritalStatusOptions}
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <CommonFileUpload
-                label="Profile Photo"
-                currentFile={watch("profilePhoto") || undefined}
-                onFileSelect={async (preview, file) => {
-                  // Show the preview immediately
-                  setValue("profilePhoto" as never, preview as never);
-
-                  // Upload in the background and swap in the real URL
-                  try {
-                    const url = await uploadImage(file);
-                    setValue("profilePhoto" as never, url as never);
-                  } catch (err) {
-                    dispatch(
-                      showToast({
-                        message: getApiErrorMessage(
-                          err,
-                          "Failed to upload image",
-                        ),
-                        severity: "error",
-                      }),
-                    );
-                    // Roll back the preview on failure
-                    setValue("profilePhoto" as never, "" as never);
-                  }
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Section>
-
-        <Section title="Contact Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="email"
-                label="Email"
-                control={control}
-                required
-                type="email"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="phone"
-                label="Phone"
-                control={control}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="alternatePhone"
-                label="Alternate Phone"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField name="city" label="City" control={control} />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2">Present Address</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="presentVillageArea"
-                label="Village/Area"
-                control={control}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="presentCountry"
-                label="Country"
-                control={control}
-                menuItems={countryOptions}
-                required
-                placeholder="Select..."
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="presentDivision"
-                label="Division"
-                control={control}
-                menuItems={divisionOptions}
-                required
-                placeholder="Select..."
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="presentDistrict"
-                label="District"
-                control={control}
-                menuItems={districtOptions}
-                placeholder="Select..."
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="presentThana"
-                label="Thana"
-                control={control}
-                menuItems={thanaOptions}
-                placeholder="Select..."
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="presentUnion"
-                label="Union"
-                control={control}
-                menuItems={unionOptions}
-                placeholder="Select union"
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <CommonTextArea
-                name="presentAddress"
-                label="Address"
-                control={control}
-                rows={2}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ mt: 1 }}>
-                Permanent Address
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <CommonCheckbox
-                name="sameAsPresentAddress"
-                label="Same as Present Address"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="permanentVillageArea"
-                label="Village/Area"
-                control={control}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="permanentCountry"
-                label="Country"
-                control={control}
-                menuItems={countryOptions}
-                placeholder="Select..."
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="permanentDivision"
-                label="Division"
-                control={control}
-                menuItems={divisionOptions}
-                placeholder="Select division"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="permanentDistrict"
-                label="District"
-                control={control}
-                menuItems={districtOptions}
-                placeholder="Select district"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="permanentThana"
-                label="Thana"
-                control={control}
-                menuItems={thanaOptions}
-                placeholder="Select thana"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="permanentUnion"
-                label="Union"
-                control={control}
-                menuItems={unionOptions}
-                placeholder="Select union"
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <CommonTextArea
-                name="permanentAddress"
-                label="Address"
-                control={control}
-                rows={2}
-                required
-              />
-            </Grid>
-          </Grid>
-        </Section>
-
-        <Section title="Academic Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="studentId"
-                label="Student ID"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="registrationNumber"
-                label="Registration Number"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonDropDown
-                name="programName"
-                label="Program"
-                control={control}
-                menuItems={programOptions}
-                required
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonDropDown
-                name="departmentName"
-                label="Department"
-                control={control}
-                menuItems={departmentOptions}
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonDropDown
-                name="facultyId"
-                label="Faculty"
-                control={control}
-                menuItems={facultyOptions}
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <CommonInputField
-                name="admissionYear"
-                label="Admission Year"
-                control={control}
-                type="number"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
-              <CommonInputField
-                name="graduationYear"
-                label="Graduation Year"
-                control={control}
-                required
-                type="number"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonDropDown
-                name="graduationSemester"
-                label="Graduation Semester"
-                control={control}
-                menuItems={semesterOptions}
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonInputField
-                name="batch"
-                label="Batch"
-                control={control}
-                placeholder="e.g. 2018"
-              />
-            </Grid>
-          </Grid>
-          <Divider sx={{ my: 2 }} />
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 2,
-            }}
-          >
-            <Typography variant="subtitle2">
-              Additional Academic Information
-            </Typography>
-            <Button
-              type="button"
-              size="small"
-              variant="outlined"
-              startIcon={<Plus size={16} />}
-              onClick={addEducation}
-            >
-              Add Academic Information
-            </Button>
-          </Box>
-          {educationEntries.map((entry) => (
-            <Box
-              key={entry.id}
-              sx={{
-                mb: 2,
-                p: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Academic Record
-                </Typography>
-                <Button
-                  type="button"
-                  size="small"
-                  color="error"
-                  startIcon={<Trash2 size={16} />}
-                  onClick={() => removeEducation(entry.id)}
+        {/* ============ Personal Information ============ */}
+        <Card sx={sectionCardSx}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <SectionHeader
+              icon={<User size={18} />}
+              title="Personal Information"
+            />
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="fullName"
+                  label="Full Name"
+                  control={control}
+                  required
                 />
-              </Box>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CommonInputField
-                    name={`educationDegree_${entry.id}` as never}
-                    label="Degree"
-                    control={control}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "degree", e.target.value)
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CommonInputField
-                    name={`educationInstitution_${entry.id}` as never}
-                    label="Institution"
-                    control={control}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "institution", e.target.value)
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CommonInputField
-                    name={`educationField_${entry.id}` as never}
-                    label="Field of Study"
-                    control={control}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "fieldOfStudy", e.target.value)
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 3 }}>
-                  <CommonInputField
-                    name={`educationStart_${entry.id}` as never}
-                    label="Start Year"
-                    control={control}
-                    type="number"
-                    onChange={(e) =>
-                      updateEducation(
-                        entry.id,
-                        "startYear",
-                        Number(e.target.value) || 0,
-                      )
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 3 }}>
-                  <CommonInputField
-                    name={`educationEnd_${entry.id}` as never}
-                    label="End Year"
-                    control={control}
-                    type="number"
-                    onChange={(e) =>
-                      updateEducation(
-                        entry.id,
-                        "endYear",
-                        Number(e.target.value) || 0,
-                      )
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <CommonInputField
-                    name={`educationResult_${entry.id}` as never}
-                    label="Result"
-                    control={control}
-                    onChange={(e) =>
-                      updateEducation(entry.id, "result", e.target.value)
-                    }
-                  />
-                </Grid>
               </Grid>
-            </Box>
-          ))}
-        </Section>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="nativeName"
+                  label="Native Name"
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDropDown
+                  name="gender"
+                  label="Gender"
+                  control={control}
+                  menuItems={genderOptions}
+                  placeholder="Select"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDatePicker
+                  name="dateOfBirth"
+                  label="Date of Birth"
+                  control={control}
+                  maxDate={new Date()}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDropDown
+                  name="bloodGroup"
+                  label="Blood Group"
+                  control={control}
+                  menuItems={bloodOptions}
+                  placeholder="Select"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDropDown
+                  name="maritalStatus"
+                  label="Marital Status"
+                  control={control}
+                  menuItems={maritalStatusOptions}
+                  placeholder="Select"
+                />
+              </Grid>
 
-        <Section title="Professional Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="currentOccupation"
-                label="Current Occupation"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="designation"
-                label="Designation"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="companyName"
-                label="Company"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonDropDown
-                name="industry"
-                label="Industry"
-                control={control}
-                menuItems={industryOptions}
-                placeholder="Select"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="workLocation"
-                label="Work Location"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CommonInputField
-                name="skills"
-                label="Skills (comma separated)"
-                control={control}
-                onChange={(e) => setSkillsInput(e.target.value)}
-              />
-            </Grid>
-          </Grid>
-        </Section>
+              {/* NEW: cover photo */}
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Cover Photo
+                </Typography>
+                <CommonFileUpload
+                  variant="cover"
+                  label={uploading ? "Uploading..." : "Upload Cover Photo"}
+                  currentFile={coverPhoto || undefined}
+                  onFileSelect={handleCoverSelect}
+                />
+              </Grid>
 
-        <Section title="Social Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonInputField
-                name="linkedinUrl"
-                label="LinkedIn URL"
-                control={control}
-              />
+              <Grid size={{ xs: 12 }}>
+                <CommonFileUpload
+                  label={uploading ? "Uploading..." : "Profile Photo"}
+                  currentFile={profilePhoto || undefined}
+                  onFileSelect={handlePhotoSelect}
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonInputField
-                name="facebookUrl"
-                label="Facebook URL"
-                control={control}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CommonInputField
-                name="websiteUrl"
-                label="Website URL"
-                control={control}
-              />
-            </Grid>
-          </Grid>
-        </Section>
+          </CardContent>
+        </Card>
 
-        <Section title="Family Information">
-          {familyFields.length === 0 && (
+        {/* ============ Contact Information ============ */}
+        <Card sx={sectionCardSx}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <SectionHeader
+              icon={<Phone size={18} />}
+              title="Contact Information"
+            />
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="email"
+                  label="Email"
+                  control={control}
+                  required
+                  type="email"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="phone"
+                  label="Phone"
+                  control={control}
+                  required
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="alternatePhone"
+                  label="Alternate Phone"
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField name="city" label="City" control={control} />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                  Present Address
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonInputField
+                  name="presentVillageArea"
+                  label="Village/Area"
+                  control={control}
+                  required
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="presentCountry"
+                  label="Country"
+                  control={control}
+                  menuItems={countryOptions}
+                  required
+                  placeholder="Select..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="presentDivision"
+                  label="Division"
+                  control={control}
+                  menuItems={divisionOptions}
+                  required
+                  placeholder="Select..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="presentDistrict"
+                  label="District"
+                  control={control}
+                  menuItems={districtOptions}
+                  placeholder="Select..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="presentThana"
+                  label="Thana"
+                  control={control}
+                  menuItems={thanaOptions}
+                  placeholder="Select..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="presentUnion"
+                  label="Union"
+                  control={control}
+                  menuItems={unionOptions}
+                  placeholder="Select union"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 12 }}>
+                <CommonTextArea
+                  name="presentAddress"
+                  label="Address"
+                  control={control}
+                  rows={2}
+                  required
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                  Permanent Address
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <CommonCheckbox
+                  name="sameAsPresentAddress"
+                  label="Same as Present Address"
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="permanentVillageArea"
+                  label="Village/Area"
+                  control={control}
+                  required
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="permanentCountry"
+                  label="Country"
+                  control={control}
+                  menuItems={countryOptions}
+                  placeholder="Select..."
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="permanentDivision"
+                  label="Division"
+                  control={control}
+                  menuItems={divisionOptions}
+                  placeholder="Select division"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="permanentDistrict"
+                  label="District"
+                  control={control}
+                  menuItems={districtOptions}
+                  placeholder="Select district"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="permanentThana"
+                  label="Thana"
+                  control={control}
+                  menuItems={thanaOptions}
+                  placeholder="Select thana"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CommonDropDown
+                  name="permanentUnion"
+                  label="Union"
+                  control={control}
+                  menuItems={unionOptions}
+                  placeholder="Select union"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 12 }}>
+                <CommonTextArea
+                  name="permanentAddress"
+                  label="Address"
+                  control={control}
+                  rows={2}
+                  required
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* ============ Family Information ============ */}
+        <Card sx={sectionCardSx}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
             <Box
               sx={{
-                p: 4,
-                textAlign: "center",
-                border: "1px dashed",
-                borderColor: "divider",
-                borderRadius: 3,
-                bgcolor: (theme) => alpha(theme.palette.action.hover, 0.02),
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 mb: 2,
               }}
             >
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 1.5 }}
-              >
-                No family members added yet.
-              </Typography>
+              <SectionHeader
+                icon={<Users size={18} />}
+                title="Family Information"
+              />
               <Button
-                variant="contained"
                 size="small"
                 startIcon={<Plus size={16} />}
-                onClick={() =>
-                  appendFamily({
-                    name: "",
-                    relation: "",
-                    occupation: "",
-                    phone: "",
-                  } as never)
-                }
-                sx={{ textTransform: "none", borderRadius: 2 }}
-              >
-                Add First Member
-              </Button>
-            </Box>
-          )}
-
-          {familyFields.map((field, index) => (
-            <Paper
-              key={field.id}
-              elevation={0}
-              sx={{
-                mb: 2.5,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 3,
-                overflow: "hidden",
-                transition: "border-color 0.2s ease",
-                "&:hover": {
-                  borderColor: (theme) =>
-                    alpha(theme.palette.primary.main, 0.4),
-                },
-              }}
-            >
-              <Box
+                onClick={addFamilyMember}
                 sx={{
-                  px: 2.5,
-                  py: 1.5,
-                  bgcolor: (theme) => alpha(theme.palette.action.hover, 0.03),
-                  borderBottom: "1px solid",
-                  borderColor: "divider",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
+                  color: "var(--color-chart-indigo)",
+                  fontWeight: 600,
+                  textTransform: "none",
                 }}
               >
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    fontWeight: 600,
-                    color: "text.secondary",
-                    fontSize: "0.825rem",
-                  }}
-                >
-                  Family Member #{index + 1}
-                </Typography>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => removeFamily(index)}
-                  sx={{
-                    borderRadius: 1.5,
-                    bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                    "&:hover": {
-                      bgcolor: (theme) => alpha(theme.palette.error.main, 0.16),
-                    },
-                  }}
-                >
-                  <Trash2 size={16} />
-                </IconButton>
-              </Box>
-              <Box sx={{ p: 2.5 }}>
-                <Grid container spacing={2}>
+                Add Member
+              </Button>
+            </Box>
+            <Grid container spacing={2}>
+              {familyMembers.map((m) => (
+                <Grid size={{ xs: 12 }} key={m.id}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.default",
+                    }}
+                  >
+                    <Grid container spacing={2} sx={{ alignItems: "center" }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonInputField
+                          name={`familyName_${m.id}` as never}
+                          label="Name"
+                          control={control}
+                          placeholder="Full name"
+                          onChange={(e) =>
+                            updateFamilyMember(m.id, "name", e.target.value)
+                          }
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonDropDown
+                          name={`familyRelation_${m.id}` as never}
+                          label="Relation"
+                          control={control}
+                          menuItems={relationOptions}
+                          placeholder="Select"
+                          onChange={(value) =>
+                            updateFamilyMember(m.id, "relation", value)
+                          }
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonInputField
+                          name={`familyOccupation_${m.id}` as never}
+                          label="Occupation"
+                          control={control}
+                          placeholder="Occupation"
+                          onChange={(e) =>
+                            updateFamilyMember(
+                              m.id,
+                              "occupation",
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <CommonInputField
+                          name={`familyPhone_${m.id}` as never}
+                          label="Phone"
+                          control={control}
+                          placeholder="Phone"
+                          onChange={(e) =>
+                            updateFamilyMember(m.id, "phone", e.target.value)
+                          }
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <IconButton
+                          onClick={() => removeFamilyMember(m.id)}
+                          color="error"
+                          size="small"
+                        >
+                          <Trash2 size={16} />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* ============ Academic Information ============ */}
+        <Card sx={sectionCardSx}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <SectionHeader
+                icon={<GraduationCap size={18} />}
+                title="Academic Information"
+              />
+              <Button
+                size="small"
+                startIcon={<Plus size={16} />}
+                onClick={addEducation}
+                sx={{
+                  color: "var(--color-chart-indigo)",
+                  fontWeight: 600,
+                  textTransform: "none",
+                }}
+              >
+                Add Education
+              </Button>
+            </Box>
+            <Grid
+              container
+              spacing={2}
+              sx={{
+                mb:
+                  familyMembers.length > 0 || educationEntries.length > 0
+                    ? 2
+                    : 0,
+              }}
+            >
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="studentId"
+                  label="Student ID"
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="registrationNumber"
+                  label="Registration Number"
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDropDown
+                  name="programName"
+                  label="Program"
+                  control={control}
+                  menuItems={programOptions}
+                  required
+                  placeholder="Select"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDropDown
+                  name="departmentName"
+                  label="Department"
+                  control={control}
+                  menuItems={departmentOptions}
+                  placeholder="Select"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDropDown
+                  name="facultyId"
+                  label="Faculty"
+                  control={control}
+                  menuItems={facultyOptions}
+                  placeholder="Select"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="admissionYear"
+                  label="Admission Year"
+                  control={control}
+                  type="number"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="graduationYear"
+                  label="Graduation Year"
+                  control={control}
+                  required
+                  type="number"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonDropDown
+                  name="graduationSemester"
+                  label="Graduation Semester"
+                  control={control}
+                  menuItems={semesterOptions}
+                  placeholder="Select"
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="batch"
+                  label="Batch"
+                  control={control}
+                  placeholder="e.g. 2018"
+                />
+              </Grid>
+            </Grid>
+            {educationEntries.length > 0 && <Divider sx={{ mb: 2 }} />}
+            {educationEntries.map((e) => (
+              <Box
+                key={e.id}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.default",
+                  mb: 1.5,
+                }}
+              >
+                <Grid container spacing={2} sx={{ alignItems: "center" }}>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <CommonInputField
-                      name={`familyMembers.${index}.name` as never}
-                      label="Full Name"
+                      name={`eduDegree_${e.id}` as never}
+                      label="Degree"
                       control={control}
-                      required
+                      placeholder="e.g. BSc"
+                      onChange={(ev) =>
+                        updateEducation(e.id, "degree", ev.target.value)
+                      }
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <CommonInputField
-                      name={`familyMembers.${index}.relation` as never}
-                      label="Relation"
+                      name={`eduInst_${e.id}` as never}
+                      label="Institution"
                       control={control}
-                      required
-                      placeholder="e.g. Father, Spouse"
+                      placeholder="Institution name"
+                      onChange={(ev) =>
+                        updateEducation(e.id, "institution", ev.target.value)
+                      }
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <CommonInputField
-                      name={`familyMembers.${index}.occupation` as never}
-                      label="Occupation"
+                      name={`eduField_${e.id}` as never}
+                      label="Field of Study"
                       control={control}
+                      placeholder="Field"
+                      onChange={(ev) =>
+                        updateEducation(e.id, "fieldOfStudy", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 6 }}>
+                    <CommonInputField
+                      name={`eduStart_${e.id}` as never}
+                      label="Start Year"
+                      control={control}
+                      type="number"
+                      placeholder="YYYY"
+                      onChange={(ev) =>
+                        updateEducation(
+                          e.id,
+                          "startYear",
+                          Number(ev.target.value) || 0,
+                        )
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 6 }}>
+                    <CommonInputField
+                      name={`eduEnd_${e.id}` as never}
+                      label="End Year"
+                      control={control}
+                      type="number"
+                      placeholder="YYYY"
+                      onChange={(ev) =>
+                        updateEducation(
+                          e.id,
+                          "endYear",
+                          Number(ev.target.value) || 0,
+                        )
+                      }
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <CommonInputField
-                      name={`familyMembers.${index}.phone` as never}
-                      label="Phone"
-                      control={control}
-                    />
+                    <IconButton
+                      onClick={() => removeEducation(e.id)}
+                      color="error"
+                      size="small"
+                    >
+                      <Trash2 size={16} />
+                    </IconButton>
                   </Grid>
                 </Grid>
               </Box>
-            </Paper>
-          ))}
+            ))}
+          </CardContent>
+        </Card>
 
-          {familyFields.length > 0 && (
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Plus size={18} />}
-              onClick={() =>
-                appendFamily({
-                  name: "",
-                  relation: "",
-                  occupation: "",
-                  phone: "",
-                } as never)
-              }
+        {/* ============ Job Experience ============ */}
+        <Card sx={sectionCardSx}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <Box
               sx={{
-                py: 1.25,
-                borderStyle: "dashed",
-                borderRadius: 2.5,
-                textTransform: "none",
-                fontWeight: 600,
-                borderColor: "divider",
-                color: "text.primary",
-                "&:hover": {
-                  borderStyle: "dashed",
-                  borderColor: "primary.main",
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                },
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
               }}
             >
-              Add Another Family Member
-            </Button>
-          )}
-        </Section>
+              <SectionHeader
+                icon={<Briefcase size={18} />}
+                title="Job Experience"
+              />
+              <Button
+                size="small"
+                startIcon={<Plus size={16} />}
+                onClick={addJob}
+                sx={{
+                  color: "var(--color-chart-indigo)",
+                  fontWeight: 600,
+                  textTransform: "none",
+                }}
+              >
+                Add Experience
+              </Button>
+            </Box>
+            {jobExperiences.map((j) => (
+              <Box
+                key={j.id}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.default",
+                  mb: 1.5,
+                }}
+              >
+                <Grid container spacing={2} sx={{ alignItems: "center" }}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobCompany_${j.id}` as never}
+                      label="Company"
+                      control={control}
+                      placeholder="Company name"
+                      onChange={(ev) =>
+                        updateJob(j.id, "company", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobPosition_${j.id}` as never}
+                      label="Position"
+                      control={control}
+                      placeholder="Job title"
+                      onChange={(ev) =>
+                        updateJob(j.id, "position", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobStart_${j.id}` as never}
+                      label="Start Date"
+                      type="month"
+                      control={control}
+                      placeholder="YYYY-MM"
+                      onChange={(ev) =>
+                        updateJob(j.id, "startDate", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobEnd_${j.id}` as never}
+                      label="End Date"
+                      control={control}
+                      placeholder="YYYY-MM"
+                      onChange={(ev) =>
+                        updateJob(j.id, "endDate", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobLocation_${j.id}` as never}
+                      label="Location"
+                      control={control}
+                      placeholder="City, Country"
+                      onChange={(ev) =>
+                        updateJob(j.id, "location", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CommonInputField
+                      name={`jobDesc_${j.id}` as never}
+                      label="Description"
+                      control={control}
+                      placeholder="Brief description"
+                      onChange={(ev) =>
+                        updateJob(j.id, "description", ev.target.value)
+                      }
+                    />
+                  </Grid>
+                </Grid>
+                <Grid
+                  size={{ xs: 12, sm: 12 }}
+                  sx={{ mt: 1, textAlign: "right" }}
+                >
+                  <IconButton
+                    onClick={() => removeJob(j.id)}
+                    color="error"
+                    size="small"
+                  >
+                    <Trash2 size={16} />
+                  </IconButton>
+                </Grid>
+              </Box>
+            ))}
+          </CardContent>
+        </Card>
 
-        <Section title="Biography">
-          <CommonTextArea
-            name="bio"
-            label="Bio / About"
-            control={control}
-            rows={4}
-            placeholder="Write a short biography..."
-          />
-        </Section>
+        {/* ============ Social Information ============ */}
+        <Card sx={sectionCardSx}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <SectionHeader
+              icon={<Globe size={18} />}
+              title="Social Information"
+            />
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="linkedinUrl"
+                  label="LinkedIn URL"
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="facebookUrl"
+                  label="Facebook URL"
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CommonInputField
+                  name="websiteUrl"
+                  label="Website URL"
+                  control={control}
+                />
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* ============ Biography ============ */}
+        <Card sx={sectionCardSx}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <SectionHeader icon={<FileText size={18} />} title="Biography" />
+            <CommonTextArea
+              name="bio"
+              label="Bio / About"
+              control={control}
+              rows={4}
+              placeholder="Write a short biography..."
+            />
+          </CardContent>
+        </Card>
 
         <Box
           sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mb: 3 }}
         >
           <Button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/alumni/profile-details")}
             startIcon={<ArrowLeft size={18} />}
+            sx={{ textTransform: "none" }}
           >
             Cancel
           </Button>
           <CommonButton
             type="submit"
-            loading={formState.isSubmitting}
+            loading={formState.isSubmitting || uploading}
             startIcon={<Save size={18} />}
           >
-            {isEdit ? "Update Alumni" : "Create Alumni"}
+            Save
           </CommonButton>
         </Box>
       </form>

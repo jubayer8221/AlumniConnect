@@ -34,25 +34,27 @@ interface RawEvent {
   capacity: number;
   regDeadline?: string;
   image?: string;
-  setDate?: string;
   eventType?: string;
   status?: string;
+  setDate?: string;
 }
 
 /* ---------- create/update payload ---------- */
 export interface CreateUpdateEventPayload {
-  eventID?: string; // omit or "" for create; set for update
+  eventID?: string;
   eventTitle: string;
   description: string;
   createByID?: string;
-  startDate: string; // ISO date-time
-  endDate: string; // ISO date-time
+  startDate: string;
+  endDate: string;
   location: string;
   venue: string;
   organizer: string;
   capacity: number;
   regDeadline?: string;
   image?: string;
+  eventType?: string;
+  status?: string;
   setDate?: string;
 }
 
@@ -83,6 +85,7 @@ const transformEvent = (raw: RawEvent): EventItem => {
     description: raw.description ?? "",
     eventType: (raw.eventType as EventType) ?? "Other",
     date: start.date,
+    endDate: end.date || start.date, // NEW
     startTime: start.time,
     endTime: end.time,
     location: raw.location ?? "",
@@ -91,7 +94,7 @@ const transformEvent = (raw: RawEvent): EventItem => {
     registrationDeadline: raw.regDeadline ?? "",
     capacity: raw.capacity ?? 0,
     image: raw.image,
-    status: deriveStatus(raw),
+    status: (raw.status as EventStatus) ?? deriveStatus(raw),
     createdAt: raw.setDate ?? "",
     updatedAt: raw.setDate ?? "",
   };
@@ -141,14 +144,14 @@ const normalizeListResponse = (
   return { items: [], totalRecords: 0 };
 };
 
-/* ---------- params (match API query names) ---------- */
+/* ---------- params ---------- */
 export interface FetchEventsParams {
   pageNumber?: number;
   pageSize?: number;
-  search?: string; // maps to searchstring
+  search?: string;
   upcomingOnly?: boolean;
-  fromDate?: string; // ISO date-time
-  toDate?: string; // ISO date-time
+  fromDate?: string;
+  toDate?: string;
 }
 
 export const useEvents = () => {
@@ -164,7 +167,7 @@ export const useEvents = () => {
   const loading = useSelector((s: RootState) => s.events.loading);
   const error = useSelector((s: RootState) => s.events.error);
 
-  /* ---------- list: GET /Event/GetEvents ---------- */
+  /* ---------- list ---------- */
   const fetchEvents = useCallback(
     async (params?: FetchEventsParams) => {
       try {
@@ -204,7 +207,7 @@ export const useEvents = () => {
     [dispatch],
   );
 
-  /* ---------- detail: GET /Event/{id} ---------- */
+  /* ---------- detail ---------- */
   const fetchEventById = useCallback(
     async (id: string) => {
       try {
@@ -235,7 +238,7 @@ export const useEvents = () => {
     [dispatch],
   );
 
-  /* ---------- registrations (update paths when API is ready) ---------- */
+  /* ---------- registrations ---------- */
   const fetchRegistrations = useCallback(
     async (eventId: string) => {
       try {
@@ -267,24 +270,32 @@ export const useEvents = () => {
     [],
   );
 
-  /* ---------- create / update: POST /Event/CreateUpdateEvent ---------- */
+  /* ---------- create / update ---------- */
   const createEvent = useCallback(async (payload: CreateUpdateEventPayload) => {
     const res = await api.post("/Event/CreateUpdateEvent", {
       ...payload,
       eventID: payload.eventID ?? "",
     });
     const raw = (res.data?.data ?? res.data) as RawEvent;
-    return transformEvent(raw);
+
+    if (!raw?.eventID) return null;
+
+    // Refetch to get the full event
+    const fetchRes = await api.get(`/Event/${raw.eventID}`);
+    const fresh = (fetchRes.data?.data ?? fetchRes.data) as RawEvent;
+    return transformEvent(fresh);
   }, []);
 
   const updateEvent = useCallback(
     async (id: string, payload: Omit<CreateUpdateEventPayload, "eventID">) => {
-      const res = await api.post("/Event/CreateUpdateEvent", {
+      await api.post("/Event/CreateUpdateEvent", {
         ...payload,
         eventID: id,
       });
-      const raw = (res.data?.data ?? res.data) as RawEvent;
-      return transformEvent(raw);
+
+      const fetchRes = await api.get(`/Event/${id}`);
+      const fresh = (fetchRes.data?.data ?? fetchRes.data) as RawEvent;
+      return transformEvent(fresh);
     },
     [],
   );

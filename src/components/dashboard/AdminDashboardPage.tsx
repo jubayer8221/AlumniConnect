@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Grid,
@@ -13,6 +13,8 @@ import {
   Divider,
   Button,
   Chip,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import {
   Users,
@@ -23,19 +25,25 @@ import {
   CalendarDays,
   Bell,
   Briefcase,
+  BadgeCheck,
+  Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
+import { useAlumni } from "@/hooks/useAlumni";
 import { fetchDashboardDataAsync } from "@/store/Slice/dashboardSlice";
+import { showToast } from "@/store/Slice/uiSlice";
 import {
   CommonLoading,
   CommonEmptyState,
   CommonPageHeader,
+  CommonConfirmDialog,
 } from "@/components/common";
 import StatCard from "@/components/dashboard/StatCard";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import { fromNow, formatDate } from "@/utils/dateUtils";
+import { getApiErrorMessage } from "@/utils/apiError";
 import { appConfig } from "@/config/appConfig";
 import Footer from "../common/Footer";
 
@@ -53,14 +61,47 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { authUser: user } = useAuth();
   const { data, loading } = useAppSelector((s) => s.dashboard);
+  const { verifyAlumni } = useAlumni();
 
-  // ★ Fetch only if store is empty
+  const [confirmVerify, setConfirmVerify] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const [verifying, setVerifying] = useState(false);
+
+  /* ★ Fetch only if store is empty */
   useEffect(() => {
     if (!data) {
       void dispatch(fetchDashboardDataAsync());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleVerify = async () => {
+    if (!confirmVerify) return;
+    setVerifying(true);
+    try {
+      await verifyAlumni(confirmVerify.id);
+      dispatch(
+        showToast({
+          message: `${confirmVerify.name} verified successfully.`,
+          severity: "success",
+        }),
+      );
+      // Refresh dashboard so the pending list updates
+      await dispatch(fetchDashboardDataAsync());
+    } catch (err) {
+      dispatch(
+        showToast({
+          message: getApiErrorMessage(err, "Unable to verify alumni"),
+          severity: "error",
+        }),
+      );
+    } finally {
+      setVerifying(false);
+      setConfirmVerify(null);
+    }
+  };
 
   if (loading && !data) return <CommonLoading />;
   if (!data) return <CommonEmptyState title="No dashboard data available" />;
@@ -227,12 +268,6 @@ export default function AdminDashboardPage() {
                             </Typography>
                           }
                         />
-                        <Chip
-                          label={alum.alumniCode}
-                          size="small"
-                          variant="outlined"
-                          sx={{ borderRadius: 1, fontSize: "0.7rem" }}
-                        />
                       </ListItem>
                       {i < data.recentAlumni.length - 1 && <Divider />}
                     </Box>
@@ -277,7 +312,7 @@ export default function AdminDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("/alumni/events")}
+                  onClick={() => navigate("/alumni/explore/events")}
                   sx={{ color: "var(--color-chart-pink)", fontWeight: 600 }}
                 >
                   View All
@@ -297,7 +332,7 @@ export default function AdminDashboardPage() {
                           borderRadius: 2,
                           cursor: "pointer",
                         }}
-                        onClick={() => navigate(`/alumni/event/${evt.id}`)}
+                        onClick={() => navigate(`/alumni/explore/events/${evt.id}`)}
                       >
                         <ListItemAvatar>
                           <Avatar
@@ -371,7 +406,7 @@ export default function AdminDashboardPage() {
                 </Box>
                 <Button
                   size="small"
-                  onClick={() => navigate("alumni/notices")}
+                  onClick={() => navigate("/alumni/explore/notices")}
                   sx={{ color: "var(--color-warning)", fontWeight: 600 }}
                 >
                   View All
@@ -391,7 +426,7 @@ export default function AdminDashboardPage() {
                           borderRadius: 2,
                           cursor: "pointer",
                         }}
-                        onClick={() => navigate(`/notices/${notice.id}`)}
+                        onClick={() => navigate(`/alumni/explore/notices/${notice.id}`)}
                       >
                         <ListItemAvatar>
                           <Avatar
@@ -437,27 +472,44 @@ export default function AdminDashboardPage() {
           <Card sx={cardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Box
-                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
               >
-                <Box
-                  sx={{
-                    width: 6,
-                    height: 24,
-                    borderRadius: 2,
-                    background:
-                      "linear-gradient(180deg, var(--color-error), var(--color-error-light))",
-                  }}
-                />
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: { xs: "1rem", md: "1.1rem" },
-                  }}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 24,
+                      borderRadius: 2,
+                      background:
+                        "linear-gradient(180deg, var(--color-error), var(--color-error-light))",
+                    }}
+                  />
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: { xs: "1rem", md: "1.1rem" },
+                    }}
+                  >
+                    Pending Verification
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  onClick={() =>
+                    navigate("/alumni/configuration/verify-member")
+                  }
+                  sx={{ color: "var(--color-error)", fontWeight: 600 }}
                 >
-                  Pending Verification
-                </Typography>
+                  View All
+                </Button>
               </Box>
+
               {data.pendingVerification.length === 0 ? (
                 <CommonEmptyState
                   title="No pending verifications"
@@ -474,6 +526,49 @@ export default function AdminDashboardPage() {
                           "&:hover": { bgcolor: "action.hover" },
                           borderRadius: 2,
                         }}
+                        secondaryAction={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 0.5,
+                              alignItems: "center",
+                            }}
+                          >
+                            <Tooltip title="View profile">
+                              <IconButton
+                                size="small"
+                                onClick={() => navigate(`/alumni/${alum.id}`)}
+                                sx={{ color: "text.secondary" }}
+                              >
+                                <Eye size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<BadgeCheck size={14} />}
+                              onClick={() =>
+                                setConfirmVerify({
+                                  id: alum.id,
+                                  name: alum.fullName,
+                                })
+                              }
+                              sx={{
+                                borderRadius: 2,
+                                textTransform: "none",
+                                fontWeight: 600,
+                                borderColor: "var(--color-error)",
+                                color: "var(--color-error)",
+                                "&:hover": {
+                                  borderColor: "var(--color-error)",
+                                  bgcolor: "rgba(var(--rgb-error), 0.06)",
+                                },
+                              }}
+                            >
+                              Verify
+                            </Button>
+                          </Box>
+                        }
                       >
                         <ListItemAvatar>
                           <Avatar
@@ -506,14 +601,6 @@ export default function AdminDashboardPage() {
                             </Typography>
                           }
                         />
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => navigate(`/alumni/${alum.id}`)}
-                          sx={{ borderRadius: 2, textTransform: "none" }}
-                        >
-                          Review
-                        </Button>
                       </ListItem>
                       {i < data.pendingVerification.length - 1 && <Divider />}
                     </Box>
@@ -526,8 +613,20 @@ export default function AdminDashboardPage() {
       </Grid>
 
       <Box>
-        <Footer></Footer>
+        <Footer />
       </Box>
+
+      {/* ---------- Confirm verify dialog ---------- */}
+      <CommonConfirmDialog
+        open={!!confirmVerify}
+        title="Verify Alumni"
+        message={`Are you sure you want to verify "${confirmVerify?.name}"?`}
+        confirmLabel="Verify"
+        onConfirm={handleVerify}
+        onCancel={() => setConfirmVerify(null)}
+        loading={verifying}
+        color="primary"
+      />
     </Box>
   );
 }

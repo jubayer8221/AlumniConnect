@@ -45,4 +45,47 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ['lucide-react'],
   },
+  // Keep the initial landing-page runtime separate from heavier feature
+  // libraries so route and section chunks can load on demand.
+  build: {
+    minify: 'esbuild',
+    cssMinify: true,
+    cssCodeSplit: true,
+    esbuild: {
+      drop: ['debugger'],
+    },
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          const moduleId = id.replace(/\\/g, '/');
+          if (!moduleId.includes('/node_modules/')) return;
+
+          if (/\/node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(moduleId)) {
+            return 'react-vendor';
+          }
+          if (moduleId.includes('/node_modules/@mui/x-data-grid/')) {
+            return 'mui-data-grid';
+          }
+          if (moduleId.includes('/node_modules/@mui/x-date-pickers/')) {
+            return 'mui-date-pickers';
+          }
+          if (
+            moduleId.includes('/node_modules/@mui/') ||
+            moduleId.includes('/node_modules/@emotion/')
+          ) {
+            return 'mui-vendor';
+          }
+          if (moduleId.includes('/node_modules/lucide-react/')) {
+            return 'lucide-icons';
+          }
+          if (moduleId.includes('/node_modules/recharts/')) {
+            return 'charts';
+          }
+          if (moduleId.includes('/node_modules/date-fns/')) {
+            return 'date-utils';
+          }
+        },
+      },
+    },
+  },
 }));

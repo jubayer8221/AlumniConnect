@@ -70,7 +70,7 @@ export default function LandingContentPage() {
   };
 
   return (
-    <Container maxWidth={false} sx={{ pb: 4 }}>
+    <Box sx={{ pb: 4 }}>
       {/* Header */}
       <Box
         sx={{
@@ -94,7 +94,7 @@ export default function LandingContentPage() {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => navigate("/alumni/landing/slides/new")}
+            onClick={() => navigate("/alumni/configuration/landing-page/slides/new")}
             sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2 }}
           >
             Add Hero Slide
@@ -105,7 +105,7 @@ export default function LandingContentPage() {
           <Button
             variant="contained"
             startIcon={<Plus size={18} />}
-            onClick={() => navigate("/alumni/landing/gallery/new")}
+            onClick={() => navigate("/alumni/explore/gallery/new")}
             sx={{ textTransform: "none", fontWeight: 600, borderRadius: 2 }}
           >
             Add Gallery Photo
@@ -259,7 +259,7 @@ export default function LandingContentPage() {
                         <IconButton
                           size="small"
                           onClick={() =>
-                            navigate(`/alumni/landing/slides/${slide.slideID}`)
+                            navigate(`/alumni/configuration/landing-page/slides/${slide.slideID}`)
                           }
                         >
                           <Pencil size={16} />
@@ -373,7 +373,7 @@ export default function LandingContentPage() {
                         <IconButton
                           size="small"
                           onClick={() =>
-                            navigate(`/alumni/landing/gallery/${photo.photoID}`)
+                            navigate(`/alumni/explore/gallery/${photo.photoID}`)
                           }
                         >
                           <Pencil size={16} />
@@ -414,7 +414,7 @@ export default function LandingContentPage() {
           />
         )}
       </Card>
-    </Container>
+    </Box>
   );
 }
 

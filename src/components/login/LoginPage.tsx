@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -23,7 +23,6 @@ import {
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-// import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
 import { hasAdminAccess } from "@/utils/authUtils";
@@ -35,21 +34,32 @@ import CommonInputField from "../common/CommonInputField";
 import CommonButton from "../common/CommonButton";
 
 /* ============================================================
-   Form validation — inline
+   Form validation — dynamic based on login method
    ============================================================ */
-const loginSchema = yup.object({
-  username: yup
-    .string()
-    .trim()
-    .required("Username is required")
-    .max(100, "Username is too long"),
-  password: yup
-    .string()
-    .required("Password is required")
-    .max(100, "Password is too long"),
-});
+type LoginMethod = "email" | "phone";
 
-type LoginFormValues = yup.InferType<typeof loginSchema>;
+const buildLoginSchema = (method: LoginMethod) =>
+  yup.object({
+    username:
+      method === "phone"
+        ? yup
+            .string()
+            .trim()
+            .required("Phone number is required")
+            .matches(/^\+?[0-9\s\-()]{7,20}$/, "Enter a valid phone number.")
+            .length(11, "Phone Number should be 11 digit")
+        : yup
+            .string()
+            .trim()
+            .required("Username is required")
+            .max(100, "Username is too long"),
+    password: yup
+      .string()
+      .required("Password is required")
+      .max(100, "Password is too long"),
+  });
+
+type LoginFormValues = yup.InferType<ReturnType<typeof buildLoginSchema>>;
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -59,14 +69,27 @@ export default function LoginPage() {
     ?.signupUsername;
   const { login, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>("email");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { control, handleSubmit } = useForm<LoginFormValues>({
-    resolver: yupResolver(loginSchema),
+  const resolver = useMemo(
+    () => yupResolver(buildLoginSchema(loginMethod)),
+    [loginMethod],
+  );
+
+  const { control, handleSubmit, resetField } = useForm<LoginFormValues>({
+    resolver,
     defaultValues: { username: signupUsername ?? "", password: "" },
+    mode: "onTouched",
   });
+
+  const handleMethodChange = (_: unknown, value: LoginMethod) => {
+    if (value === loginMethod) return;
+    setLoginMethod(value);
+    setError(null);
+    resetField("username", { defaultValue: "" });
+  };
 
   const onSubmit = async (data: LoginFormValues) => {
     setError(null);
@@ -350,7 +373,7 @@ export default function LoginPage() {
           <Box sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}>
             <Tabs
               value={loginMethod}
-              onChange={(_, v) => setLoginMethod(v)}
+              onChange={handleMethodChange}
               textColor="primary"
               indicatorColor="primary"
               sx={{
@@ -383,20 +406,33 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <Stack spacing={2.5}>
               <CommonInputField
                 name="username"
                 label={
-                  loginMethod === "phone" ? "Phone Number " : "Username / Email"
+                  loginMethod === "phone" ? "Phone Number" : "Username / Email"
                 }
                 control={control}
                 placeholder={
                   loginMethod === "phone"
-                    ? "Enter your phone number"
+                    ? "01955512345"
                     : "Enter your username or email"
                 }
+                type={loginMethod === "phone" ? "tel" : "text"}
                 required
+                sx={
+                  loginMethod === "phone"
+                    ? {
+                        inputMode: "tel",
+                        autoComplete: "tel",
+                        pattern: "[+0-9\\s\\-()]*",
+                      }
+                    : {
+                        inputMode: "email",
+                        autoComplete: "username",
+                      }
+                }
               />
               <CommonInputField
                 name="password"

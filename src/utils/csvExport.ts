@@ -5,7 +5,6 @@ export function exportAlumniToCSV(
   filename = "alumni_export.csv",
 ): void {
   const headers = [
-    "Alumni Code",
     "Full Name",
     "Email",
     "Phone",
@@ -31,7 +30,6 @@ export function exportAlumniToCSV(
     const e = a.academicInformation[0];
     const j = a.jobExperience[0];
     return [
-      a.alumniCode,
       p.fullName,
       c.email ?? "",
       c.phone ?? "",

@@ -2,6 +2,7 @@ import { Box, Button, Container, Grid, Stack, Typography } from "@mui/material";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "@/config/appConfig";
+import { useAuth } from "@/hooks/useAuth";
 
 const BENEFITS = [
   "Reconnect with old classmates and friends",
@@ -14,19 +15,19 @@ const BENEFITS = [
 
 export default function JoinNetworkSection() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <Box
       sx={{
         py: { xs: 8, md: 12 },
-        background:
-          "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 60%, var(--color-dark-forest-surface) 100%)",
-        color: "var(--color-surface)",
+        bgcolor: "background.default",
+        color: "var(--color-primary)",
         position: "relative",
         overflow: "hidden",
       }}
     >
-      {/* Decorative blobs */}
+      {/* Decorative background accents */}
       <Box
         sx={{
           position: "absolute",
@@ -36,7 +37,7 @@ export default function JoinNetworkSection() {
           height: 400,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle, rgba(var(--rgb-accent), 0.25) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(var(--rgb-primary), 0.06) 0%, transparent 70%)",
         }}
       />
       <Box
@@ -48,7 +49,7 @@ export default function JoinNetworkSection() {
           height: 400,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle, rgba(var(--rgb-category-warm), 0.2) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(var(--rgb-accent), 0.08) 0%, transparent 70%)",
         }}
       />
 
@@ -69,10 +70,12 @@ export default function JoinNetworkSection() {
             </Typography>
             <Typography
               sx={{
-                fontSize: { xs: "2rem", md: "3rem" },
+                fontSize: { xs: "2rem", md: "2rem" },
                 fontWeight: 800,
                 lineHeight: 1.15,
-                letterSpacing: "-0.02em",
+                letterSpacing: "0.02em",
+                color: "text.primary",
+                textTransform: "uppercase",
                 mb: 3,
               }}
             >
@@ -80,10 +83,7 @@ export default function JoinNetworkSection() {
               <Box
                 component="span"
                 sx={{
-                  background:
-                    "linear-gradient(135deg, var(--color-accent) 0%, var(--color-category-warm) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
+                  color: "var(--color-accent)",
                 }}
               >
                 320+ alumni
@@ -93,7 +93,7 @@ export default function JoinNetworkSection() {
             <Typography
               sx={{
                 fontSize: "1.05rem",
-                color: "rgba(var(--rgb-white), 0.78)",
+                color: "text.secondary",
                 lineHeight: 1.75,
                 mb: 4,
                 maxWidth: 620,
@@ -122,7 +122,8 @@ export default function JoinNetworkSection() {
                   <Typography
                     sx={{
                       fontSize: "0.95rem",
-                      color: "rgba(var(--rgb-white), 0.9)",
+                      color: "text.primary",
+                      fontWeight: 500,
                     }}
                   >
                     {benefit}
@@ -137,9 +138,10 @@ export default function JoinNetworkSection() {
               sx={{
                 p: { xs: 3, md: 4 },
                 borderRadius: 4,
-                bgcolor: "rgba(var(--rgb-white), 0.06)",
-                border: "1px solid rgba(var(--rgb-white), 0.14)",
-                backdropFilter: "blur(20px)",
+                bgcolor: "background.paper",
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
                 textAlign: "center",
               }}
             >
@@ -147,6 +149,7 @@ export default function JoinNetworkSection() {
                 sx={{
                   fontSize: "1.5rem",
                   fontWeight: 800,
+                  color: "text.primary",
                   mb: 1,
                   letterSpacing: "-0.02em",
                 }}
@@ -156,7 +159,7 @@ export default function JoinNetworkSection() {
               <Typography
                 sx={{
                   fontSize: "0.9rem",
-                  color: "rgba(var(--rgb-white), 0.7)",
+                  color: "text.secondary",
                   mb: 3,
                   lineHeight: 1.6,
                 }}
@@ -171,28 +174,28 @@ export default function JoinNetworkSection() {
                 endIcon={<ArrowRight size={18} />}
                 onClick={() => navigate("/login")}
                 sx={{
-                  bgcolor: "var(--color-surface)",
-                  color: "var(--color-primary)",
+                  bgcolor: "var(--color-primary)",
+                  color: "#fff",
                   textTransform: "none",
                   fontWeight: 700,
                   py: 1.75,
                   fontSize: "1rem",
                   borderRadius: 2.5,
-                  boxShadow: "0 12px 30px rgba(var(--rgb-white), 0.15)",
+                  boxShadow: "0 8px 20px rgba(0, 0, 0, 0.12)",
                   "&:hover": {
-                    bgcolor: "var(--color-gray50)",
+                    bgcolor: "var(--color-primary-hover, var(--color-primary))",
                     transform: "translateY(-2px)",
-                    boxShadow: "0 16px 36px rgba(var(--rgb-white), 0.25)",
+                    boxShadow: "0 12px 24px rgba(0, 0, 0, 0.18)",
                   },
                   transition: "all 0.25s ease",
                 }}
               >
-                Join the Network
+                {isAuthenticated ? "Explore Alumni" : "Join the Network"}
               </Button>
               <Typography
                 sx={{
                   fontSize: "0.75rem",
-                  color: "rgba(var(--rgb-white), 0.5)",
+                  color: "text.secondary",
                   mt: 2,
                 }}
               >

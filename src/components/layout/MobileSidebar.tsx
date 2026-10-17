@@ -35,7 +35,7 @@ export default function MobileSidebar() {
     location.pathname === path ||
     (path !== "/dashboard" &&
       path !== "/alumni/dashboard" &&
-      path !== "/alumni/profile" &&
+      path !== "/alumni/profile-details" &&
       path !== "/alumni" &&
       location.pathname.startsWith(path));
 

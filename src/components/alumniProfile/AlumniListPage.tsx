@@ -265,7 +265,7 @@ export default function AlumniListPage() {
           <Tooltip title="View alumni">
             <IconButton
               size="small"
-              onClick={() => navigate(`/alumni/${row.alumniID}`)}
+              onClick={() => navigate(`/alumni/profile-details/${row.alumniID}`)}
               sx={{
                 color: "text.secondary",
                 bgcolor: "white",
@@ -281,7 +281,7 @@ export default function AlumniListPage() {
           <Tooltip title="Edit alumni">
             <IconButton
               size="small"
-              onClick={() => navigate(`/alumni/${row.alumniID}/edit`)}
+              onClick={() => navigate(`/alumni/profile-details/${row.alumniID}/edit`)}
               sx={{
                 color: "text.secondary",
                 bgcolor: "white",
@@ -433,7 +433,7 @@ export default function AlumniListPage() {
             <Grid key={alum.alumniID} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
               <AlumniCard
                 alumni={alum}
-                onEdit={() => navigate(`/alumni/${alum.alumniID}/edit`)}
+                onEdit={() => navigate(`/alumni/profile-details/${alum.alumniID}/edit`)}
               />
             </Grid>
           ))}

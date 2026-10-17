@@ -98,6 +98,8 @@ export default function PublicEventDetailsPage() {
                   component="img"
                   src={evt.image}
                   alt={evt.title}
+                  fetchPriority="high"
+                  decoding="async"
                   onError={(e) => {
                     e.currentTarget.src = "/image/logo-small.png";
                   }}

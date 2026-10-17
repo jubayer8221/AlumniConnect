@@ -9,15 +9,10 @@ import type {
 export const TOKEN_KEY = "auth_token";
 export const USER_KEY = "auth_user";
 
-/** Roles that share the admin application permissions and navigation. */
 export function hasAdminAccess(role: string | null | undefined): boolean {
   return role === "ADMIN" || role === "MODERATOR";
 }
 
-// export function deriveRole(roles: Role[]): UserRole {
-//   const codes = (roles ?? []).map((r) => r.roleCode?.toUpperCase() ?? "");
-//   return codes.some((c) => c.includes("ADMIN")) ? "ADMIN" : "ALUMNI";
-// }
 export function deriveRole(roles: Role[]): UserRole {
   const codes = (roles ?? []).map((r) => r.roleCode?.toUpperCase() ?? "");
 

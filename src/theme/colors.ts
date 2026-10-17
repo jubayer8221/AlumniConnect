@@ -2,20 +2,21 @@ export type ColorMode = "light" | "dark";
 
 /** The application's single editable color palette. */
 export const colors = {
-  primary: "#0F766E",
-  primaryHover: "#115E59",
-  primaryLight: "#2A9D8F",
-  secondary: "#16324F",
-  secondaryLight: "#244663",
-  secondaryDark: "#102A43",
-  accent: "#F4A261",
-  accentDark: "#D9823B",
-  background: "#F5F7F8",
+  // primary: "#155EEF",
+  primary: "#345888",
+  primaryHover: "#1249C7",
+  primaryLight: "#4B8BFF",
+  secondary: "#102A4C",
+  secondaryLight: "#1C3D67",
+  secondaryDark: "#0A1C35",
+  accent: "#31A6F5",
+  accentDark: "#147CC4",
+  background: "#F5F8FC",
   surface: "#FFFFFF",
   textPrimary: "#172B3A",
   textSecondary: "#5F6F7E",
   textMuted: "#8998A5",
-  border: "#DDE5E8",
+  border: "#E1E8F0",
   success: "#16A34A",
   successLight: "#34D399",
   successDark: "#166534",
@@ -83,23 +84,23 @@ export const colors = {
   lightSurfaceGreen: "#F6FAF9",
   lightBorder: "#D8E3DE",
   lightBorderGreen: "#9AB9B0",
-  darkBackground: "#10231F",
-  darkSurface: "#17362F",
+  darkBackground: "#0C1728",
+  darkSurface: "#13243B",
   darkSurfaceAlt: "#132038",
   darkSurfaceBlue: "#1B2D4A",
   darkSurfaceNavy: "#1C2C4A",
   darkSurfaceDeep: "#203B56",
   darkTextPrimary: "#F2F7F5",
   darkTextSecondary: "#B6C8C2",
-  darkBorder: "#33534B",
-  darkAccent: "#78B7A8",
+  darkBorder: "#29415F",
+  darkAccent: "#65A4FF",
   darkMuted: "#77918A",
   mutedTeal: "#9AB9B0",
   gray999: "#999999",
-  darkForest: "#0A1E1C",
-  darkForestSurface: "#102A28",
+  darkForest: "#0A1B32",
+  darkForestSurface: "#102A4C",
   chartEmerald: "#10B981",
-  darkForestAlt: "#18312E",
+  darkForestAlt: "#17375F",
 } as const;
 
 export type ColorToken = keyof typeof colors;
@@ -118,12 +119,16 @@ export const getCssColorVariables = (mode: ColorMode) => {
 
   const variables: Record<string, string> = {};
   for (const [name, value] of Object.entries(activeColors)) {
-    const cssName = name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    const cssName = name.replace(
+      /[A-Z]/g,
+      (letter) => `-${letter.toLowerCase()}`,
+    );
     variables[`--color-${cssName}`] = value;
     if (/^#[\da-f]{6}$/i.test(value)) {
       const channels = value.slice(1).match(/[\da-f]{2}/gi)!;
-      variables[`--rgb-${cssName}`] =
-        channels.map((channel) => parseInt(channel, 16)).join(", ");
+      variables[`--rgb-${cssName}`] = channels
+        .map((channel) => parseInt(channel, 16))
+        .join(", ");
     }
   }
 

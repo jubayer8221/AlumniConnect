@@ -116,7 +116,7 @@ export default function NewsSection() {
             endIcon={<ArrowRight size={16} />}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            View all news
+            View all
           </Button>
         </Box>
 

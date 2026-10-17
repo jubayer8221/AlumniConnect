@@ -9,6 +9,7 @@ import {
   Menu,
   MenuItem,
   alpha,
+  Stack,
 } from "@mui/material";
 import {
   MoreVertical,
@@ -23,6 +24,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AlumniProfileFullModel } from "@/types/alumni";
 import { CommonAvatar } from "@/components/common";
+import ConnectButton from "@/components/network/ConnectButton";
+import { useAuth } from "@/hooks/useAuth";
 import { colors } from "@/theme/colors";
 
 const NAVY = colors.darkSurfaceAlt;
@@ -40,12 +43,28 @@ export default function AlumniCard({
   onDelete,
 }: AlumniCardProps) {
   const navigate = useNavigate();
+  const { authUser: me } = useAuth();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
   const p = alumni.personalInformation;
   const c = alumni.contactInformation;
   const firstEdu = alumni.academicInformation[0];
   const firstJob = alumni.jobExperience[0];
+
+  const isOwner = Boolean(
+    me &&
+    (me.id === String(alumni.userID) ||
+      me.alumniId === String(alumni.alumniID)),
+  );
+
+  /* ---------- Connect visibility ----------
+     Show the button whenever:
+       - it's not the current user's own card
+       - the target has a valid userID to send the request to
+     The ConnectButton itself resolves the actual state (Connect / Pending /
+     Accept / Message / Disconnect) via the API.
+  -------------------------------------------- */
+  const showConnect = !isOwner && alumni.userID > 0;
 
   return (
     <Card
@@ -56,6 +75,8 @@ export default function AlumniCard({
         height: "100%",
         position: "relative",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
         transition: "all 0.25s ease",
         "&:hover": {
           transform: "translateY(-4px)",
@@ -64,25 +85,36 @@ export default function AlumniCard({
         },
       }}
     >
+      {/* ---------- HEADER: cover photo (fallback gradient) ---------- */}
       <Box
         sx={{
-          height: 80,
-          background: `linear-gradient(135deg, ${NAVY} 0%, var(--color-dark-surface-navy) 100%)`,
+          height: p.coverPhoto ? 120 : 80,
           position: "relative",
           overflow: "hidden",
+          ...(p.coverPhoto
+            ? {
+                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 100%), url(${p.coverPhoto})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {
+                background: `linear-gradient(135deg, ${NAVY} 0%, var(--color-dark-surface-navy) 100%)`,
+              }),
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            top: -30,
-            left: -30,
-            width: 110,
-            height: 110,
-            borderRadius: "50%",
-            background: `radial-gradient(circle, ${alpha(TEAL, 0.25)} 0%, transparent 70%)`,
-          }}
-        />
+        {!p.coverPhoto && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: -30,
+              left: -30,
+              width: 110,
+              height: 110,
+              borderRadius: "50%",
+              background: `radial-gradient(circle, ${alpha(TEAL, 0.25)} 0%, transparent 70%)`,
+            }}
+          />
+        )}
         <Box sx={{ position: "absolute", top: 8, right: 8 }}>
           <IconButton
             size="small"
@@ -90,6 +122,7 @@ export default function AlumniCard({
             sx={{
               color: "white",
               bgcolor: "rgba(var(--rgb-white), 0.15)",
+              backdropFilter: "blur(6px)",
               "&:hover": { bgcolor: "rgba(var(--rgb-white), 0.25)" },
             }}
           >
@@ -105,7 +138,7 @@ export default function AlumniCard({
           <MenuItem
             onClick={() => {
               setAnchor(null);
-              navigate(`/alumni/${alumni.alumniID}`);
+              navigate(`/alumni/profile-details/${alumni.alumniID}`);
             }}
             sx={{
               py: 1.25,
@@ -155,7 +188,17 @@ export default function AlumniCard({
         </Menu>
       </Box>
 
-      <CardContent sx={{ p: 2.5, pt: 0, mt: -5 }}>
+      {/* ---------- BODY ---------- */}
+      <CardContent
+        sx={{
+          p: 2.5,
+          pt: 0,
+          mt: p.coverPhoto ? -4 : -5,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
           <Box sx={{ position: "relative" }}>
             <CommonAvatar
@@ -195,12 +238,6 @@ export default function AlumniCard({
             sx={{ fontWeight: 700, fontSize: "0.95rem" }}
           >
             {p.fullName}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: "text.secondary", display: "block", mb: 1 }}
-          >
-            {alumni.alumniCode}
           </Typography>
         </Box>
 
@@ -273,23 +310,31 @@ export default function AlumniCard({
           </Typography>
         )}
 
-        <Button
-          variant="outlined"
-          size="small"
-          fullWidth
-          onClick={() => navigate(`/alumni/${alumni.alumniID}`)}
-          sx={{
-            mt: 1.5,
-            borderRadius: 2,
-            textTransform: "none",
-            fontWeight: 600,
-            borderColor: NAVY,
-            color: NAVY,
-            "&:hover": { borderColor: NAVY, bgcolor: alpha(TEAL, 0.08) },
-          }}
-        >
-          View Profile
-        </Button>
+        {/* ---------- ACTIONS ---------- */}
+        <Stack spacing={1} sx={{ mt: "auto", pt: 2 }}>
+          {showConnect && (
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <ConnectButton otherUserID={alumni.userID} compact />
+            </Box>
+          )}
+
+          <Button
+            variant="outlined"
+            size="small"
+            fullWidth
+            onClick={() => navigate(`/alumni/profile-details/${alumni.alumniID}`)}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              borderColor: NAVY,
+              color: NAVY,
+              "&:hover": { borderColor: NAVY, bgcolor: alpha(TEAL, 0.08) },
+            }}
+          >
+            View Profile
+          </Button>
+        </Stack>
       </CardContent>
     </Card>
   );

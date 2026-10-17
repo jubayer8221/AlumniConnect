@@ -73,7 +73,7 @@ export default function SettingsPage() {
             startIcon={<Save size={18} />}
             onClick={handleSave}
           >
-            Save Settings
+            Save
           </CommonButton>
         }
       />

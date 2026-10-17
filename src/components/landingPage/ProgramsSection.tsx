@@ -6,6 +6,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
+import { Link } from "react-router-dom";
 
 import {
   Award,
@@ -15,6 +16,8 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
+import SectionHeader from "@/components/common/SectionHeader";
+
 const PROGRAMS = [
   {
     number: "01",
@@ -23,6 +26,7 @@ const PROGRAMS = [
     description:
       "Merit-based awards for outstanding students across every faculty.",
     about: "About scholarship program",
+    path: "",
     color: "var(--color-primary)",
   },
   {
@@ -31,6 +35,7 @@ const PROGRAMS = [
     title: "Mentorship",
     description: "Senior alumni guiding current students and young graduates.",
     about: "About mentorship",
+    path: "/mentorship",
     color: "var(--color-primary)",
   },
   {
@@ -39,6 +44,7 @@ const PROGRAMS = [
     title: "Reunions & Events",
     description: "Year-round chapter meetups, lectures and the annual reunion.",
     about: "About reunions & events",
+    path: "/events",
     color: "var(--color-primary)",
   },
   {
@@ -48,6 +54,7 @@ const PROGRAMS = [
     description:
       "Giving back to the University of Dhaka and the wider society.",
     about: "About community impact",
+    path: "/about",
     color: "var(--color-primary)",
   },
 ];
@@ -58,53 +65,33 @@ export default function ProgramsSection() {
       component="section"
       aria-labelledby="programs-heading"
       sx={{
-        py: { xs: 8, md: 12 },
+        py: 8,
         bgcolor: "background.default",
       }}
     >
       <Container maxWidth="lg">
-        {/* Section heading */}
-        <Box sx={{ textAlign: "center", mb: { xs: 5, md: 7 } }}>
-          <Typography
-            component="p"
-            sx={{
-              fontSize: "0.8rem",
-              fontWeight: 700,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "primary.main",
-              mb: 1.5,
-            }}
-          >
-            Our Programs
-          </Typography>
-
-          <Typography
-            id="programs-heading"
-            component="h2"
-            sx={{
-              fontSize: { xs: "2rem", md: "2.5rem" },
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.2,
-              mb: 1.5,
-            }}
-          >
-            Diverse Communities, One Family
-          </Typography>
-
-          <Typography
-            sx={{
-              color: "text.secondary",
-              maxWidth: 560,
-              mx: "auto",
-              lineHeight: 1.7,
-            }}
-          >
-            Programs that connect alumni, support students, and strengthen our
-            university community.
-          </Typography>
-        </Box>
+        {/* Reusable Section Header */}
+        <SectionHeader
+          align="center"
+          subtitle="Our Programs"
+          subtitlePosition="above"
+          title="Diverse Communities, One Family"
+          titleColor="text.primary"
+          subtitleSx={{
+            fontWeight: 700,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            color: "primary.main",
+            mb: 1.5,
+          }}
+          titleSx={{
+            fontSize: { xs: "2rem", md: "2.25rem" },
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            textTransform: "uppercase",
+          }}
+          sx={{ mb: 6 }}
+        />
 
         {/* Program cards */}
         <Grid container spacing={3}>
@@ -117,7 +104,7 @@ export default function ProgramsSection() {
                   component="article"
                   sx={{
                     height: "100%",
-                    minHeight: 290,
+                    minHeight: 280,
                     borderRadius: 3,
                     border: "1px solid",
                     borderColor: "divider",
@@ -132,6 +119,9 @@ export default function ProgramsSection() {
                       transform: "translateY(-5px)",
                       boxShadow: "0 16px 40px rgba(var(--rgb-primary), 0.12)",
                       borderColor: program.color,
+                      "& .about-link-icon": {
+                        transform: "translate(2px, -2px)",
+                      },
                     },
 
                     "@media (prefers-reduced-motion: reduce)": {
@@ -194,27 +184,14 @@ export default function ProgramsSection() {
                       <ProgramIcon size={26} strokeWidth={1.8} />
                     </Box>
 
-                    {/* Visible program number */}
-                    {/* <Typography
-                      component="p"
-                      sx={{
-                        fontSize: "0.75rem",
-                        fontWeight: 800,
-                        letterSpacing: "0.08em",
-                        color: "var(--color-primary)",
-                        mb: 0.75,
-                      }}
-                    >
-                      {program.number}
-                    </Typography> */}
-
                     {/* Program title */}
                     <Typography
                       component="h3"
                       sx={{
                         fontSize: "1.1rem",
                         fontWeight: 700,
-                        lineHeight: 1.4,
+                        lineHeight: 1,
+                        color: "primary.main",
                         mb: 1,
                       }}
                     >
@@ -227,21 +204,29 @@ export default function ProgramsSection() {
                         fontSize: "0.9rem",
                         color: "text.secondary",
                         lineHeight: 1.7,
-                        mb: 2.5,
+                        // mb: 1,
                       }}
                     >
                       {program.description}
                     </Typography>
 
-                    {/* Informational label */}
+                    {/* Interactive path link */}
                     <Box
+                      component={Link}
+                      to={program.path === "" ? "" : program.path}
                       sx={{
                         mt: "auto",
-                        pt: 1,
-                        display: "flex",
+                        // pt: 1,
+                        display: "inline-flex",
                         alignItems: "center",
                         gap: 0.75,
-                        color: "var(--color-primary)",
+                        color: "primary.main",
+                        textDecoration: "none",
+                        transition: "color 0.2s ease",
+                        "&:hover": {
+                          color: "primary.dark",
+                          textDecoration: "underline",
+                        },
                       }}
                     >
                       <Typography
@@ -249,13 +234,20 @@ export default function ProgramsSection() {
                         sx={{
                           fontSize: "0.8rem",
                           fontWeight: 700,
-                          lineHeight: 1.5,
+                          // lineHeight: 1.5,
                         }}
                       >
                         {program.about}
                       </Typography>
 
-                      <ArrowUpRight size={16} aria-hidden="true" />
+                      <ArrowUpRight
+                        size={16}
+                        className="about-link-icon"
+                        style={{
+                          transition: "transform 0.2s ease",
+                        }}
+                        aria-hidden="true"
+                      />
                     </Box>
                   </CardContent>
                 </Card>

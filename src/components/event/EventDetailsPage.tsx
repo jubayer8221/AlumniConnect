@@ -46,7 +46,9 @@ export default function EventDetailsPage() {
   const { authUser: user } = useAuth();
 
   const isAdmin = hasAdminAccess(user?.role);
-  const basePath = isAdmin ? "/alumni/events" : "/alumni/events";
+  const basePath = isAdmin
+    ? "/alumni/explore/events"
+    : "/alumni/explore/events";
   const homePath = isAdmin ? "/dashboard" : "/alumni/dashboard";
 
   const {
@@ -350,7 +352,9 @@ export default function EventDetailsPage() {
                 <CommonButton
                   variant="outlined"
                   startIcon={<Pencil size={18} />}
-                  onClick={() => navigate(`/alumni/events/${evt.id}/edit`)}
+                  onClick={() =>
+                    navigate(`/alumni/explore/events/${evt.id}/edit`)
+                  }
                 >
                   Edit Event
                 </CommonButton>

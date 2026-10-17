@@ -32,18 +32,28 @@ export default function CommonBanner({
         pb: { xs: 10, md: 14 },
         overflow: "hidden",
         color: "var(--color-surface)",
+        // background:
+        //   "linear-gradient( 90deg, var(--color-primary) 0%, var(--color-primary) 35%, transparent 50%)",
         background:
-          "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 40%, var(--color-dark-forest-surface) 100%)",
+          "linear-gradient(135deg, var(--color-primary) 40%,  var(--color-dark-forest-surface) 100%)",
       }}
     >
       {/* Background Image Overlay */}
       <Box
+        component="img"
+        src={bgImageUrl}
+        alt=""
+        width={1920}
+        height={1080}
+        fetchPriority="high"
+        decoding="async"
         sx={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `url('${bgImageUrl}')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
           opacity: 0.2,
         }}
       />
