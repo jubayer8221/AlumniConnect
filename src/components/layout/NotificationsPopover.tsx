@@ -69,7 +69,7 @@ export default function NotificationsPopover({
     // Mark this moment as "last seen" before navigating
     localStorage.setItem(STORAGE_KEY, new Date().toISOString());
     onClose();
-    navigate(`/notices/${id}`);
+    navigate(`/alumni/explore/notices/${id}`);
   };
 
   const handleViewAll = () => {

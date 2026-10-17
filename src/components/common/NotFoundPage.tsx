@@ -11,8 +11,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import LandingHeader from "../landingPage/LandingHeader";
 import LandingFooter from "../landingPage/LandingFooter";
-// import LandingHeader from "./LandingHeader";
-// import LandingFooter from "./LandingFooter";
 
 type NotFoundPageProps = {
   homePath?: string;

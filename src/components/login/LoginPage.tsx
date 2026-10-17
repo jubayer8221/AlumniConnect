@@ -51,7 +51,12 @@ const buildLoginSchema = (method: LoginMethod) =>
         : yup
             .string()
             .trim()
+
             .required("Username is required")
+            .matches(
+              /^[a-zA-Z0-9_-]+$/,
+              "Username can only contain letters, numbers, underscores, and hyphens",
+            )
             .max(100, "Username is too long"),
     password: yup
       .string()
